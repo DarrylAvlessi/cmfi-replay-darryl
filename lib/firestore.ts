@@ -2480,30 +2480,77 @@ export const statsVuesService = {
             );
 
             const querySnapshot = await getDocs(q);
-            const continueWatchingItems: ContinueWatchingItem[] = [];
+            
+            // Séparer les épisodes et les films pour les récupérer en batch
+            const episodeRefs: DocumentReference[] = [];
+            const movieUids: string[] = [];
+            const historyData: Array<{ docSnapshot: QueryDocumentSnapshot; data: StatsVues; isEpisode: boolean }> = [];
 
             for (const docSnapshot of querySnapshot.docs) {
                 const data = docSnapshot.data() as StatsVues;
-
-                // Vérifier si c'est un épisode ou un film
                 const isEpisode = !!data.idEpisodeSerie;
+                
+                historyData.push({ docSnapshot, data, isEpisode });
 
                 if (isEpisode && data.idEpisodeSerie) {
-                    // C'est un épisode de série
-                    const episodeDoc = await getDoc(data.idEpisodeSerie);
+                    episodeRefs.push(data.idEpisodeSerie);
+                } else if (!isEpisode && data.uid) {
+                    movieUids.push(data.uid);
+                }
+            }
+
+            // Récupérer tous les épisodes en parallèle
+            const episodesMap = new Map<string, EpisodeSerie>();
+            if (episodeRefs.length > 0) {
+                // Éviter les doublons de références pour optimiser les appels getDoc
+                const uniqueRefs = Array.from(new Set(episodeRefs.map(ref => ref.path)))
+                    .map(path => doc(db, path));
+                
+                const episodeDocs = await Promise.all(uniqueRefs.map(ref => getDoc(ref)));
+                
+                for (const episodeDoc of episodeDocs) {
                     if (episodeDoc.exists()) {
-                        const episode = episodeDoc.data() as EpisodeSerie;
+                        episodesMap.set(episodeDoc.id, episodeDoc.data() as EpisodeSerie);
+                    }
+                }
+            }
+
+            // Récupérer tous les films en batch (max 10 par requête Firestore avec 'in')
+            const moviesMap = new Map<string, Movie>();
+            if (movieUids.length > 0) {
+                const uniqueMovieUids = Array.from(new Set(movieUids));
+                const batchSize = 10;
+                
+                for (let i = 0; i < uniqueMovieUids.length; i += batchSize) {
+                    const batch = uniqueMovieUids.slice(i, i + batchSize);
+                    const moviesQuery = query(
+                        collection(db, MOVIES_COLLECTION),
+                        where('uid', 'in', batch)
+                    );
+                    const moviesSnapshot = await getDocs(moviesQuery);
+                    
+                    for (const movieDoc of moviesSnapshot.docs) {
+                        const movie = movieDoc.data() as Movie;
+                        moviesMap.set(movie.uid, movie);
+                    }
+                }
+            }
+
+            const continueWatchingItems: ContinueWatchingItem[] = [];
+
+            for (const { docSnapshot, data, isEpisode } of historyData) {
+                if (isEpisode && data.idEpisodeSerie) {
+                    const episode = episodesMap.get(data.idEpisodeSerie.id);
+                    if (episode) {
                         const runtime = episode.runtime || 0;
                         const progress = runtime > 0 ? Math.min((data.tempsRegarde / runtime) * 100, 100) : 0;
 
-                        // Ne pas afficher si déjà terminé (>95%)
                         if (progress < 95) {
-                            // Utiliser le titre de l'épisode, ou combiner série + épisode si disponible
                             const displayTitle = episode.title || `${episode.title_serie} - Épisode ${episode.episode_numero}`;
                             
                             continueWatchingItems.push({
                                 id: docSnapshot.id,
-                                uid: data.uid || episode.uid_episode || episodeDoc.id, // Fallback sur l'ID du document
+                                uid: data.uid || episode.uid_episode || data.idEpisodeSerie.id,
                                 title: displayTitle,
                                 imageUrl: episode.backdrop_path || episode.picture_path,
                                 progress,
@@ -2513,17 +2560,15 @@ export const statsVuesService = {
                                 episodeNumber: episode.episode_numero,
                                 episodeTitle: episode.title,
                                 serieTitle: episode.title_serie,
-                                uid_episode: episode.uid_episode || episodeDoc.id, // Fallback sur l'ID du document
-                                episodeId: episodeDoc.id, // Stocker l'ID du document
+                                uid_episode: episode.uid_episode || data.idEpisodeSerie.id,
+                                episodeId: data.idEpisodeSerie.id,
                                 dateDernierUpdate: data.dateDernierUpdate
                             });
                         }
                     }
-                } else {
-                    // C'est un film
-                    const movie = await movieService.getMovieByUid(data.uid);
+                } else if (data.uid) {
+                    const movie = moviesMap.get(data.uid);
                     if (movie) {
-                        // Convertir runtime_h_m (ex: "2h 30min") en secondes
                         const runtimeMatch = movie.runtime?.match(/(\d+)h?\s*(\d+)?/);
                         let runtime = 0;
                         if (runtimeMatch) {
@@ -2534,7 +2579,6 @@ export const statsVuesService = {
 
                         const progress = runtime > 0 ? Math.min((data.tempsRegarde / runtime) * 100, 100) : 0;
 
-                        // Ne pas afficher si déjà terminé (>95%)
                         if (progress < 95) {
                             continueWatchingItems.push({
                                 id: docSnapshot.id,

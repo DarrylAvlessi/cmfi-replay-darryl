@@ -4,8 +4,9 @@ import Header from '../components/Header';
 import MediaCard from '../components/MediaCard';
 import { MediaContent, MediaType } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { bookDocService, bookSeriesService, movieService, episodeSerieService, BookDoc, BookSeries, EpisodeSerie } from '../lib/firestore';
-import { getDoc } from 'firebase/firestore';
+import { bookDocService, bookSeriesService, movieService, episodeSerieService, BookDoc, BookSeries, EpisodeSerie, Movie } from '../lib/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { TrashIcon } from '../components/icons';
 
 interface BookmarksScreenProps {
@@ -33,17 +34,41 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 // Récupérer les bookmarks de films
                 const movieBookmarks = await bookDocService.getUserBookmarks(user.email);
-                const movieContents: MediaContent[] = await Promise.all(
-                    movieBookmarks.map(async (bookmark: BookDoc) => {
-                        // Essayer de récupérer les détails complets du film
-                        const movie = await movieService.getMovieById(bookmark.uid);
-
+                const movieUids = movieBookmarks.map(b => b.uid).filter(uid => !!uid);
+                
+                let movieContents: MediaContent[] = [];
+                
+                if (movieUids.length > 0) {
+                    const batchSize = 10;
+                    const moviePromises = [];
+                    
+                    for (let i = 0; i < movieUids.length; i += batchSize) {
+                        const batch = movieUids.slice(i, i + batchSize);
+                        const moviesQuery = query(
+                            collection(db, 'movies'),
+                            where('uid', 'in', batch)
+                        );
+                        moviePromises.push(getDocs(moviesQuery));
+                    }
+                    
+                    const moviesSnapshots = await Promise.all(moviePromises);
+                    const moviesMap = new Map<string, Movie>();
+                    
+                    moviesSnapshots.forEach(snapshot => {
+                        snapshot.docs.forEach(doc => {
+                            const movie = doc.data() as Movie;
+                            moviesMap.set(movie.uid, movie);
+                        });
+                    });
+                    
+                    movieContents = movieBookmarks.map((bookmark: BookDoc) => {
+                        const movie = moviesMap.get(bookmark.uid);
                         if (movie) {
                             return {
                                 id: movie.uid,
                                 title: movie.title,
                                 theme: movie.original_language,
-                                imageUrl: movie.backdrop_path || movie.picture_path,
+                                imageUrl: movie.picture_path || movie.backdrop_path,
                                 type: MediaType.Movie,
                                 duration: movie.runtime_h_m,
                                 year: '',
@@ -57,8 +82,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                 premium_text: movie.premium_text
                             };
                         }
-
-                        // Fallback sur les données du bookmark
+                        
                         return {
                             id: bookmark.uid,
                             title: bookmark.title,
@@ -74,32 +98,48 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                             cast: [],
                             director: '',
                         };
-                    })
-                );
+                    });
+                }
 
                 // Récupérer les bookmarks d'épisodes
                 const seriesBookmarks = await bookSeriesService.getUserBookmarks(user.email);
-                const episodeContents: MediaContent[] = await Promise.all(
-                    seriesBookmarks.map(async (bookmark: BookSeries) => {
-                        // Essayer de récupérer les détails complets de l'épisode
-                        let episode: EpisodeSerie | null = null;
-
-                        if (bookmark.uid) {
-                            episode = await episodeSerieService.getEpisodeByUid(bookmark.uid);
-                        } else if (bookmark.refEpisode) {
-                            // refEpisode est une DocumentReference, on doit la résoudre
-                            const episodeDoc = await getDoc(bookmark.refEpisode);
-                            if (episodeDoc.exists()) {
-                                episode = episodeDoc.data() as EpisodeSerie;
-                            }
-                        }
-
+                const episodeUids = seriesBookmarks.map(b => b.uid).filter(uid => !!uid) as string[];
+                
+                let episodeContents: MediaContent[] = [];
+                
+                if (episodeUids.length > 0) {
+                    const batchSize = 10;
+                    const episodePromises = [];
+                    
+                    for (let i = 0; i < episodeUids.length; i += batchSize) {
+                        const batch = episodeUids.slice(i, i + batchSize);
+                        const episodesQuery = query(
+                            collection(db, 'episodesSeries'),
+                            where('uid_episode', 'in', batch)
+                        );
+                        episodePromises.push(getDocs(episodesQuery));
+                    }
+                    
+                    const episodesSnapshots = await Promise.all(episodePromises);
+                    const episodesMap = new Map<string, EpisodeSerie>();
+                    
+                    episodesSnapshots.forEach(snapshot => {
+                        snapshot.docs.forEach(doc => {
+                            const episode = doc.data() as EpisodeSerie;
+                            episodesMap.set(episode.uid_episode, episode);
+                        });
+                    });
+                    
+                    episodeContents = seriesBookmarks.map((bookmark: BookSeries) => {
+                        const uid = bookmark.uid;
+                        const episode = uid ? episodesMap.get(uid) : null;
+                        
                         if (episode) {
                             return {
                                 id: episode.uid_episode,
                                 title: episode.title,
                                 theme: episode.title_serie,
-                                imageUrl: episode.backdrop_path || episode.picture_path,
+                                imageUrl: episode.picture_path || episode.backdrop_path,
                                 type: MediaType.Series,
                                 duration: episode.runtime_h_m,
                                 year: '',
@@ -112,7 +152,6 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                             };
                         }
 
-                        // Fallback sur les données du bookmark
                         return {
                             id: bookmark.uid || bookmark.refEpisode?.id || '',
                             title: bookmark.title,
@@ -128,8 +167,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                             cast: [],
                             director: '',
                         };
-                    })
-                );
+                    });
+                }
 
                 setBookmarkedMovies(movieContents);
                 setBookmarkedEpisodes(episodeContents);
@@ -175,15 +214,16 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
     };
 
     // Éviter les doublons dans les favoris
-    const uniqueEpisodes = useMemo(() =>
-        bookmarkedEpisodes.reduce((acc: MediaContent[], current) => {
-            const x = acc.find(item => item.id === current.id);
-            return x ? acc : [...acc, current];
-        }, []),
-        [bookmarkedEpisodes]
-    );
+    const uniqueEpisodes = useMemo(() => {
+        const seen = new Set();
+        return bookmarkedEpisodes.filter(item => {
+            if (seen.has(item.id)) return false;
+            seen.add(item.id);
+            return true;
+        });
+    }, [bookmarkedEpisodes]);
 
-    const getFilteredContent = useCallback(() => {
+    const filteredContent = useMemo(() => {
         switch (activeTab) {
             case 'movies':
                 return bookmarkedMovies;
@@ -193,8 +233,6 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                 return [...bookmarkedMovies, ...uniqueEpisodes];
         }
     }, [activeTab, bookmarkedMovies, uniqueEpisodes]);
-
-    const filteredContent = useMemo(() => getFilteredContent(), [getFilteredContent]);
 
     return (
         <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">

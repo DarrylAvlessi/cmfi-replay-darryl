@@ -9,7 +9,7 @@ interface MediaCardProps {
   onPlay?: (item: MediaContent) => void;
 }
 
-const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSelect, onPlay }) => {
+const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumbnail', onSelect, onPlay }) => {
   const { title, imageUrl, author, progress, type, is_premium, premium_text } = item;
   const handleSelect = () => onSelect && onSelect(item);
   const handlePlay = (e: React.MouseEvent) => {
@@ -58,6 +58,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
             src={imageUrl} 
             alt={title} 
             className="w-full h-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105" 
+            loading="lazy"
           />
           <div
             onClick={handlePlay}
@@ -98,6 +99,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
             src={imageUrl} 
             alt={title} 
             className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-110" 
+            loading="lazy"
           />
           {/* Overlay au hover */}
           <div
@@ -177,6 +179,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
           src={imageUrl} 
           alt={title} 
           className="w-full h-full object-cover relative z-10 transition-transform duration-700 group-hover:scale-110" 
+          loading="lazy"
         />
         <div
           onClick={handlePlay}
@@ -196,6 +199,6 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
       {author && <p className="text-gray-500 dark:text-gray-400 text-sm break-words">{author}</p>}
     </div>
   );
-};
+});
 
 export default MediaCard;

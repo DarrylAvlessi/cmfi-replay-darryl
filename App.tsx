@@ -207,49 +207,29 @@ const AppContent: React.FC = () => {
     }, [hasStarted]);
 
     const handlePlay = async (media: MediaContent, episode?: EpisodeSerie) => {
-        let episodeToPlay = episode;
-        if ((media.type === MediaType.Series || media.type === MediaType.Podcast) && !episodeToPlay) {
-            const mockFirst = media.seasons?.[0]?.episodes?.[0];
-            if (mockFirst) {
-                try {
-                    const serie = await serieService.getSerieByUid(media.id);
-                    if (serie) {
-                        const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie);
-                        if (seasons.length > 0) {
-                            const episodesBySeason = await Promise.all(
-                                seasons.map(async (s) => await episodeSerieService.getEpisodesBySeason(s.uid_season))
-                            );
-                            const allEpisodesFs = episodesBySeason.flat();
-                            if (allEpisodesFs.length > 0) {
-                                setEpisodesCache({ serieId: serie.uid_serie, episodes: allEpisodesFs });
-                                episodeToPlay = allEpisodesFs[0];
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // Silent failover
+        const route = media.type === MediaType.Series ? 'serie' :
+            media.type === MediaType.Movie ? 'movie' :
+                'podcast';
+        const detailPath = `/${route}/${media.id}`;
+
+        // Pour les films, séries et podcasts, si on n'a pas d'épisode spécifique et qu'on n'est pas déjà
+        // sur la page de détails, on redirige vers celle-ci au lieu de lancer la lecture.
+        if (!episode && location.pathname !== detailPath) {
+            // Pour les séries/podcasts, on vérifie si c'est bien une série top-level
+            if (media.type === MediaType.Series || media.type === MediaType.Podcast) {
+                const serie = await serieService.getSerieByUid(media.id);
+                if (serie) {
+                    handleSelectMedia(media);
+                    return;
                 }
-            } else {
-                try {
-                    const serie = await serieService.getSerieByUid(media.id);
-                    if (serie) {
-                        const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie);
-                        if (seasons.length > 0) {
-                            const episodesBySeason = await Promise.all(
-                                seasons.map(async (s) => await episodeSerieService.getEpisodesBySeason(s.uid_season))
-                            );
-                            const allEpisodesFs = episodesBySeason.flat();
-                            if (allEpisodesFs.length > 0) {
-                                setEpisodesCache({ serieId: serie.uid_serie, episodes: allEpisodesFs });
-                                episodeToPlay = allEpisodesFs[0];
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // Ignore
-                }
+            } else if (media.type === MediaType.Movie) {
+                // Pour les films, on redirige systématiquement vers les détails si on n'y est pas déjà
+                handleSelectMedia(media);
+                return;
             }
         }
+
+        let episodeToPlay = episode;
         setPlayingItem({ media, episode: episodeToPlay });
 
         // Navigate to watch screen with appropriate UID

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MediaContent, MediaType } from '../types';
-import { PlayIcon, PlusIcon, CheckIcon, InfoIcon } from './icons';
+import { PlayIcon, PlusIcon, CheckIcon, InfoIcon, VolumeHighIcon, VolumeMuteIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { movieService, Movie } from '../lib/firestore';
 
@@ -13,6 +13,8 @@ interface HeroPrimeVideoProps {
 const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSelectMedia, onPlay }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [slideProgress, setSlideProgress] = useState(0);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
@@ -20,7 +22,11 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const randomStartTimeRef = React.useRef<number>(0);
   const isSeekingRef = React.useRef<boolean>(false);
+  const slideStartTimeRef = React.useRef<number | null>(null);
+  const slideElapsedBeforePauseRef = React.useRef<number>(0);
+  const slideRafIdRef = React.useRef<number | null>(null);
   const { t, bookmarkedIds, toggleBookmark, isPremium } = useAppContext();
+  const SLIDE_DURATION_MS = 30000;
 
   // Détecter la taille d'écran pour une gestion précise des titres
   useEffect(() => {
@@ -81,15 +87,63 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const currentItem = items.length > 0 ? items[currentIndex] : null;
 
   useEffect(() => {
-    if (!items || items.length <= 1 || isPaused) return;
+    if (items.length <= 1) {
+      setSlideProgress(0);
+      slideStartTimeRef.current = null;
+      slideElapsedBeforePauseRef.current = 0;
+      if (slideRafIdRef.current !== null) {
+        cancelAnimationFrame(slideRafIdRef.current);
+        slideRafIdRef.current = null;
+      }
+      return;
+    }
 
-    const timer = setTimeout(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
-      setVideoError(false); // Reset l'erreur vidéo lors du changement
-    }, 30000); // 30 secondes pour synchroniser avec la durée de la vidéo
+    if (isPaused) {
+      if (slideRafIdRef.current !== null) {
+        cancelAnimationFrame(slideRafIdRef.current);
+        slideRafIdRef.current = null;
+      }
+      if (slideStartTimeRef.current !== null) {
+        slideElapsedBeforePauseRef.current += performance.now() - slideStartTimeRef.current;
+        slideStartTimeRef.current = null;
+      }
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [currentIndex, items, isPaused]);
+    slideStartTimeRef.current = performance.now();
+
+    const tick = () => {
+      if (slideStartTimeRef.current === null) return;
+
+      const elapsed =
+        slideElapsedBeforePauseRef.current + (performance.now() - slideStartTimeRef.current);
+      const progress = Math.min(elapsed / SLIDE_DURATION_MS, 1);
+      setSlideProgress(progress);
+
+      if (progress >= 1) {
+        slideElapsedBeforePauseRef.current = 0;
+        slideStartTimeRef.current = performance.now();
+        setSlideProgress(0);
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
+        setVideoError(false);
+      }
+
+      slideRafIdRef.current = requestAnimationFrame(tick);
+    };
+
+    slideRafIdRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (slideRafIdRef.current !== null) {
+        cancelAnimationFrame(slideRafIdRef.current);
+        slideRafIdRef.current = null;
+      }
+      if (slideStartTimeRef.current !== null) {
+        slideElapsedBeforePauseRef.current += performance.now() - slideStartTimeRef.current;
+        slideStartTimeRef.current = null;
+      }
+    };
+  }, [items.length, isPaused]);
 
   // Gérer la vidéo : jouer un extrait de 30 secondes aléatoire en boucle
   useEffect(() => {
@@ -203,12 +257,27 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   const isBookmarked = bookmarkedIds.includes(currentItem.id);
 
+  const restartCarouselTimer = () => {
+    slideElapsedBeforePauseRef.current = 0;
+    slideStartTimeRef.current = isPaused ? null : performance.now();
+    setSlideProgress(0);
+  };
+
   const handlePrev = () => {
+    restartCarouselTimer();
     setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length);
+    setVideoError(false);
   };
 
   const handleNext = () => {
+    restartCarouselTimer();
     setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
+    setVideoError(false);
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(!isMuted);
   };
 
   const handlePlay = () => {
@@ -229,7 +298,11 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const showVideo = videoUrl && !videoError;
 
   return (
-    <div className="relative w-full h-[70vh] md:h-[80vh] bg-black overflow-hidden">
+    <div 
+      className="relative w-full h-[70vh] md:h-[80vh] bg-black overflow-hidden group"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       {/* Vidéo ou Image de fond */}
       <div className="absolute inset-0">
         {showVideo ? (
@@ -238,7 +311,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
             key={currentItem.id}
             src={videoUrl}
             className="absolute inset-0 w-full h-full object-cover object-left transition-opacity duration-1000"
-            muted
+            muted={isMuted}
             playsInline
             loop
             autoPlay
@@ -368,6 +441,21 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
         </div>
       </div>
 
+      {/* Bouton de contrôle Audio (Mute/Unmute) */}
+      {showVideo && (
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-20 md:bottom-24 right-4 md:right-8 lg:right-12 z-20 p-3 md:p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300 hover:scale-110 shadow-lg group"
+          aria-label={isMuted ? 'Activer le son' : 'Couper le son'}
+        >
+          {isMuted ? (
+            <VolumeMuteIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          ) : (
+            <VolumeHighIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          )}
+        </button>
+      )}
+
       {/* Contrôles de navigation et indicateurs de carrousel */}
       {items.length > 1 && (
         <>
@@ -393,19 +481,28 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
           </button>
 
           {/* Indicateurs en bas */}
-          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 md:gap-3 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-            {items.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'w-8 h-2 bg-white rounded-full'
-                    : 'w-2 h-2 bg-white/40 hover:bg-white/60 rounded-full'
-                }`}
-                aria-label={`Aller à la slide ${index + 1}`}
-              />
-            ))}
+          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10 relative">
+            <div className="absolute left-4 right-4 top-2 h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-white/80 transition-[width] duration-100" style={{ width: `${slideProgress * 100}%` }} />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3 pt-3">
+              {items.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    restartCarouselTimer();
+                    setCurrentIndex(index);
+                    setVideoError(false);
+                  }}
+                  className={`transition-all duration-300 ${
+                    index === currentIndex
+                      ? 'w-8 h-2 bg-white rounded-full'
+                      : 'w-2 h-2 bg-white/40 hover:bg-white/60 rounded-full'
+                  }`}
+                  aria-label={`Aller à la slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </>
       )}
@@ -414,4 +511,3 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 };
 
 export default HeroPrimeVideo;
-

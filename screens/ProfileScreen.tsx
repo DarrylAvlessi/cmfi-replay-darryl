@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import UserAvatar from '../components/UserAvatar';
 import HistorySection from '../components/HistorySection';
 import ViewModeSelector from '../components/ViewModeSelector';
+import SettingsItem from '../components/SettingsItem';
+import ToggleSwitch from '../components/ToggleSwitch';
 import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/firestore';
 import { MediaContent, MediaType, User, Screen } from '../types';
 import {
@@ -22,74 +24,36 @@ import { appSettingsService } from '../lib/appSettingsService';
 import PremiumBadge from '../components/PremiumBadge';
 import { authService } from '../lib/authService';
 
-const SettingsItem: React.FC<{
-    Icon: React.FC<{ className?: string }>;
-    label: string;
-    isDestructive?: boolean;
-    onClick?: () => void;
-}> = ({ Icon, label, isDestructive = false, onClick }) => {
-    const textColor = isDestructive ? 'text-red-500' : 'text-gray-900 dark:text-white';
-    const iconColor = isDestructive ? 'text-red-500' : 'text-gray-400';
-
-    return (
-        <button onClick={onClick} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200">
-            <div className="flex items-center space-x-4">
-                <Icon className={`w-6 h-6 ${iconColor}`} />
-                <span className={textColor}>{label}</span>
-            </div>
-            {!isDestructive && <ChevronRightIcon className="w-5 h-5 text-gray-400" />}
-        </button>
-    );
-};
-
 interface ProfileScreenProps {
     navigate: (screen: 'Bookmarks' | 'Preferences' | 'EditProfile') => void;
     onSelectMedia: (item: MediaContent) => void;
     onPlay: (item: MediaContent) => void;
 }
 
-const ToggleSwitch: React.FC<{ enabled: boolean; onChange: (enabled: boolean) => void }> = ({ enabled, onChange }) => (
-    <div className="flex items-center">
-        <button
-            type="button"
-            className={`${enabled ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'} 
-                      relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer 
-                      rounded-full border-2 border-transparent transition-colors 
-                      duration-200 ease-in-out focus:outline-none`}
-            onClick={() => onChange(!enabled)}
-        >
-            <span
-                className={`${enabled ? 'translate-x-5' : 'translate-x-0'} 
-                          pointer-events-none inline-block h-5 w-5 transform rounded-full 
-                          bg-white shadow-lg ring-0 transition duration-200 ease-in-out`}
-            />
-        </button>
-    </div>
-);
-
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user } = useAppContext();
     const [premiumForAll, setPremiumForAll] = useState(false);
 
+    // Centralisation de la détection Admin
+    const isAdminValue = useMemo(() => {
+        return userProfile?.isAdmin ?? (userProfile as any)?.['isAdmin '];
+    }, [userProfile]);
+
     // Debug: afficher la valeur de isAdmin
     useEffect(() => {
-        // Gérer le cas où le champ s'appelle "isAdmin " (avec espace) dans Firestore
-        const isAdminValue = userProfile?.isAdmin ?? (userProfile as any)?.['isAdmin '];
         console.log('ProfileScreen - isAdmin:', isAdminValue, 'userProfile:', userProfile);
-        console.log('ProfileScreen - Raw isAdmin field:', (userProfile as any)?.['isAdmin '], 'isAdmin (no space):', userProfile?.isAdmin);
-    }, [userProfile]);
+    }, [isAdminValue, userProfile]);
 
     // Charger l'état de premiumForAll au montage du composant
     useEffect(() => {
         const loadPremiumForAll = async () => {
-            const isAdminValue = userProfile?.isAdmin ?? (userProfile as any)?.['isAdmin '];
             if (isAdminValue) {
                 const isEnabled = await appSettingsService.isPremiumForAll();
                 setPremiumForAll(isEnabled);
             }
         };
         loadPremiumForAll();
-    }, [userProfile]);
+    }, [isAdminValue]);
 
     const navigateRouter = useNavigate();
     const [historyItems, setHistoryItems] = useState<ContinueWatchingItem[]>([]);
@@ -116,7 +80,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         fetchHistory();
     }, [user]);
 
-    const handleHistoryItemClick = async (item: ContinueWatchingItem) => {
+    const handleHistoryItemClick = useCallback(async (item: ContinueWatchingItem) => {
         if (item.type === 'movie') {
             const movie = await movieService.getMovieByUid(item.uid);
             if (movie) {
@@ -154,13 +118,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 onPlay(mediaContent);
             }
         }
-    };
+    }, [onPlay]);
 
     const handleViewAllHistory = () => {
         navigateRouter('/history');
     };
 
-    const settingsItems = [
+    const settingsItems = useMemo(() => [
         { icon: BookmarkIcon, label: t('myFavorites'), action: () => navigate('Bookmarks') },
         { icon: SettingsIcon, label: t('preferences'), action: () => navigate('Preferences') },
         { icon: KeyIcon, label: t('changePassword'), action: () => navigateRouter('/change-password') },
@@ -170,39 +134,41 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             label: t('redeemVoucher'),
             action: () => navigateRouter('/redeem-voucher')
         },
-    ];
+    ], [t, navigate, navigateRouter]);
 
-    // Items admin - Gérer le cas où le champ s'appelle "isAdmin " (avec espace) dans Firestore
-    const isAdminValue = userProfile?.isAdmin ?? (userProfile as any)?.['isAdmin '];
-    const adminItems = isAdminValue ? [
-        {
-            icon: SettingsIcon,
-            label: 'Gérer les messages d\'information',
-            action: () => navigateRouter('/manage-info-bar')
-        },
-        {
-            icon: SettingsIcon,
-            label: 'Gérer les publicités',
-            action: () => navigateRouter('/manage-ads')
-        },
-        {
-            icon: SettingsIcon,
-            label: 'Gérer les utilisateurs',
-            action: () => navigateRouter('/manage-users')
-        },
-        {
-            icon: SettingsIcon,
-            label: 'Envoyer une notification à tous',
-            action: () => navigateRouter('/manage-notifications')
-        },
-        {
-            icon: SettingsIcon,
-            label: 'Admin - Gestion des vidéos',
-            action: () => navigateRouter('/admin')
-        },
-    ] : [];
+    // Items admin
+    const adminItems = useMemo(() => {
+        if (!isAdminValue) return [];
+        return [
+            {
+                icon: SettingsIcon,
+                label: 'Gérer les messages d\'information',
+                action: () => navigateRouter('/manage-info-bar')
+            },
+            {
+                icon: SettingsIcon,
+                label: 'Gérer les publicités',
+                action: () => navigateRouter('/manage-ads')
+            },
+            {
+                icon: SettingsIcon,
+                label: 'Gérer les utilisateurs',
+                action: () => navigateRouter('/manage-users')
+            },
+            {
+                icon: SettingsIcon,
+                label: 'Envoyer une notification à tous',
+                action: () => navigateRouter('/manage-notifications')
+            },
+            {
+                icon: SettingsIcon,
+                label: 'Admin - Gestion des vidéos',
+                action: () => navigateRouter('/admin')
+            },
+        ];
+    }, [isAdminValue, navigateRouter]);
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         try {
             await authService.signOut();
             setIsAuthenticated(false);
@@ -210,7 +176,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
         }
-    };
+    }, [setIsAuthenticated, navigateRouter]);
 
     return (
         <div className="pt-4">
@@ -284,7 +250,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     />
                 </div>
             </section>
-
         </div>
     );
 };

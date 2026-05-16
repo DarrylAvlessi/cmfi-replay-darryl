@@ -2,7 +2,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { MediaContent, MediaType, Episode } from '../types';
 
@@ -40,13 +40,13 @@ interface MediaDetailScreenProps {
 
 
 
-const EpisodeListItem: React.FC<{ 
+const EpisodeListItem = React.memo<{ 
     episode: Episode | EpisodeSerie, 
     onClick: () => void, 
     isPlaying: boolean,
     currentSeasonUid?: string,
     currentSerieTitle?: string
-}> = ({ episode, onClick, isPlaying, currentSeasonUid, currentSerieTitle }) => {
+}>(({ episode, onClick, isPlaying, currentSeasonUid, currentSerieTitle }) => {
     const playingClasses = isPlaying ? 'bg-amber-100 dark:bg-amber-900/40' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/50';
 
 
@@ -83,7 +83,7 @@ const EpisodeListItem: React.FC<{
 
             <div className="relative w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 lg:w-28 lg:h-18 bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 mt-1">
 
-                <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" />
+                <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" loading="lazy" />
 
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
 
@@ -122,7 +122,7 @@ const EpisodeListItem: React.FC<{
 
     );
 
-};
+});
 
 
 
@@ -318,18 +318,18 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
 
-                // Récupérer les épisodes pour chaque saison
-
+                // Récupérer les épisodes pour toutes les saisons en parallèle (évite le problème N+1)
+                const episodesPromises = seasons.map(season => 
+                    episodeSerieService.getEpisodesBySeason(season.uid_season)
+                );
+                
+                const episodesResults = await Promise.all(episodesPromises);
+                
                 const episodesData: { [key: string]: EpisodeSerie[] } = {};
-
-                for (const season of seasons) {
-
-                    const episodes = await episodeSerieService.getEpisodesBySeason(season.uid_season);
-
-                    episodesData[season.uid_season] = episodes;
-
-                }
-
+                seasons.forEach((season, index) => {
+                    episodesData[season.uid_season] = episodesResults[index];
+                });
+                
                 setSeasonEpisodes(episodesData);
 
                 
@@ -375,54 +375,29 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
     // Find the season of the currently playing episode to initialize state
-
-    let playingEpisodeSeasonNumber: number | undefined;
-
-    if (playingItem?.media.id === item.id && playingItem.episode) {
-
-        // Vérifier si c'est un EpisodeSerie ou un Episode
-
-        const isEpisodeSerie = 'uid_episode' in playingItem.episode;
-
-        if (isEpisodeSerie) {
-
-            // Chercher la saison par uid_episode
-
-            for (const season of firestoreSeasons) {
-
-                const episodes = seasonEpisodes[season.uid_season] || [];
-
-                if (episodes.some(e => e.uid_episode === playingItem.episode?.uid_episode)) {
-
-                    playingEpisodeSeasonNumber = season.season_number;
-
-                    break;
-
+    const playingEpisodeSeasonNumber = useMemo(() => {
+        if (playingItem?.media.id === item.id && playingItem.episode) {
+            // Vérifier si c'est un EpisodeSerie ou un Episode
+            const isEpisodeSerie = 'uid_episode' in playingItem.episode;
+            if (isEpisodeSerie) {
+                // Chercher la saison par uid_episode
+                for (const season of firestoreSeasons) {
+                    const episodes = seasonEpisodes[season.uid_season] || [];
+                    if (episodes.some(e => e.uid_episode === playingItem.episode?.uid_episode)) {
+                        return season.season_number;
+                    }
                 }
-
-            }
-
-        } else if (seasons) {
-
-            // Logique existante pour les épisodes mockés
-
-            for (const season of seasons) {
-
-                if (season.episodes.some(e => e.episodeNumber === playingItem.episode?.episodeNumber && e.title === playingItem.episode?.title)) {
-
-                    playingEpisodeSeasonNumber = season.seasonNumber;
-
-                    break;
-
+            } else if (seasons) {
+                // Logique existante pour les épisodes mockés
+                for (const season of seasons) {
+                    if (season.episodes.some(e => e.episodeNumber === playingItem.episode?.episodeNumber && e.title === playingItem.episode?.title)) {
+                        return season.seasonNumber;
+                    }
                 }
-
             }
-
         }
-
-    }
-
-
+        return undefined;
+    }, [playingItem, item.id, firestoreSeasons, seasonEpisodes, seasons]);
 
     const [expandedSeasons, setExpandedSeasons] = useState<number[]>([]);
 
@@ -442,119 +417,63 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
 
-    const toggleSeason = (seasonNumber: number) => {
-
+    const toggleSeason = useCallback((seasonNumber: number) => {
         setExpandedSeasons(current =>
-
             current.includes(seasonNumber)
-
                 ? current.filter(s => s !== seasonNumber)
-
                 : [...current, seasonNumber]
-
         );
+    }, []);
 
-    };
-
-
-
-    const handlePlay = () => {
-
+    const handlePlay = useCallback(() => {
         let episodeToPlay: Episode | EpisodeSerie | undefined;
 
-
-
         if (type === MediaType.Series || type === MediaType.Podcast) {
-
             // Prioriser les données Firestore
-
             if (firestoreSeasons.length > 0) {
-
                 const firstSeason = firestoreSeasons[0];
-
                 const episodes = seasonEpisodes[firstSeason.uid_season] || [];
-
                 episodeToPlay = episodes[0]; // Premier épisode de la première saison
-
             } else if (seasons && seasons.length > 0) {
-
                 episodeToPlay = seasons[0].episodes[0]; // Fallback vers les données mockées
-
             }
-
         }
-
-
 
         onPlay(item, episodeToPlay);
+    }, [type, firestoreSeasons, seasonEpisodes, seasons, onPlay, item]);
 
-    };
-
-
-
-    const handleLike = async () => {
-
+    const handleLike = useCallback(async () => {
         if (!userProfile) {
-
             toast.error('Vous devez être connecté pour aimer', {
-
                 position: 'bottom-center',
-
                 autoClose: 2000,
-
             });
-
             return;
-
         }
-
-
 
         try {
-
             setIsLoading(true);
-
             const itemUid = movieData?.uid || item.id;
-
             const itemTitle = movieData?.title || item.title;
-
             const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile);
 
-
-
             setHasLiked(isLiked);
-
             setLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));
 
-
-
             const message = isLiked ? 'Contenu aimé avec succès!' : 'Like retiré';
-
             toast.success(message, { position: 'bottom-center', autoClose: 2000 });
-
         } catch (error) {
-
             console.error('Error toggling like:', error);
-
             toast.error('Erreur lors du like', {
-
                 position: 'bottom-center',
-
                 autoClose: 2000,
-
             });
-
         } finally {
-
             setIsLoading(false);
-
         }
+    }, [userProfile, movieData, item.id, item.title]);
 
-    };
-
-
-
-    const handleShare = async (shareType: 'series' | 'season' = 'series') => {
+    const handleShare = useCallback(async (shareType: 'series' | 'season' = 'series') => {
 
         if (isSharing) return;
         
@@ -670,7 +589,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
         }
 
-    };
+    }, [isSharing, type, item, selectedSeasonUid, firestoreSeasons]);
 
 
 
