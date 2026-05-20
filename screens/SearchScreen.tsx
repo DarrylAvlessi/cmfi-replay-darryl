@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { SearchIcon } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
@@ -15,6 +16,13 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'movie' | 'serie' | 'podcast' | 'season' | 'episode'>('all');
   const { t } = useAppContext();
+  const [searchParams] = useSearchParams();
+
+  // Lire le paramètre ?q= de l'URL au montage et à chaque changement d'URL
+  useEffect(() => {
+    const queryParam = searchParams.get('q');
+    setSearchTerm(queryParam || '');
+  }, [searchParams]);
 
   // Debounce la recherche pour éviter trop de requêtes
   useEffect(() => {

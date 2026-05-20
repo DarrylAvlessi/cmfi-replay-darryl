@@ -20,6 +20,7 @@ const translations = {
         featuredPodcasts: 'Featured Podcasts',
         activeNow: 'Active Now',
         accountSettings: 'Account Settings',
+        overview: 'Overview',
         myFavorites: 'My Favorites',
         preferences: 'Preferences',
         changePassword: 'Change Password',
@@ -339,6 +340,7 @@ const translations = {
     },
     fr: {
         home: 'Accueil',
+        search: 'Recherche',
         profile: 'Profil',
         play: 'Lire',
         pause: 'Pause',
@@ -355,6 +357,7 @@ const translations = {
         featuredPodcasts: 'Podcasts en vedette',
         activeNow: 'Actifs maintenant',
         accountSettings: 'Paramètres du compte',
+        overview: 'Vue d\'ensemble',
         myFavorites: 'Mes favoris',
         preferences: 'Préférences',
         changePassword: 'Changer le mot de passe',

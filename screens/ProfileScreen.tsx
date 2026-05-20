@@ -33,6 +33,7 @@ interface ProfileScreenProps {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user } = useAppContext();
     const [premiumForAll, setPremiumForAll] = useState(false);
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin'>('overview');
 
     // Centralisation de la détection Admin
     const isAdminValue = useMemo(() => {
@@ -178,78 +179,257 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         }
     }, [setIsAuthenticated, navigateRouter]);
 
-    return (
-        <div className="pt-4">
-            <div className="flex flex-col items-center p-6 space-y-3 border-b border-gray-200 dark:border-gray-800">
-                <img
-                    src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
-                    alt="Your avatar"
-                    className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
-                />
-                <h2 className="text-2xl font-bold">{userProfile?.display_name || 'User'}</h2>
-                <PremiumBadge size="md" showDetails={true} />
-                <button
-                    onClick={() => navigate('EditProfile')}
-                    className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold py-2 px-6 rounded-full transition-colors duration-200"
-                >
-                    {t('editProfile')}
-                </button>
-            </div>
+    // Sidebar navigation items
+    const navItems = useMemo(() => {
+        const items = [
+            { id: 'overview' as const, label: t('overview') || 'Vue d\'ensemble', icon: 'User' },
+            { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
+            { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
+        ];
+        
+        if (isAdminValue) {
+            items.push({ id: 'admin' as const, label: 'Administration', icon: 'Shield' });
+        }
+        
+        return items;
+    }, [t, isAdminValue]);
 
-            <HistorySection
-                items={loadingHistory ? [] : historyItems}
-                onItemClick={handleHistoryItemClick}
-                title={t('continueWatching')}
-                isLoading={loadingHistory}
-            />
-
-            <section className="px-4 py-4">
-                <h3 className="text-xl font-bold mb-3">{t('accountSettings')}</h3>
-                <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-                    {settingsItems.map((item) => (
-                        <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
-                    ))}
-                </div>
-                {isAdminValue && (
-                    <div className="mt-4">
-                        <h3 className="text-lg font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
-                        <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
-                            {/* Toggle pour l'accès premium pour tous */}
-                            <div className="flex items-center justify-between p-4">
-                                <div className="flex items-center">
-                                    <SettingsIcon className="w-6 h-6 text-gray-400 mr-4" />
-                                    <span className="text-gray-900 dark:text-white">Accès premium pour tous</span>
-                                </div>
-                                <ToggleSwitch 
-                                    enabled={premiumForAll} 
-                                    onChange={async (enabled) => {
-                                        const success = await appSettingsService.setPremiumForAll(enabled);
-                                        if (success) {
-                                            setPremiumForAll(enabled);
-                                        }
-                                    }} 
-                                />
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'overview':
+                return (
+                    <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <img
+                                src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
+                                alt="Your avatar"
+                                className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
+                            />
+                            <div className="flex-1 text-center sm:text-left">
+                                <h2 className="text-2xl font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
+                                <PremiumBadge size="md" showDetails={true} />
+                                <button
+                                    onClick={() => navigate('EditProfile')}
+                                    className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold py-2 px-6 rounded-full transition-colors duration-200"
+                                >
+                                    {t('editProfile')}
+                                </button>
                             </div>
-                            
-                            {adminItems.map((item) => (
-                                <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
-                            ))}
-                            {/* Sélecteur de mode d'affichage pour les admins */}
-                            <div className="relative overflow-visible">
-                                <ViewModeSelector />
+                        </div>
+                        
+                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-bold mb-4">Liens rapides</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {settingsItems.map((item) => (
+                                    <button
+                                        key={item.label}
+                                        onClick={item.action}
+                                        className="flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <item.icon className="w-5 h-5 text-gray-500" />
+                                        <span className="text-gray-900 dark:text-white">{item.label}</span>
+                                        <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
-                )}
-                <div className="mt-4 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-                    <SettingsItem 
-                        Icon={LogoutIcon} 
-                        label={t('logout')} 
-                        isDestructive 
-                        onClick={handleLogout} 
+                );
+            
+            case 'history':
+                return (
+                    <HistorySection
+                        items={loadingHistory ? [] : historyItems}
+                        onItemClick={handleHistoryItemClick}
+                        title={t('continueWatching')}
+                        isLoading={loadingHistory}
                     />
+                );
+            
+            case 'account':
+                return (
+                    <div className="space-y-6">
+                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-xl font-bold mb-4">{t('accountSettings')}</h3>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
+                                {settingsItems.map((item) => (
+                                    <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <SettingsItem 
+                                Icon={LogoutIcon} 
+                                label={t('logout')} 
+                                isDestructive 
+                                onClick={handleLogout} 
+                            />
+                        </div>
+                    </div>
+                );
+            
+            case 'admin':
+                return (
+                    <div className="space-y-6">
+                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800">
+                            <h3 className="text-xl font-bold mb-4 text-amber-600 dark:text-amber-400">Administration</h3>
+                            <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden divide-y divide-amber-200 dark:divide-amber-800">
+                                <div className="flex items-center justify-between p-4">
+                                    <div className="flex items-center">
+                                        <SettingsIcon className="w-6 h-6 text-gray-400 mr-4" />
+                                        <span className="text-gray-900 dark:text-white">Accès premium pour tous</span>
+                                    </div>
+                                    <ToggleSwitch 
+                                        enabled={premiumForAll} 
+                                        onChange={async (enabled) => {
+                                            const success = await appSettingsService.setPremiumForAll(enabled);
+                                            if (success) {
+                                                setPremiumForAll(enabled);
+                                            }
+                                        }} 
+                                    />
+                                </div>
+                                {adminItems.map((item) => (
+                                    <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                                ))}
+                                <div className="relative overflow-visible p-4">
+                                    <ViewModeSelector />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="pt-4">
+            {/* Mobile layout - unchanged */}
+            <div className="lg:hidden">
+                <div className="flex flex-col items-center p-6 space-y-3 border-b border-gray-200 dark:border-gray-800">
+                    <img
+                        src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
+                        alt="Your avatar"
+                        className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
+                    />
+                    <h2 className="text-2xl font-bold">{userProfile?.display_name || 'User'}</h2>
+                    <PremiumBadge size="md" showDetails={true} />
+                    <button
+                        onClick={() => navigate('EditProfile')}
+                        className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold py-2 px-6 rounded-full transition-colors duration-200"
+                    >
+                        {t('editProfile')}
+                    </button>
                 </div>
-            </section>
+
+                <HistorySection
+                    items={loadingHistory ? [] : historyItems}
+                    onItemClick={handleHistoryItemClick}
+                    title={t('continueWatching')}
+                    isLoading={loadingHistory}
+                />
+
+                <section className="px-4 py-4">
+                    <h3 className="text-xl font-bold mb-3">{t('accountSettings')}</h3>
+                    <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
+                        {settingsItems.map((item) => (
+                            <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                        ))}
+                    </div>
+                    {isAdminValue && (
+                        <div className="mt-4">
+                            <h3 className="text-lg font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
+                            <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
+                                <div className="flex items-center justify-between p-4">
+                                    <div className="flex items-center">
+                                        <SettingsIcon className="w-6 h-6 text-gray-400 mr-4" />
+                                        <span className="text-gray-900 dark:text-white">Accès premium pour tous</span>
+                                    </div>
+                                    <ToggleSwitch 
+                                        enabled={premiumForAll} 
+                                        onChange={async (enabled) => {
+                                            const success = await appSettingsService.setPremiumForAll(enabled);
+                                            if (success) {
+                                                setPremiumForAll(enabled);
+                                            }
+                                        }} 
+                                    />
+                                </div>
+                                {adminItems.map((item) => (
+                                    <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                                ))}
+                                <div className="relative overflow-visible">
+                                    <ViewModeSelector />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="mt-4 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
+                        <SettingsItem 
+                            Icon={LogoutIcon} 
+                            label={t('logout')} 
+                            isDestructive 
+                            onClick={handleLogout} 
+                        />
+                    </div>
+                </section>
+            </div>
+
+            {/* Desktop dashboard layout */}
+            <div className="hidden lg:flex gap-6 px-6 py-4">
+                {/* Sidebar navigation */}
+                <aside className="w-64 flex-shrink-0">
+                    <nav className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-3">
+                                <img
+                                    src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
+                                    alt="Your avatar"
+                                    className="w-12 h-12 rounded-full border-2 border-amber-500 object-cover"
+                                />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{userProfile?.display_name || 'User'}</p>
+                                    <PremiumBadge size="sm" showDetails={false} />
+                                </div>
+                            </div>
+                        </div>
+                        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                            {navItems.map((item) => (
+                                <li key={item.id}>
+                                    <button
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                                            activeTab === item.id
+                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-l-4 border-amber-500'
+                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        <span className="font-medium">{item.label}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            >
+                                <LogoutIcon className="w-5 h-5" />
+                                <span className="font-medium">{t('logout')}</span>
+                            </button>
+                        </div>
+                    </nav>
+                </aside>
+
+                {/* Main content area */}
+                <main className="flex-1 min-w-0">
+                    {renderContent()}
+                </main>
+            </div>
         </div>
     );
 };

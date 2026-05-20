@@ -249,7 +249,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   if (loading || !items || items.length === 0 || !currentItem) {
     return (
-      <div className="relative w-full h-[70vh] md:h-[80vh] bg-black flex items-center justify-center">
+      <div className="relative w-full h-[60vh] md:h-[80vh] bg-black flex items-center justify-center">
         <div className="text-white text-lg">{t('loading') || 'Chargement...'}</div>
       </div>
     );
@@ -299,7 +299,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   return (
     <div 
-      className="relative w-full h-[70vh] md:h-[80vh] bg-black overflow-hidden group"
+      className="relative w-full h-[60vh] md:h-[80vh] bg-black overflow-hidden group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -310,13 +310,12 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
             ref={videoRef}
             key={currentItem.id}
             src={videoUrl}
-            className="absolute inset-0 w-full h-full object-contain md:object-cover object-center md:object-left transition-opacity duration-1000"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none transition-opacity duration-1000"
             muted={isMuted}
             playsInline
             loop
             autoPlay
-            preload="auto"
-            style={{ objectFit: 'contain' }}
+            preload="metadata"
           />
         ) : (
           <>
@@ -346,7 +345,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
       {/* Contenu principal - Layout Prime Video */}
       <div className="relative z-10 h-full flex items-center w-full max-w-[100vw] overflow-hidden">
         {/* Dégradé sombre pour améliorer le contraste du texte */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent lg:from-black/70 lg:via-black/50 lg:to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent lg:from-black/80 lg:via-black/60 lg:to-transparent"></div>
         
         <div className="w-full max-w-[100%] px-4 md:px-8 lg:px-12 mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -395,13 +394,6 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                   <span>{currentItem.languages[0].toUpperCase()}</span>
                 )}
               </div>
-
-              {/* Description */}
-              {currentItem.description && (
-                <p className="text-white/90 text-base md:text-lg leading-relaxed max-w-2xl line-clamp-3">
-                  {currentItem.description}
-                </p>
-              )}
 
               {/* Boutons d'action */}
               <div className="flex items-center gap-4">

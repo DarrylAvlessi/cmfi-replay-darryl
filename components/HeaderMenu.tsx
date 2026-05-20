@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { EllipsisVerticalIcon, LogoutIcon, GlobeIcon } from './icons';
+import { Link } from 'react-router-dom';
+import { UserIcon, LogoutIcon, GlobeIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Language } from '../lib/i18n';
 import { auth } from '../lib/firebase';
@@ -13,22 +14,25 @@ interface HeaderMenuProps {
 const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-    const { t, setIsAuthenticated, language, setLanguage, user } = useAppContext();
+    const closeTimeoutRef = useRef<number | null>(null);
+    const { t, setIsAuthenticated, language, setLanguage, user, userProfile } = useAppContext();
 
     const iconColor = variant === 'light' ? 'text-white' : 'text-gray-600 dark:text-gray-400';
     const hoverBg = variant === 'light' ? 'hover:bg-white/20' : 'hover:bg-gray-200 dark:hover:bg-gray-700';
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    const handleMouseEnter = () => {
+        if (closeTimeoutRef.current !== null) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+        setIsOpen(true);
+    };
+
+    const handleMouseLeave = () => {
+        closeTimeoutRef.current = window.setTimeout(() => {
+            setIsOpen(false);
+        }, 200);
+    };
 
     const handleLogout = async () => {
         try {
@@ -62,18 +66,32 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
         setIsOpen(false);
     }
 
+    const photoUrl = userProfile?.photo_url;
+
     return (
-        <div className="relative" ref={menuRef}>
-            <div className="flex items-center space-x-2">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={`p-2 rounded-full transition-colors ${iconColor} ${hoverBg}`}
-                >
-                    <EllipsisVerticalIcon className="w-6 h-6" />
-                </button>
-            </div>
+        <div className="relative" ref={menuRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <button className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} overflow-hidden`}>
+                {photoUrl ? (
+                    <img src={photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center">
+                        <UserIcon className="w-5 h-5 text-white" />
+                    </div>
+                )}
+            </button>
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[#FBF9F3] dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
+                    <Link
+                        to="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <UserIcon className="w-5 h-5 mr-3" />
+                        {t('profile')}
+                    </Link>
+
+                    <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
+
                     <div className="flex items-center px-4 pt-2 pb-1 text-sm text-gray-700 dark:text-gray-200">
                         <GlobeIcon className="w-5 h-5 mr-3 text-gray-400" />
                         <span>{t('language')}</span>

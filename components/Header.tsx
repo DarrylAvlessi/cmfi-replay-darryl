@@ -4,6 +4,8 @@ import HeaderMenu from './HeaderMenu';
 import { useAppContext } from '../context/AppContext';
 import HamburgerMenu from './HamburgerMenu';
 import NotificationBell from './NotificationBell';
+import Navbar from './Navbar';
+import DesktopSearchBar from './DesktopSearchBar';
 
 interface HeaderProps {
   title: string;
@@ -20,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   isWatchRoute = false
 }) => {
-  const { theme, setTheme, t, isSidebarCollapsed } = useAppContext();
+  const { theme, setTheme, t } = useAppContext();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -59,11 +61,10 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Header pour les écrans plus larges */}
-      <header className={`bg-[#FBF9F3] dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' :
-          isSidebarCollapsed ? 'lg:left-16' : 'lg:left-64'
+      <header className={`bg-[#FBF9F3] dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' : 'lg:left-0'
         } ${isWatchRoute ? 'bg-opacity-60' : ''}`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
-          {/* Bouton de retour et menu */}
+          {/* Logo et titre */}
           <div className="flex items-center space-x-4">
             {onBack ? (
               <button
@@ -73,22 +74,16 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
-            ) : (
-              <button
-                onClick={onToggleSidebar}
-                className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 lg:hidden"
-                aria-label="Toggle menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{isWatchRoute ? t('watch') : title}</h1>
+            ) : null}
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">CMFI Replay</h1>
           </div>
+
+          {/* Navbar central */}
+          {!isWatchRoute && <Navbar />}
 
           {/* Contrôles alignés à droite */}
           <div className="flex items-center space-x-4">
+            {!isWatchRoute && <DesktopSearchBar />}
             {!isWatchRoute && <NotificationBell />}
             <button
               onClick={toggleTheme}

@@ -77,9 +77,7 @@ const AppContent: React.FC = () => {
         loading,
         user,
         activeTab: contextActiveTab,
-        setActiveTab: setContextActiveTab,
-        isSidebarCollapsed: contextIsSidebarCollapsed,
-        toggleSidebarCollapse: contextToggleSidebarCollapse
+        setActiveTab: setContextActiveTab
     } = useAppContext();
     const location = useLocation();
     const navigate = useNavigate();
@@ -196,11 +194,6 @@ const AppContent: React.FC = () => {
     const [playingItem, setPlayingItem] = useState<{ media: MediaContent; episode?: EpisodeSerie } | null>(null);
     const [episodesCache, setEpisodesCache] = useState<{ serieId: string; episodes: EpisodeSerie[] } | null>(null);
 
-
-    const toggleSidebarCollapse = () => {
-        contextToggleSidebarCollapse();
-    };
-
     // Sauvegarder hasStarted dans localStorage
     useEffect(() => {
         localStorage.setItem('hasStarted', hasStarted.toString());
@@ -291,7 +284,7 @@ const AppContent: React.FC = () => {
                 />
 
                 {/* Contenu de chargement */}
-                <div className={`${contextIsSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'} pt-16`}>
+                <div className={`pt-16`}>
                     <div className="flex items-center justify-center h-screen">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
                     </div>
@@ -340,14 +333,15 @@ const AppContent: React.FC = () => {
                 }}
             />
 
-            <Sidebar
-                isOpen={isSidebarOpen}
-                onClose={() => setIsSidebarOpen(false)}
-                activeTab={contextActiveTab}
-                setActiveTab={setContextActiveTab}
-                isCollapsed={contextIsSidebarCollapsed}
-                toggleCollapse={contextToggleSidebarCollapse}
-            />
+            {/* Sidebar - Mobile only (hidden on desktop) */}
+            <div className="lg:hidden">
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                    activeTab={contextActiveTab}
+                    setActiveTab={setContextActiveTab}
+                />
+            </div>
 
             {/* Ne pas afficher le header sur les pages de lecture vidéo */}
             {!location.pathname.startsWith('/watch/') && (
@@ -360,7 +354,7 @@ const AppContent: React.FC = () => {
                 />
             )}
 
-            <div className={`page-transition fadeIn min-h-screen ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out ${contextIsSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
+            <div className={`page-transition fadeIn min-h-screen ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out`}>
                 <Routes>
                     {/* Routes publiques - Accessibles sans authentification */}
                     <Route path="/privacy" element={<PrivacyScreen />} />
