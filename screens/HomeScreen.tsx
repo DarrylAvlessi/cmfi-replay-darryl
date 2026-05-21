@@ -61,7 +61,7 @@ const MediaRow: React.FC<{ title: string; items: MediaContent[]; onSelectMedia: 
         <section className="py-8 md:py-12 relative group">
             {/* Titre avec meilleure hiérarchie */}
             <div className="px-4 md:px-6 lg:px-8 mb-6">
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-gray-900 dark:text-white tracking-tight">
                     {title}
                 </h3>
             </div>
@@ -70,12 +70,12 @@ const MediaRow: React.FC<{ title: string; items: MediaContent[]; onSelectMedia: 
             <div className="relative">
                 {/* Gradient gauche */}
                 {showLeftGradient && (
-                    <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-r from-[#FBF9F3] dark:from-black via-[#FBF9F3]/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
+                    <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-r from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
                 )}
 
                 {/* Gradient droite */}
                 {showRightGradient && (
-                    <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-l from-[#FBF9F3] dark:from-black via-[#FBF9F3]/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
+                    <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-l from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
                 )}
 
                 {/* Carrousel avec scroll smooth et snap */}
@@ -409,7 +409,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
     }, [onPlay]);
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
 
             {/* Hero Section Prime Video */}
             <div className="animate-fadeIn">
@@ -420,18 +420,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             <InfoBar />
 
             {/* Sections horizontales style Prime Video */}
-            <div className="bg-[#FBF9F3] dark:bg-black">
+            <div className="bg-white dark:bg-black">
                 {/* Section Continue Watching */}
                 {loadingContinueWatching && (
                     <div className="py-8 md:py-12">
                         <div className="px-4 md:px-6 lg:px-8 mb-6">
-                            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                            <div className="h-8 w-64 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                         </div>
                         <div className="flex space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {[...Array(3)].map((_, i) => (
                                 <div key={i} className="flex-shrink-0 w-56 md:w-64 lg:w-72">
-                                    <div className="aspect-video bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse mb-3"></div>
-                                    <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                                    <div className="aspect-video bg-gray-200 dark:bg-black rounded-lg animate-pulse mb-3"></div>
+                                    <div className="h-4 w-3/4 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                                 </div>
                             ))}
                         </div>

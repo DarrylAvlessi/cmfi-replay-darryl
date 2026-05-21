@@ -98,12 +98,12 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onSelectMedia, onPlay, on
     }, [onPlay]);
 
     return (
-        <div className="bg-[#FBF9F3] dark:bg-black min-h-screen animate-fadeIn">
-            <div className="sticky top-0 z-10 bg-[#FBF9F3] dark:bg-black border-b border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
+            <div className="sticky top-0 z-10 bg-white dark:bg-black border-b border-gray-200 dark:border-black">
                 <div className="flex items-center px-4 py-4">
                     <button
                         onClick={onBack}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mr-4"
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-black transition-colors mr-4"
                         aria-label="Retour"
                     >
                         <ArrowLeftIcon className="w-6 h-6" />

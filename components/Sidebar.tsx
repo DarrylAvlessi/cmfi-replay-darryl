@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     {
       id: 'movies',
       label: t('categoryMovies'),
-      path: '/movies',
+      path: '/documentaries',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     {
       id: 'series',
       label: t('categorySeries'),
-      path: '/series',
+      path: '/teachings',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Barre latérale avec animation fluide */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#FBF9F3] dark:bg-black border-r border-gray-200 dark:border-gray-800 flex flex-col h-full transition-all duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-black border-r border-gray-200 dark:border-black flex flex-col h-full transition-all duration-300 ease-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
@@ -121,8 +121,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         aria-label="Menu principal"
       >
         {/* En-tête */}
-        <div className="flex items-center justify-between px-4 py-[17.8px] border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">CMFI Replay</h2>
+        <div className="flex items-center justify-between px-4 py-[17.8px] border-b border-gray-200 dark:border-black">
+          <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">CMFI Replay</h2>
           <div className="flex items-center">
             <button
               onClick={onClose}
@@ -143,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Champ de recherche */}
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-black">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -153,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <Link
               to="/search"
               onClick={onClose}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent sm:text-sm"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent sm:text-sm"
             >
               <span className="text-gray-500 dark:text-gray-400">{t('search')}</span>
             </Link>
@@ -173,7 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       item.onClick(e);
                     }
                   }}
-                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800/50 text-gray-700"
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50 text-gray-700"
                   aria-current={isActive(item.path) ? 'page' : undefined}
                 >
                   <span className="flex-shrink-0">{item.icon}</span>
@@ -184,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {/* Bouton d'administration (toujours visible) */}
             {menuItems.find(item => item.isAdmin) && (
               <div className="mt-8 pt-4 border-t border-gray-200">
-                <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <p className="px-4 text-xs font-serif font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Administration
                 </p>
                 {menuItems
@@ -209,11 +209,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="mt-auto py-2"></div>
 
         {/* User section */}
-        <div className="p-2 border-t border-gray-200 dark:border-gray-800">
+        <div className="p-2 border-t border-gray-200 dark:border-black">
           <Link
             to="/profile"
             onClick={onClose}
-            className="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black"
           >
             <span className="flex items-center justify-center w-5 mr-3">
               <svg

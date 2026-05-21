@@ -57,7 +57,7 @@ const AuthPrompt: React.FC<AuthPromptProps> = ({ action, onClose }) => {
                     </button>
                     <button
                         onClick={handleRegister}
-                        className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-xl transition-all duration-200"
+                        className="w-full py-3 px-4 bg-gray-100 dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-xl transition-all duration-200"
                     >
                         Créer un compte
                     </button>

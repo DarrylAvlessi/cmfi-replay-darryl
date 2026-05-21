@@ -120,7 +120,7 @@ const CategoriesTab: React.FC = () => {
                     {categories.map(category => (
                         <div
                             key={category.id}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+                            className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-700"
                         >
                             <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ const CategoriesTab: React.FC = () => {
             {/* Modal de création/édition */}
             {(showCreateModal || editingCategory) && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                    <div className="bg-white dark:bg-black rounded-lg p-6 max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                             {editingCategory ? 'Modifier la catégorie' : 'Créer une catégorie'}
                         </h3>

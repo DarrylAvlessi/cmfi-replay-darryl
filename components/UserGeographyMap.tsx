@@ -94,11 +94,11 @@ const UserGeographyMap: React.FC<UserGeographyMapProps> = ({ onCountryClick }) =
 
             {/* Statistiques détaillées */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-black/20 p-4 rounded-lg border border-gray-200 dark:border-black">
                     <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Sans pays renseigné</div>
                     <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mt-1">{usersWithoutCountry}</div>
                 </div>
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-black/20 p-4 rounded-lg border border-gray-200 dark:border-black">
                     <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Sans téléphone renseigné</div>
                     <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mt-1">{usersWithoutPhone}</div>
                 </div>
@@ -118,7 +118,7 @@ const UserGeographyMap: React.FC<UserGeographyMapProps> = ({ onCountryClick }) =
                         {countryStats.map((stat, index) => (
                             <div
                                 key={stat.countryCode}
-                                className={`bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-shadow ${
+                                className={`bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-shadow ${
                                     onCountryClick ? 'cursor-pointer hover:shadow-md hover:border-amber-500 dark:hover:border-amber-400' : 'hover:shadow-md'
                                 }`}
                                 onClick={() => onCountryClick && onCountryClick(stat.countryCode, stat.countryName)}

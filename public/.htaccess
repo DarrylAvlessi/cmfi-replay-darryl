@@ -12,7 +12,7 @@
     # ===================================================================
 
     RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|Discordbot|Pinterest|vkShare|W3C_Validator|Embedly|showyoubot|outbrain|quora|rogerbot|Iframely|curl/og) [NC]
-    RewriteCond %{REQUEST_URI} ^/(movie|serie|podcast|watch)/.+ [NC]
+    RewriteCond %{REQUEST_URI} ^/(teaching|documentary|movie|serie|podcast|watch)/.+ [NC]
     RewriteRule ^(.*)$ og.php?path=$1 [L,QSA]
 
     # ===================================================================

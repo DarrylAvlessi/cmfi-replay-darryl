@@ -54,7 +54,7 @@ const ManageNotificationsScreen: React.FC = () => {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-gray-500 dark:text-gray-400">Accès refusé. Administrateur requis.</p>
                     <button
@@ -198,12 +198,12 @@ const ManageNotificationsScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="min-h-screen bg-white dark:bg-black">
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-black">
                 <div className="flex items-center gap-4 px-4 py-4">
                     <button
                         onClick={() => navigate('/profile')}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-black rounded-full transition-colors"
                     >
                         <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
@@ -238,7 +238,7 @@ const ManageNotificationsScreen: React.FC = () => {
 
             <div className="px-4 md:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
                 {activeTab === 'send' ? (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 space-y-6">
+                <div className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700 space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Titre *
@@ -259,7 +259,7 @@ const ManageNotificationsScreen: React.FC = () => {
                         <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Ex: Un nouvel épisode de votre série préférée est disponible !"
+                            placeholder="Ex: Un nouvel épisode de votre enseignement préféré est disponible !"
                             rows={5}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                         />
@@ -309,7 +309,7 @@ const ManageNotificationsScreen: React.FC = () => {
                             type="text"
                             value={link}
                             onChange={(e) => setLink(e.target.value)}
-                            placeholder="Ex: /serie/abc123 ou /movie/xyz789"
+                            placeholder="Ex: /serie/abc123 ou /documentary/xyz789"
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -342,7 +342,7 @@ const ManageNotificationsScreen: React.FC = () => {
                 </div>
                 ) : (
                 <div className="space-y-4">
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                             Notifications envoyées
                         </h2>
@@ -401,7 +401,7 @@ const ManageNotificationsScreen: React.FC = () => {
                                                 {notification.unreadCount > 0 && (
                                                     <button
                                                         onClick={() => handleDeleteUnread(notification)}
-                                                        className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-lg transition-colors"
+                                                        className="p-2 hover:bg-white/50 dark:hover:bg-black/50 rounded-lg transition-colors"
                                                         title={`Supprimer pour ${notification.unreadCount} utilisateur(s) non lu(s)`}
                                                     >
                                                         <TrashIcon className="w-5 h-5 text-orange-500" />
@@ -409,7 +409,7 @@ const ManageNotificationsScreen: React.FC = () => {
                                                 )}
                                                 <button
                                                     onClick={() => handleDeleteAll(notification)}
-                                                    className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-lg transition-colors"
+                                                    className="p-2 hover:bg-white/50 dark:hover:bg-black/50 rounded-lg transition-colors"
                                                     title="Supprimer pour tous les utilisateurs"
                                                 >
                                                     <TrashIcon className="w-5 h-5 text-red-500" />

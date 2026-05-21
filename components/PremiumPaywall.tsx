@@ -19,7 +19,7 @@ const PremiumPaywall: React.FC<PremiumPaywallProps> = ({ contentTitle, contentTy
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
             <div className="max-w-2xl w-full">
                 {/* Fond avec effet de blur */}
-                <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-3xl shadow-2xl overflow-hidden">
+                <div className="relative bg-gradient-to-br from-gray-900 via-black to-black rounded-3xl shadow-2xl overflow-hidden">
                     {/* Effet de brillance */}
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/10"></div>
 

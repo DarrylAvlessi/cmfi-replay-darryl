@@ -816,7 +816,7 @@ const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => (
             />
         </div>
         <div className="flex-1 min-w-0">
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-xl rounded-tl-none shadow-sm group-hover:shadow-md transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900 p-4 rounded-xl rounded-tl-none shadow-sm group-hover:shadow-md transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
                 <p className="font-bold text-sm text-gray-900 dark:text-white mb-1.5">{comment.created_by}</p>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words">{comment.comment}</p>
             </div>
@@ -881,13 +881,13 @@ const CommentSection: React.FC<{ itemUid: string, onAuthRequired: (action: strin
 
     return (
         <div className="space-y-6">
-            <div className="pb-2 border-b border-gray-200 dark:border-gray-800">
+            <div className="pb-2 border-b border-gray-200 dark:border-black">
                 <h3 className="text-2xl font-black text-gray-900 dark:text-white">
                     {t('comments')} <span className="text-amber-500">({comments.length})</span>
                 </h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex items-start space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+            <form onSubmit={handleSubmit} className="flex items-start space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900 p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
                 <img src={userProfile?.photo_url || generateDefaultAvatar(userProfile?.display_name)} alt="you" className="w-12 h-12 rounded-full flex-shrink-0 ring-2 ring-amber-500/20" />
                 <div className="flex-1">
                     <div className="relative">
@@ -1364,7 +1364,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     // Afficher un indicateur de chargement pendant la vérification du statut premium
     if (isCheckingPremium) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-[#FBF9F3] dark:bg-black">
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
             </div>
         );
@@ -1373,7 +1373,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     // Si le contenu est premium et que l'utilisateur n'est pas premium, afficher le paywall
     if (isPremiumContent && (!userProfile?.uid || !isPremium) && !premiumForAll) {
         return (
-            <div className="bg-[#FBF9F3] dark:bg-black min-h-screen">
+            <div className="bg-white dark:bg-black min-h-screen">
                 <header className="absolute top-4 left-4 z-20">
                     <button
                         onClick={onBack}
@@ -1394,7 +1394,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     }
 
     return (
-        <div className="bg-[#FBF9F3] dark:bg-black min-h-screen animate-fadeIn">
+        <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
             {/* Bouton de retour amélioré avec gradient */}
             <header className="absolute top-4 left-4 z-30">
                 <button
@@ -1471,7 +1471,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-around py-2 md:py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                            <div className="flex items-center justify-around py-2 md:py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-black/50 shadow-lg">
                                 <LikeButton
                                     label={hasLiked ? (t('likeVideo') + ' ✓') : t('likeVideo')}
                                     value={likeCount}
@@ -1495,7 +1495,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 <button
                                     onClick={() => onNavigateEpisode('prev')}
                                     disabled={!hasPrevEpisode}
-                                    className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 hover:from-amber-500 hover:to-orange-500 text-gray-900 dark:text-white hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-200 disabled:hover:to-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 font-semibold"
+                                    className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-black dark:to-gray-700 hover:from-amber-500 hover:to-orange-500 text-gray-900 dark:text-white hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-200 disabled:hover:to-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 font-semibold"
                                 >
                                     <ChevronLeftIcon className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                                     <span>{t('prevEpisode')}</span>
@@ -1515,8 +1515,8 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     {/* Colonne de droite - Section des commentaires améliorée */}
                     <div className="lg:col-span-1">
                         <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-hidden flex flex-col">
-                            <div className="lg:flex-1 lg:overflow-y-auto lg:pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-gray-800">
-                                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50 dark:border-gray-800/50 shadow-xl">
+                            <div className="lg:flex-1 lg:overflow-y-auto lg:pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-black">
+                                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50 dark:border-black/50 shadow-xl">
                                     <CommentSection
                                         itemUid={episode.uid_episode}
                                         onAuthRequired={handleAuthRequired}
@@ -1555,7 +1555,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                                 console.error('Épisode sans uid_episode:', otherEpisode);
                                             }
                                         }}
-                                        className="group relative bg-gray-100/50 dark:bg-gray-800/40 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                                        className="group relative bg-gray-100/50 dark:bg-black/40 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
                                     >
                                         <div className="relative aspect-video bg-gray-300 dark:bg-gray-700">
                                             {otherEpisode.picture_path ? (

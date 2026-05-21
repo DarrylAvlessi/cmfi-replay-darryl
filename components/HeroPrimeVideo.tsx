@@ -364,7 +364,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
               {/* Titre principal adaptatif */}
               <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl overflow-hidden">
                 <h1 
-                  className="font-black text-white leading-tight break-words transition-all duration-300"
+                  className="font-display font-bold text-white leading-tight break-words transition-all duration-300"
                   style={{
                     fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)',
                     lineHeight: 'clamp(1.3rem, 3.8vw, 3.2rem)',

@@ -76,7 +76,7 @@ const BottomNav: React.FC = () => {
     ];
 
     return (
-        <nav className="bg-[#FBF9F3] dark:bg-black border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <nav className="bg-white dark:bg-black border-t border-gray-200 dark:border-black shadow-lg">
             <div className="flex justify-around items-center h-16">
                 {tabs.map((tab) => {
                     const isActive = location.pathname === tab.path;

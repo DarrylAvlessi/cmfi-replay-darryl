@@ -56,7 +56,7 @@ const PreferenceRow: React.FC<{
     return (
         <div className="flex items-center justify-between py-5 px-1 group transition-all duration-300 hover:px-2">
             <div className="flex items-center space-x-4 flex-1">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-600/30 group-hover:border-amber-500/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-amber-500/10">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700/50 dark:to-black/50 backdrop-blur-sm border border-gray-300 dark:border-gray-600/30 group-hover:border-amber-500/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-amber-500/10">
                     <Icon className="w-5 h-5 text-amber-600 dark:text-amber-500/90 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors duration-300" />
                 </div>
                 <div className="flex-1">
@@ -78,7 +78,7 @@ const PreferenceSection: React.FC<{ title: string; children: React.ReactNode }> 
         <h3 className="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500/80 mb-3 px-1">
             {title}
         </h3>
-        <div className="bg-[#FBF9F3] dark:bg-black backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-black backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-xl overflow-hidden">
             <div className="divide-y divide-gray-200 dark:divide-gray-700/30">
                 {children}
             </div>
@@ -91,7 +91,7 @@ const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onBack }) => {
     const { theme, setTheme, language, setLanguage, t, autoplay, setAutoplay } = useAppContext();
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
             <Header title={t('preferencesScreenTitle')} onBack={onBack} />
             <div className="px-4 py-6 max-w-2xl mx-auto">
                 {/* Titre de la page avec description */}

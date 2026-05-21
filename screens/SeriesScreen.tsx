@@ -46,7 +46,7 @@ const SeriesCard: React.FC<{
         return (
             <div
                 onClick={handleSelect}
-                className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-gray-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
+                className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
                     serie.is_premium ? 'ring-1 ring-amber-400/30' : ''
                 }`}
             >
@@ -54,7 +54,7 @@ const SeriesCard: React.FC<{
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Image avec aspect ratio cinématique */}
-                <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
+                <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
                     serie.is_premium ? 'ring-1 ring-amber-400/50' : ''
                 }`}>
                     {serie.is_premium && (
@@ -361,9 +361,9 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
     };
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black animate-fadeIn pb-8">
+        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
             {/* Header avec recherche et contrôles */}
-            <div className="bg-[#FBF9F3] dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-black shadow-sm">
                 <div className="px-4 md:px-6 lg:px-8 py-4 space-y-4">
                     {/* Barre de navigation supérieure */}
                     <div className="flex items-center justify-between">
@@ -375,7 +375,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
-                            {t('seriesScreenTitle') || 'Séries'}
+                            {t('seriesScreenTitle') || 'Teachings'}
                         </h1>
                         <div className="w-10"></div>
                     </div>
@@ -392,7 +392,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             placeholder={t('search') || 'Rechercher une série...'}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
                         />
                     </div>
 
@@ -584,12 +584,12 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noSeries') || 'Aucune série'}
+                                {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noSeries') || 'No teachings found'}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {searchTerm
                                     ? t('tryDifferentSearch') || 'Essayez une autre recherche'
-                                    : t('noSeriesAvailable') || 'Aucune série disponible pour le moment'}
+                                    : t('noSeriesAvailable') || 'No teachings available'}
                             </p>
                             {searchTerm && (
                                 <button
@@ -606,7 +606,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         {/* Compteur de résultats */}
                         <div className="mb-6">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'séries' : t('serie') || 'série'}
+                                {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'teachings' : t('serie') || 'teaching'}
                                 {searchTerm && ` ${t('foundFor') || 'trouvée(s) pour'} "${searchTerm}"`}
                             </p>
                         </div>

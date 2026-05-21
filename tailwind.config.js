@@ -9,12 +9,14 @@ module.exports = {
     extend: {
       colors: {
         background: {
-          light: '#FBF9F3',
-          dark: '#000000', // Noir pour le mode sombre
+          light: 'white',
+          dark: 'black'
         },
       },
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Lora', 'serif'],
+        display: ['Lora', 'serif'],
       },
     },
   },

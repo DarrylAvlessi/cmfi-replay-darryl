@@ -15,7 +15,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user }) => {
           alt={user.name}
         />
         {user.isOnline && (
-          <span className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-400 ring-2 ring-white dark:ring-gray-800" />
+          <span className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-400 ring-2 ring-white dark:ring-black" />
         )}
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-300 truncate w-16 text-center">{user.name}</p>

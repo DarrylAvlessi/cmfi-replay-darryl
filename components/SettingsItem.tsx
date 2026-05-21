@@ -13,7 +13,7 @@ const SettingsItem: React.FC<SettingsItemProps> = React.memo(({ Icon, label, isD
     const iconColor = isDestructive ? 'text-red-500' : 'text-gray-400';
 
     return (
-        <button onClick={onClick} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200">
+        <button onClick={onClick} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-black transition-colors duration-200">
             <div className="flex items-center space-x-4">
                 <Icon className={`w-6 h-6 ${iconColor}`} />
                 <span className={textColor}>{label}</span>

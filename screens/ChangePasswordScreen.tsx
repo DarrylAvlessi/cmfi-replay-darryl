@@ -82,7 +82,7 @@ const ChangePasswordScreen: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-[#FBF9F3] dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
             <AuthHeader />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 text-center">
@@ -108,7 +108,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showCurrentPassword ? 'text' : 'password'}
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                 />
@@ -131,7 +131,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showNewPassword ? 'text' : 'password'}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                     minLength={6}
@@ -158,7 +158,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                     minLength={6}

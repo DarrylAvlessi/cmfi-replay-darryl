@@ -82,7 +82,7 @@ const AdminBackupVideosScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
             </div>
         );
@@ -90,7 +90,7 @@ const AdminBackupVideosScreen: React.FC = () => {
 
     if (!isAuthorized) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="text-center px-4">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Accès refusé</h1>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -108,12 +108,12 @@ const AdminBackupVideosScreen: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="min-h-screen bg-white dark:bg-black">
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-black">
                 <div className="flex items-center gap-4 px-4 py-4">
                     <button
                         onClick={() => navigate('/profile')}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-black rounded-full transition-colors"
                     >
                         <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
@@ -123,7 +123,7 @@ const AdminBackupVideosScreen: React.FC = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-gray-200 dark:border-gray-800">
+                <div className="flex border-b border-gray-200 dark:border-black">
                     <button
                         onClick={() => setActiveTab('app-videos')}
                         className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
@@ -757,7 +757,7 @@ const AppVideosTab: React.FC = () => {
                         placeholder="Rechercher une série, saison ou épisode..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 dark:bg-black text-gray-900 dark:text-white"
                     />
                 </div>
             </div>
@@ -780,7 +780,7 @@ const AppVideosTab: React.FC = () => {
                         return (
                             <div
                                 key={serie.uid_serie}
-                                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
                             >
                                 {/* En-tête Série */}
                                 <div className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -830,7 +830,7 @@ const AppVideosTab: React.FC = () => {
                                             return (
                                                 <div key={season.uid_season} className="bg-gray-50 dark:bg-gray-900/50">
                                                     {/* En-tête Saison */}
-                                                    <div className="flex items-center justify-between p-4 pl-12 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                                    <div className="flex items-center justify-between p-4 pl-12 hover:bg-gray-100 dark:hover:bg-black transition-colors">
                                                         <button
                                                             onClick={() => toggleSeason(serie.uid_serie, season.uid_season)}
                                                             className="flex-1 flex items-center justify-between"
@@ -888,7 +888,7 @@ const AppVideosTab: React.FC = () => {
                                                             {episodes.map(episode => (
                                                                 <div
                                                                     key={episode.id}
-                                                                    className="p-4 pl-20 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                                    className="p-4 pl-20 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-gray-100 dark:hover:bg-black"
                                                                 >
                                                                     <div className="flex justify-between items-start">
                                                                         <div className="flex-1">
@@ -964,7 +964,7 @@ const AppVideosTab: React.FC = () => {
                     }}
                 >
                     <div 
-                        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                        className="bg-white dark:bg-black rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
                         style={{
                             position: 'relative',
                             zIndex: 10000,
@@ -1330,7 +1330,7 @@ const AppVideosTab: React.FC = () => {
                     }}
                 >
                     <div 
-                        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                        className="bg-white dark:bg-black rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
                         style={{
                             position: 'relative',
                             zIndex: 10000,
@@ -1446,7 +1446,7 @@ const AppVideosTab: React.FC = () => {
                                                                                     </div>
                                                                                 )}
                                                                             </div>
-                                                                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                                                                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-black ${
                                                                                 user.presence === 'online' ? 'bg-green-500' :
                                                                                 user.presence === 'away' ? 'bg-yellow-500' :
                                                                                 'bg-gray-400'
@@ -1514,7 +1514,7 @@ const AppVideosTab: React.FC = () => {
             {/* Modal d'édition saison */}
             {editingSeason && !showSeasonPermissions && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-black rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Modifier la saison</h2>
                         <div className="space-y-4">
                             <div>
@@ -1643,7 +1643,7 @@ const AppVideosTab: React.FC = () => {
             {/* Modal d'édition série */}
             {editingSerie && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-black rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Modifier la série</h2>
                         <div className="space-y-4">
                             <div>
@@ -1822,7 +1822,7 @@ const VimeoTab: React.FC = () => {
                 <select
                     value={selectedFolder}
                     onChange={(e) => setSelectedFolder(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-black text-gray-900 dark:text-white"
                 >
                     <option value="">Tous les dossiers</option>
                     {folders.map(folder => (
@@ -1846,7 +1846,7 @@ const VimeoTab: React.FC = () => {
                     {videos.map(video => (
                         <div
                             key={video.id}
-                            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
+                            className="bg-white dark:bg-black rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
                         >
                             {video.thumbnail && (
                                 <img
@@ -1877,7 +1877,7 @@ const VimeoTab: React.FC = () => {
             {/* Modal d'import */}
             {importingVideo && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-black rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Importer la vidéo</h2>
                         <div className="space-y-4">
                             <div>
@@ -2038,7 +2038,7 @@ const UploadTab: React.FC = () => {
 
     return (
         <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 space-y-4">
+            <div className="bg-white dark:bg-black rounded-lg p-6 border border-gray-200 dark:border-gray-700 space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Fichier vidéo

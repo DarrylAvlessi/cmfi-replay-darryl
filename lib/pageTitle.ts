@@ -31,8 +31,8 @@ export const usePageTitle = () => {
     }
     
     // Pages de catégories
-    if (pathname === '/movies') return `${safeT('categoryMovies')} - CMFI Replay`;
-    if (pathname === '/series') return `${safeT('categorySeries')} - CMFI Replay`;
+    if (pathname === '/documentaries') return `${safeT('categoryMovies')} - CMFI Replay`;
+    if (pathname === '/teachings') return `${safeT('categorySeries')} - CMFI Replay`;
     if (pathname === '/podcasts') return `${safeT('categoryPodcasts')} - CMFI Replay`;
     
     // Autres pages
@@ -43,8 +43,8 @@ export const usePageTitle = () => {
     if (pathname === '/redeem-voucher') return `${safeT('redeemVoucher')} - CMFI Replay`;
     
     // Pages de détails
-    if (pathname.startsWith('/movie/')) return `${safeT('movie')} - CMFI Replay`;
-    if (pathname.startsWith('/serie/')) return `${safeT('serie')} - CMFI Replay`;
+    if (pathname.startsWith('/documentary/')) return `${safeT('movie')} - CMFI Replay`;
+    if (pathname.startsWith('/teaching/')) return `${safeT('serie')} - CMFI Replay`;
     if (pathname.startsWith('/podcast/')) return `${safeT('podcast')} - CMFI Replay`;
     
     // Par défaut

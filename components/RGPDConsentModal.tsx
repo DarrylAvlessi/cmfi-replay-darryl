@@ -38,7 +38,7 @@ const RGPDConsentModal: React.FC<RGPDConsentModalProps> = ({ userProfile, onAcce
 
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-80 p-4 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border-2 border-blue-500/20 flex flex-col">
+            <div className="bg-white dark:bg-black rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border-2 border-blue-500/20 flex flex-col">
                 {/* Header */}
                 <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 rounded-t-2xl">
                     <div className="flex items-center gap-4">

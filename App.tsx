@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { ThemeProvider } from './components/ThemeProvider';
 import { ToastContainer } from 'react-toastify';
@@ -54,11 +54,11 @@ import { usePageTitle } from './lib/pageTitle';
 
 const getTitleFromPath = (path: string, t: (key: string) => string): string => {
     if (path === '/home') return t('home');
-    if (path === '/movies') return t('categoryMovies');
-    if (path === '/series') return t('categorySeries');
+    if (path === '/documentaries') return t('categoryMovies');
+    if (path === '/teachings') return t('categorySeries');
     if (path === '/podcasts') return t('categoryPodcasts');
-    if (path.startsWith('/movie/')) return t('movie');
-    if (path.startsWith('/serie/')) return t('serie');
+    if (path.startsWith('/documentary/')) return t('movie');
+    if (path.startsWith('/teaching/')) return t('serie');
     if (path.startsWith('/podcast/')) return t('podcast');
     if (path === '/search') return t('search');
     if (path === '/profile') return t('profile');
@@ -107,11 +107,11 @@ const AppContent: React.FC = () => {
 
         const getPageName = (path: string): string => {
             if (path === '/home') return 'Accueil';
-            if (path === '/movies') return 'Films';
-            if (path === '/series') return 'Séries';
+            if (path === '/documentaries') return 'Documentaires';
+            if (path === '/teachings') return 'Enseignements';
             if (path === '/podcasts') return 'Podcasts';
-            if (path.startsWith('/movie/')) return 'Détail Film';
-            if (path.startsWith('/serie/')) return 'Détail Série';
+            if (path.startsWith('/documentary/')) return 'Détail Documentaire';
+            if (path.startsWith('/teaching/')) return 'Détail Enseignement';
             if (path.startsWith('/podcast/')) return 'Détail Podcast';
             if (path.startsWith('/watch/')) return 'Lecture Vidéo';
             if (path === '/search') return 'Recherche';
@@ -200,8 +200,8 @@ const AppContent: React.FC = () => {
     }, [hasStarted]);
 
     const handlePlay = async (media: MediaContent, episode?: EpisodeSerie) => {
-        const route = media.type === MediaType.Series ? 'serie' :
-            media.type === MediaType.Movie ? 'movie' :
+        const route = media.type === MediaType.Series ? 'teaching' :
+            media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
         const detailPath = `/${route}/${media.id}`;
 
@@ -238,17 +238,16 @@ const AppContent: React.FC = () => {
     };
 
     const handleSelectMedia = (media: MediaContent) => {
-        // Convertir le type de média en route appropriée
-        const route = media.type === MediaType.Series ? 'serie' :
-            media.type === MediaType.Movie ? 'movie' :
+        const route = media.type === MediaType.Series ? 'teaching' :
+            media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
         navigate(`/${route}/${media.id}`);
     };
 
     const handleNavigateToCategory = (type: MediaType) => {
         // Series est déjà au pluriel, Movie et Podcast ont besoin d'un "s"
-        const route = type === MediaType.Series ? 'series' :
-            type === MediaType.Movie ? 'movies' :
+        const route = type === MediaType.Series ? 'teachings' :
+            type === MediaType.Movie ? 'documentaries' :
                 'podcasts';
         console.log('🔍 Navigation vers catégorie:', { type, route, fullPath: `/${route}` });
         navigate(`/${route}`);
@@ -274,7 +273,7 @@ const AppContent: React.FC = () => {
     // Afficher un indicateur de chargement pendant la vérification de l'authentification
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+            <div className="min-h-screen bg-white dark:bg-black">
                 {/* Header avec bouton de menu fonctionnel */}
                 <Header
                     title=""
@@ -314,7 +313,7 @@ const AppContent: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black text-gray-900 dark:text-white">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
             <ToastContainer
                 position="bottom-center"
                 autoClose={3000}
@@ -380,7 +379,7 @@ const AppContent: React.FC = () => {
                                 <SearchScreen
                                     onNavigate={(screen: string, data?: any) => {
                                         if (screen === 'movieDetail' && data?.uid) {
-                                            navigate(`/movie/${data.uid}`);
+                                            navigate(`/documentary/${data.uid}`);
                                         } else if (screen === 'serieDetail' && data?.uid_serie) {
                                             navigate(`/serie/${data.uid_serie}`);
                                         } else if (screen === 'seasonDetail' && data?.uid_serie) {
@@ -411,14 +410,14 @@ const AppContent: React.FC = () => {
                             } />
 
                             {/* Category Routes */}
-                            <Route path="/movies" element={
+                            <Route path="/documentaries" element={
                                 <MoviesScreen
                                     onSelectMedia={handleSelectMedia}
                                     onPlay={handlePlay}
                                 />
                             } />
 
-                            <Route path="/series" element={
+                            <Route path="/teachings" element={
                                 <SeriesScreen
                                     onSelectMedia={handleSelectMedia}
                                     onPlay={handlePlay}
@@ -433,14 +432,14 @@ const AppContent: React.FC = () => {
                             } />
 
                             {/* Detail Routes */}
-                            <Route path="/movie/:uid" element={
+                            <Route path="/documentary/:uid" element={
                                 <MediaDetailWrapper
                                     onPlay={handlePlay}
                                     playingItem={playingItem}
                                 />
                             } />
 
-                            <Route path="/serie/:uid" element={
+                            <Route path="/teaching/:uid" element={
                                 <MediaDetailWrapper
                                     onPlay={handlePlay}
                                     playingItem={playingItem}
@@ -519,6 +518,10 @@ const AppContent: React.FC = () => {
 
                     {/* Redirects */}
                     <Route path="/get-started" element={<Navigate to="/home" replace />} />
+                    <Route path="/serie/:uid" element={<SeriesToTeachingsRedirect />} />
+                    <Route path="/series" element={<Navigate to="/teachings" replace />} />
+                    <Route path="/movie/:uid" element={<MoviesToDocumentariesRedirect />} />
+                    <Route path="/movies" element={<Navigate to="/documentaries" replace />} />
                     <Route path="/" element={<Navigate to="/home" replace />} />
                     <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
                 </Routes>
@@ -555,6 +558,16 @@ const App: React.FC = () => {
             </AppProvider>
         </BrowserRouter>
     );
+};
+
+const MoviesToDocumentariesRedirect = () => {
+    const { uid } = useParams();
+    return <Navigate to={`/documentary/${uid}`} replace />;
+};
+
+const SeriesToTeachingsRedirect = () => {
+    const { uid } = useParams();
+    return <Navigate to={`/teaching/${uid}`} replace />;
 };
 
 // Dans App.tsx, ajoutez cette ligne temporairement

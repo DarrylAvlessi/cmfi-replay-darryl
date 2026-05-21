@@ -80,7 +80,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
                 )}
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#FBF9F3] dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}

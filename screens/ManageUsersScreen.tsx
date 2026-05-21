@@ -229,13 +229,13 @@ const ManageUsersScreen: React.FC = () => {
         });
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-black">
                 <div className="flex items-center gap-4 px-4 py-4">
                     <button
                         onClick={() => navigate('/profile')}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-black rounded-full transition-colors"
                     >
                         <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
@@ -253,7 +253,7 @@ const ManageUsersScreen: React.FC = () => {
                 ) : (
                     <div className="space-y-6">
                         {/* Barre de recherche */}
-                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -283,15 +283,15 @@ const ManageUsersScreen: React.FC = () => {
 
                         {/* Statistiques de base */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">En ligne</div>
                                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">{onlineUsers.length}</div>
                             </div>
-                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Inactifs</div>
                                 <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{awayUsers.length}</div>
                             </div>
-                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Hors ligne</div>
                                 <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{offlineUsers.length}</div>
                             </div>
@@ -330,7 +330,7 @@ const ManageUsersScreen: React.FC = () => {
                         ) : (
                             <div className="space-y-6 mb-6">
                                 {/* Top 10 utilisateurs les plus connectés */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         🔝 Top 10 utilisateurs les plus connectés
                                     </h2>
@@ -358,7 +358,7 @@ const ManageUsersScreen: React.FC = () => {
                                 </section>
 
                                 {/* Temps moyen de session */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         ⏱️ Temps moyen de session
                                     </h2>
@@ -373,7 +373,7 @@ const ManageUsersScreen: React.FC = () => {
                                 </section>
 
                                 {/* Top 10 utilisateurs les plus actifs */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         🎬 Top 10 utilisateurs les plus actifs
                                     </h2>
@@ -401,7 +401,7 @@ const ManageUsersScreen: React.FC = () => {
                                 </section>
 
                                 {/* Heures de pointe */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         📊 Heures de pointe
                                     </h2>
@@ -429,7 +429,7 @@ const ManageUsersScreen: React.FC = () => {
                                 </section>
 
                                 {/* Top 10 temps total en ligne */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         ⏰ Top 10 temps total en ligne
                                     </h2>
@@ -465,7 +465,7 @@ const ManageUsersScreen: React.FC = () => {
                                 </section>
 
                                 {/* Cartographie des pays */}
-                                <section className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                                         🌍 Répartition géographique des utilisateurs
                                     </h2>
@@ -552,7 +552,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, formatLastSeen, getStatusLabe
     return (
         <div className="space-y-4">
             <div 
-                className="flex items-center space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+                className="flex items-center space-x-4 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => setShowDetails(true)}
             >
             <div className="relative">
@@ -575,7 +575,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, formatLastSeen, getStatusLabe
                         </div>
                     )}
                 </div>
-                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(user.presence)}`}></span>
+                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-black ${getStatusColor(user.presence)}`}></span>
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-gray-900 dark:text-white font-medium truncate">{user.display_name}</p>
@@ -596,7 +596,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, formatLastSeen, getStatusLabe
             </div>
             
             {showTimeline && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <UserNavigationTimeline userUid={user.uid} height={300} />
                 </div>
             )}
@@ -725,7 +725,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
             }}
         >
             <div 
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+                className="bg-white dark:bg-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
                 onClick={(e) => e.stopPropagation()}
                 style={{ 
                     position: 'relative',
@@ -734,7 +734,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                 }}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                <div className="sticky top-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                         Détails de l'utilisateur
                     </h2>
@@ -770,7 +770,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                                     </div>
                                 )}
                             </div>
-                            <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(user.presence)}`}></span>
+                            <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-black ${getStatusColor(user.presence)}`}></span>
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -987,7 +987,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
             }}
         >
             <div 
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative"
+                className="bg-white dark:bg-black rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative"
                 onClick={(e) => e.stopPropagation()}
                 style={{ 
                     position: 'relative',
@@ -996,7 +996,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
                 }}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                <div className="sticky top-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                             Utilisateurs de {country.name} ({country.code})
@@ -1049,7 +1049,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(user.presence)}`}></span>
+                                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-black ${getStatusColor(user.presence)}`}></span>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-gray-900 dark:text-white font-medium truncate">

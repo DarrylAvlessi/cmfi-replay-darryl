@@ -51,7 +51,7 @@ const ViewModeSelector: React.FC = () => {
         <div className="relative" style={{ zIndex: isOpen ? 1000 : 'auto' }}>
             <button
                 onClick={handleToggle}
-                className={`w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                className={`w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-black transition-colors ${
                     homeViewMode === 'default'
                         ? 'bg-amber-50 dark:bg-amber-900/20'
                         : ''
@@ -88,7 +88,7 @@ const ViewModeSelector: React.FC = () => {
                         onClick={() => setIsOpen(false)}
                     />
                     <div 
-                        className="absolute top-full left-0 right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden z-[1000]"
+                        className="absolute top-full left-0 right-0 mt-2 w-full bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden z-[1000]"
                         style={{ position: 'absolute' }}
                     >
                         {modes.map((mode) => (

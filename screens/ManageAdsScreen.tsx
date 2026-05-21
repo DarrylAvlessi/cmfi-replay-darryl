@@ -234,7 +234,7 @@ const ManageAdsScreen: React.FC = () => {
                 <div className="flex items-center gap-4 mb-6">
                     <button
                         onClick={() => navigate('/profile')}
-                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-black rounded-full transition-colors"
                     >
                         <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
@@ -244,7 +244,7 @@ const ManageAdsScreen: React.FC = () => {
                 </div>
 
                 {/* Paramètres globaux */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white dark:bg-black rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                         Paramètres globaux
                     </h2>
@@ -289,7 +289,7 @@ const ManageAdsScreen: React.FC = () => {
                 </div>
 
                 {/* Liste des publicités */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white dark:bg-black rounded-lg shadow-md p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                             Publicités ({ads.length})
@@ -315,7 +315,7 @@ const ManageAdsScreen: React.FC = () => {
                                     value={newVideoUrl}
                                     onChange={(e) => setNewVideoUrl(e.target.value)}
                                     placeholder="https://example.com/ad.mp4"
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                 />
                             </div>
                             <div>
@@ -327,7 +327,7 @@ const ManageAdsScreen: React.FC = () => {
                                     value={newTitle}
                                     onChange={(e) => setNewTitle(e.target.value)}
                                     placeholder="Titre de la publicité"
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                 />
                             </div>
                             <div>
@@ -340,7 +340,7 @@ const ManageAdsScreen: React.FC = () => {
                                     max="30"
                                     value={newSkipAfterSeconds}
                                     onChange={(e) => setNewSkipAfterSeconds(parseInt(e.target.value) || 5)}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                 />
                             </div>
                             <div className="flex gap-2">
@@ -387,7 +387,7 @@ const ManageAdsScreen: React.FC = () => {
                                                     type="url"
                                                     value={editVideoUrl}
                                                     onChange={(e) => setEditVideoUrl(e.target.value)}
-                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                                 />
                                             </div>
                                             <div>
@@ -398,7 +398,7 @@ const ManageAdsScreen: React.FC = () => {
                                                     type="text"
                                                     value={editTitle}
                                                     onChange={(e) => setEditTitle(e.target.value)}
-                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                                 />
                                             </div>
                                             <div>
@@ -411,7 +411,7 @@ const ManageAdsScreen: React.FC = () => {
                                                     max="30"
                                                     value={editSkipAfterSeconds}
                                                     onChange={(e) => setEditSkipAfterSeconds(parseInt(e.target.value) || 5)}
-                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-black text-gray-900 dark:text-white"
                                                 />
                                             </div>
                                             <div className="flex gap-2">
@@ -440,7 +440,7 @@ const ManageAdsScreen: React.FC = () => {
                                                         className={`px-2 py-1 text-xs rounded-full ${
                                                             ad.isActive
                                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                                : 'bg-gray-100 text-black dark:bg-gray-700 dark:text-gray-300'
                                                         }`}
                                                     >
                                                         {ad.isActive ? 'Actif' : 'Inactif'}
@@ -459,7 +459,7 @@ const ManageAdsScreen: React.FC = () => {
                                                     className={`p-2 rounded-lg transition-colors ${
                                                         ad.isActive
                                                             ? 'bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-800 dark:text-green-200'
-                                                            : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-300'
+                                                            : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-black dark:text-gray-300'
                                                     }`}
                                                     title={ad.isActive ? 'Désactiver' : 'Activer'}
                                                 >

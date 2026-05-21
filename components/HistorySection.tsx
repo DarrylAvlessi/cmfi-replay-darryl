@@ -101,7 +101,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({
                     </button>
                 )}
             </div>
-            <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
 
                 <div className="relative group overflow-hidden">
                     <div 
@@ -122,7 +122,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({
                                         className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96"
                                     >
                                         <div className="h-full flex flex-col">
-                                            <div className="relative aspect-video bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-lg overflow-hidden animate-shimmer bg-[length:200%_100%]">
+                                            <div className="relative aspect-video bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-700 dark:to-black rounded-lg overflow-hidden animate-shimmer bg-[length:200%_100%]">
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     <div className="w-12 h-12 rounded-full bg-white/20 dark:bg-black/20 animate-pulse" />
                                                 </div>

@@ -130,14 +130,14 @@ const ManageInfoBarScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="text-gray-600 dark:text-gray-400">Chargement...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black animate-fadeIn pb-8">
+        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
             <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 pt-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
@@ -163,7 +163,7 @@ const ManageInfoBarScreen: React.FC = () => {
 
                 {/* Formulaire de création */}
                 {showNewForm && (
-                    <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="mb-6 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
                             Créer un nouveau message
                         </h2>
@@ -209,7 +209,7 @@ const ManageInfoBarScreen: React.FC = () => {
                                 className={`p-4 rounded-lg border ${
                                     message.isActive
                                         ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                        : 'bg-white dark:bg-black border-gray-200 dark:border-gray-700'
                                 }`}
                             >
                                 {editingId === message.id ? (

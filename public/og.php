@@ -36,7 +36,7 @@ $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'];
 // Valeurs par défaut
 // ===================================================================
 $title = 'CMFI Replay';
-$description = 'Plateforme de replay chrétienne — Films, séries, podcasts et enseignements.';
+$description = 'Plateforme de replay chrétienne — Documentaires, enseignements et podcasts.';
 $image = $baseUrl . '/cmfireplay.svg';
 $ogType = 'website';
 $url = $baseUrl . '/' . $path;
@@ -50,6 +50,8 @@ $uid = isset($segments[1]) ? $segments[1] : '';
 
 if (!empty($uid)) {
     switch ($contentType) {
+        // --- Documentaire ---
+        case 'documentary':
         // --- Film ---
         case 'movie':
             $data = queryFirestore('movies', 'uid', $uid);
@@ -67,6 +69,8 @@ if (!empty($uid)) {
             }
             break;
 
+        // --- Enseignement ---
+        case 'teaching':
         // --- Série ou Podcast ---
         case 'serie':
         case 'podcast':

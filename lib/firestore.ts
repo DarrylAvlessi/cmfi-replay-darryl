@@ -204,7 +204,7 @@ export interface UserView {
 
 // Interface pour une navigation individuelle
 export interface NavigationEntry {
-    page_path: string; // Chemin de la page (ex: /home, /movies, /watch/abc123)
+    page_path: string; // Chemin de la page (ex: /home, /documentaries, /watch/abc123)
     page_name: string; // Nom lisible de la page (ex: "Accueil", "Films", "Lecture")
     timestamp: Date | Timestamp;
     video_title?: string; // Titre de la vidéo si c'est une page de lecture (ex: "Episode 1 - Titre de l'épisode")

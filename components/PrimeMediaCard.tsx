@@ -70,7 +70,7 @@ const PrimeMediaCard: React.FC<PrimeMediaCardProps> = ({
                         rank === 1 
                             ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900' // Or
                             : rank === 2 
-                                ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-gray-800' // Argent
+                                ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-black' // Argent
                                 : rank === 3 
                                     ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100' // Bronze
                                     : theme === 'dark' 

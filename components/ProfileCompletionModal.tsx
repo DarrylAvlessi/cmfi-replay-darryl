@@ -141,7 +141,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ userPro
     
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-70 p-4 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border-2 border-amber-500/20 transform transition-all duration-300 scale-100">
+            <div className="bg-white dark:bg-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border-2 border-amber-500/20 transform transition-all duration-300 scale-100">
                 {/* Header avec gradient et icône */}
                 <div className="relative bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 p-6 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-4">
@@ -252,7 +252,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ userPro
                                         className="fixed inset-0 z-10"
                                         onClick={() => setIsCountryDropdownOpen(false)}
                                     />
-                                    <div className="absolute z-20 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                    <div className="absolute z-20 w-full mt-2 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                         {COUNTRIES.map((country) => (
                                             <button
                                                 key={country.code}

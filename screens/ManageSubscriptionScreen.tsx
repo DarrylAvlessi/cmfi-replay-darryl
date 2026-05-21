@@ -152,7 +152,7 @@ const ManageSubscriptionScreen: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header avec bouton retour */}
                 <div className="mb-8">
@@ -182,7 +182,7 @@ const ManageSubscriptionScreen: React.FC = () => {
                 ) : (
                     <>
                         {/* Carte de statut actuel */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden mb-8">
+                        <div className="bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden mb-8">
                             <div className="relative">
                                 {/* Fond avec gradient */}
                                 <div className={`absolute inset-0 ${isPremium
@@ -254,19 +254,19 @@ const ManageSubscriptionScreen: React.FC = () => {
 
                             {/* Détails supplémentaires */}
                             <div className="px-6 md:px-8 py-6 bg-gray-50 dark:bg-gray-900/50 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl">
+                                <div className="text-center p-4 bg-white dark:bg-black rounded-xl">
                                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('status') || 'Statut'}</div>
                                     <div className={`font-semibold ${isPremium ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                                         {isPremium ? (t('active') || 'Actif') : (t('inactive') || 'Inactif')}
                                     </div>
                                 </div>
-                                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl">
+                                <div className="text-center p-4 bg-white dark:bg-black rounded-xl">
                                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('plan') || 'Plan'}</div>
                                     <div className="font-semibold text-gray-900 dark:text-white">
                                         {getPlanName(subscription?.planType || 'free')}
                                     </div>
                                 </div>
-                                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl">
+                                <div className="text-center p-4 bg-white dark:bg-black rounded-xl">
                                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                                         {subscription?.planType === 'lifetime' ? (t('access') || 'Accès') : (t('expiration') || 'Expiration')}
                                     </div>
@@ -318,7 +318,7 @@ const ManageSubscriptionScreen: React.FC = () => {
                                     return (
                                         <div
                                             key={plan.id}
-                                            className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl ${isCurrentPlan ? 'ring-2 ring-amber-500' : ''}`}
+                                            className={`relative bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl ${isCurrentPlan ? 'ring-2 ring-amber-500' : ''}`}
                                         >
                                             {plan.popular && (
                                                 <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
@@ -384,7 +384,7 @@ const ManageSubscriptionScreen: React.FC = () => {
                         </div>
 
                         {/* Avantages Premium */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
+                        <div className="bg-white dark:bg-black rounded-2xl shadow-lg p-6 md:p-8">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
                                 <span className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -465,7 +465,7 @@ const ManageSubscriptionScreen: React.FC = () => {
                         <div className="relative">
                             <button
                                 onClick={() => setShowStripeCheckout(false)}
-                                className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
+                                className="absolute -top-4 -right-4 bg-white dark:bg-black rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -33,7 +33,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
     return (
       <div 
         onClick={handleSelect} 
-        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-gray-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
+        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
           is_premium ? 'ring-1 ring-amber-400/30' : ''
         }`}
       >
@@ -41,7 +41,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Image avec aspect ratio cinématique */}
-        <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
+        <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
           is_premium ? 'ring-1 ring-amber-400/50' : ''
         }`}>
           {is_premium && (
@@ -68,6 +68,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
         {/* Informations */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
+            <h3 className="text-lg md:text-xl font-serif font-bold text-gray-900 dark:text-white break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+              {title}
+            </h3>
             {is_premium && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-black flex-shrink-0">
                 <CrownIcon />
@@ -144,7 +147,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
           </div>
         )}
       </div>
-      {author && <p className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-xs truncate">{author}</p>}
+      <h3 className="text-gray-900 dark:text-white text-[10px] sm:text-xs font-serif font-bold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
+      {author && <p className="text-gray-500 dark:text-gray-400 text-[9px] sm:text-[10px] truncate">{author}</p>}
     </div>
   );
 };

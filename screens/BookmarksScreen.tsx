@@ -235,7 +235,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
     }, [activeTab, bookmarkedMovies, uniqueEpisodes]);
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
             <div className="p-4 md:p-6 lg:p-8 space-y-6">
                 {/* En-tête avec titre */}
                 <div className="pt-2">
@@ -247,7 +247,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 {/* Tabs avec design amélioré */}
                 <div className="flex items-center justify-center md:justify-start pt-4">
-                    <div className="inline-flex items-center space-x-2 bg-white dark:bg-gray-800 p-1.5 rounded-full shadow-lg">
+                    <div className="inline-flex items-center space-x-2 bg-white dark:bg-black p-1.5 rounded-full shadow-lg">
                         <button
                             onClick={() => setActiveTab('all')}
                             className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 ${activeTab === 'all'
@@ -315,7 +315,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                     />
                                 </svg>
                             </div>
-                            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg">
+                            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white dark:bg-black rounded-full flex items-center justify-center shadow-lg">
                                 <span className="text-2xl">📺</span>
                             </div>
                         </div>

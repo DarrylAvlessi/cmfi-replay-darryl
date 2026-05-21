@@ -107,9 +107,9 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
     };
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black animate-fadeIn pb-8">
+        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
             {/* Header avec recherche et contrôles */}
-            <div className="sticky top-16 z-30 bg-[#FBF9F3] dark:bg-black border-b border-gray-200 dark:border-gray-800 backdrop-blur-md shadow-sm">
+            <div className="sticky top-16 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-black backdrop-blur-md shadow-sm">
                 <div className="px-4 md:px-6 lg:px-8 py-4 space-y-4">
                     {/* Barre de navigation supérieure */}
                     <div className="flex items-center justify-between">
@@ -121,7 +121,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
-                            {t('moviesScreenTitle') || 'Films'}
+                            {t('moviesScreenTitle') || 'Documentaires'}
                         </h1>
                         <div className="w-10"></div>
                     </div>
@@ -135,10 +135,10 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
                         <input
                             type="text"
-                            placeholder={t('search') || 'Rechercher un film...'}
+                            placeholder={t('search') || 'Rechercher un documentaire...'}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
                         />
                     </div>
 
@@ -275,12 +275,12 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noMovies') || 'Aucun film'}
+                                {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noMovies') || 'Aucun documentaire'}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {searchTerm
                                     ? t('tryDifferentSearch') || 'Essayez une autre recherche'
-                                    : t('noMoviesAvailable') || 'Aucun film disponible pour le moment'}
+                                    : t('noMoviesAvailable') || 'Aucun documentaire disponible pour le moment'}
                             </p>
                             {searchTerm && (
                                 <button
@@ -297,7 +297,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         {/* Compteur de résultats */}
                         <div className="mb-6">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {filteredAndSortedMovies.length} {filteredAndSortedMovies.length > 1 ? t('movies') || 'films' : t('movie') || 'film'}
+                                {filteredAndSortedMovies.length} {filteredAndSortedMovies.length > 1 ? t('movies') || 'documentaires' : t('movie') || 'documentaire'}
                                 {searchTerm && ` ${t('foundFor') || 'trouvé(s) pour'} "${searchTerm}"`}
                             </p>
                         </div>

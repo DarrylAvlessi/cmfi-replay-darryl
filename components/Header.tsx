@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <>
       {/* Header pour les écrans mobiles */}
-      <div className="fixed top-0 left-0 right-0 z-20 bg-[#FBF9F3] dark:bg-black p-4 border-b border-gray-200 dark:border-gray-800 md:hidden">
+      <div className="fixed top-0 left-0 right-0 z-20 bg-white dark:bg-black p-4 border-b border-gray-200 dark:border-black md:hidden">
         <div className="w-full flex items-center justify-between">
           {/* Menu burger à gauche */}
           <HamburgerMenu
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
           />
 
           {/* Titre au centre */}
-          <h1 className="text-xl font-bold text-center">CMFI Replay</h1>
+          <h1 className="text-xl font-serif font-bold text-center">CMFI Replay</h1>
 
           {/* Contrôles à droite */}
           <div className="flex items-center space-x-2">
@@ -61,9 +61,9 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Header pour les écrans plus larges */}
-      <header className={`bg-[#FBF9F3] dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' : 'lg:left-0'
+      <header className={`bg-white dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' : 'lg:left-0'
         } ${isWatchRoute ? 'bg-opacity-60' : ''}`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-black">
           {/* Logo et titre */}
           <div className="flex items-center space-x-4">
             {onBack ? (
@@ -75,7 +75,7 @@ const Header: React.FC<HeaderProps> = ({
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
             ) : null}
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">CMFI Replay</h1>
+            <h1 className="text-lg font-serif font-semibold text-gray-900 dark:text-white">CMFI Replay</h1>
           </div>
 
           {/* Navbar central */}

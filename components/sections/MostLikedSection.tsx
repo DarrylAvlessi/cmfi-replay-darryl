@@ -21,13 +21,13 @@ const MostLikedSection: React.FC<MostLikedSectionProps> = React.memo(({
         return (
             <div className="py-6 md:py-8 lg:py-10 mt-4 md:mt-6">
                 <div className="px-4 md:px-6 lg:px-8 mb-6">
-                    <div className="h-8 w-64 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                    <div className="h-8 w-64 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                 </div>
                 <div className="flex space-x-3 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className="flex-shrink-0 w-40 md:w-48 lg:w-52">
-                            <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded animate-pulse mb-3"></div>
-                            <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                            <div className="aspect-[2/3] bg-gray-200 dark:bg-black rounded animate-pulse mb-3"></div>
+                            <div className="h-4 w-3/4 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                         </div>
                     ))}
                 </div>

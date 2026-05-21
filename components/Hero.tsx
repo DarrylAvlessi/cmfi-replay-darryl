@@ -260,7 +260,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
         <div className={`absolute inset-0 ${gradientClass}`} />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/50 dark:from-black/80 dark:via-transparent dark:to-black/60" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 dark:to-black/50" />
-        <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-[#FBF9F3] via-[#FBF9F3]/90 to-transparent dark:from-black dark:via-black/90" />
+        <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-black dark:via-black/90" />
         
         {/* Bordure lumineuse animée en bas */}
         <div 
@@ -377,7 +377,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                           )}
                           {item.type && (
                             <span className="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-white/95 text-xs md:text-sm font-bold">
-                              {item.type === MediaType.Movie ? 'Film' : item.type === MediaType.Series ? 'Série' : 'Podcast'}
+                              {item.type === MediaType.Movie ? 'Documentaire' : item.type === MediaType.Series ? 'Enseignement' : 'Podcast'}
                             </span>
                           )}
                         </div>

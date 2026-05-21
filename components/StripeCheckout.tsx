@@ -41,7 +41,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({ onClose }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-w-md w-full">
+        <div className="bg-white dark:bg-black rounded-2xl shadow-xl overflow-hidden max-w-md w-full">
             {/* Header */}
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
                 <div className="flex items-center justify-between mb-4">

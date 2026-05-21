@@ -44,7 +44,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                         className="w-1 h-8 rounded-full"
                                         style={{ backgroundColor: category.color || '#3B82F6' }}
                                     />
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                                    <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
                                         {category.name}
                                     </h3>
                                 </div>
@@ -66,7 +66,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                     className="w-1 h-8 rounded-full"
                                     style={{ backgroundColor: category.color || '#3B82F6' }}
                                 />
-                                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
                                     {category.name}
                                 </h3>
                             </div>

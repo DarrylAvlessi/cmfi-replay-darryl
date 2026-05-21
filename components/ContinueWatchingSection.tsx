@@ -26,7 +26,7 @@ const ContinueWatchingCard: React.FC<ContinueWatchingCardProps> = ({ item, onCli
         >
             <div className="group cursor-pointer transition-all duration-500 hover:scale-105 flex flex-col">
                 {/* Image container avec meilleur design */}
-                <div className="relative w-full aspect-[2/3] rounded-lg md:rounded-xl overflow-hidden bg-gray-800 dark:bg-gray-900 shadow-xl group-hover:shadow-2xl mb-3 transition-all duration-500">
+                <div className="relative w-full aspect-[2/3] rounded-lg md:rounded-xl overflow-hidden bg-black dark:bg-gray-900 shadow-xl group-hover:shadow-2xl mb-3 transition-all duration-500">
                     <img
                         src={item.imageUrl}
                         alt={item.title}
@@ -54,7 +54,7 @@ const ContinueWatchingCard: React.FC<ContinueWatchingCardProps> = ({ item, onCli
 
                 {/* Info container amélioré */}
                 <div className="px-2 py-2">
-                    <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-white break-words min-h-[2.5rem] group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                    <h3 className="text-sm md:text-base font-serif font-bold text-gray-900 dark:text-white break-words min-h-[2.5rem] group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                         {item.title}
                     </h3>
                     {item.type === 'episode' && item.serieTitle && item.serieTitle !== item.title && (
@@ -116,7 +116,7 @@ const ContinueWatchingSection: React.FC<ContinueWatchingSectionProps> = ({
         <div className="mb-8 md:mb-12">
             {/* Titre avec meilleure hiérarchie */}
             <div className="px-4 md:px-6 lg:px-8 mb-6">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-gray-900 dark:text-white tracking-tight">
                     {title}
                 </h2>
             </div>
@@ -125,12 +125,12 @@ const ContinueWatchingSection: React.FC<ContinueWatchingSectionProps> = ({
             <div className="relative">
                 {/* Gradient gauche */}
                 {showLeftGradient && (
-                    <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-r from-[#FBF9F3] dark:from-black via-[#FBF9F3]/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
+                    <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-r from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
                 )}
                 
                 {/* Gradient droite */}
                 {showRightGradient && (
-                    <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-l from-[#FBF9F3] dark:from-black via-[#FBF9F3]/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
+                    <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-l from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
                 )}
                 
                 <div className="px-4 md:px-6 lg:px-8">

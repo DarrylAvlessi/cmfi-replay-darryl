@@ -33,7 +33,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ className = '' }) =
     return (
         <button
             onClick={() => navigate('/notifications')}
-            className={`relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors ${className}`}
+            className={`relative p-2 hover:bg-gray-100 dark:hover:bg-black rounded-full transition-colors ${className}`}
             aria-label="Notifications"
         >
             <BellIcon className="w-6 h-6 text-gray-900 dark:text-white" />

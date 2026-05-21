@@ -38,7 +38,7 @@ const PaymentSuccessScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-500 mx-auto mb-4"></div>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -50,9 +50,9 @@ const PaymentSuccessScreen: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black flex items-center justify-center p-4">
+        <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
             <div className="max-w-md w-full">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-white dark:bg-black rounded-2xl shadow-xl overflow-hidden">
                     {/* Success animation */}
                     <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-8 text-center">
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 animate-bounce">

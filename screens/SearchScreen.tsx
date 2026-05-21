@@ -89,8 +89,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
 
   const getTypeLabel = (type: SearchResult['type']): string => {
     const labels = {
-      movie: t('categoryMovies') || 'Film',
-      serie: t('categorySeries') || 'Série',
+      movie: t('categoryMovies') || 'Documentaire',
+      serie: t('categorySeries') || 'Teaching',
       podcast: t('categoryPodcasts') || 'Podcast',
       season: t('season') || 'Saison',
       episode: t('episode') || 'Épisode'
@@ -111,8 +111,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
 
   const filters: Array<{ value: typeof selectedFilter; label: string }> = [
     { value: 'all', label: t('all') || 'Tout' },
-    { value: 'movie', label: t('categoryMovies') || 'Films' },
-    { value: 'serie', label: t('categorySeries') || 'Séries' },
+    { value: 'movie', label: t('categoryMovies') || 'Documentaires' },
+    { value: 'serie', label: t('categorySeries') || 'Teachings' },
     { value: 'podcast', label: t('categoryPodcasts') || 'Podcasts' },
     { value: 'season', label: t('season') || 'Saison' },
     { value: 'episode', label: t('episode') || 'Épisode' }
@@ -154,7 +154,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
               onClick={() => setSelectedFilter(filter.value)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedFilter === filter.value
                 ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
+                : 'bg-gray-200 dark:bg-black text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
                 }`}
             >
               {filter.label}
@@ -179,11 +179,11 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
             <div
               key={`${result.type}-${result.id}`}
               onClick={() => handleResultClick(result)}
-              className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all cursor-pointer group"
+              className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-black rounded-xl overflow-hidden hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all cursor-pointer group"
             >
               <div className="flex gap-3 p-3">
                 {/* Image */}
-                <div className="flex-shrink-0 w-24 h-36 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800">
+                <div className="flex-shrink-0 w-24 h-36 rounded-lg overflow-hidden bg-gray-200 dark:bg-black">
                   {result.imageUrl ? (
                     <img
                       src={result.imageUrl}

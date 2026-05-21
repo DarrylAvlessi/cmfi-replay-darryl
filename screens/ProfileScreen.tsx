@@ -23,6 +23,11 @@ import { UserProfile, userService } from '../lib/firestore';
 import { appSettingsService } from '../lib/appSettingsService';
 import PremiumBadge from '../components/PremiumBadge';
 import { authService } from '../lib/authService';
+import EditProfileScreen from './EditProfileScreen';
+import PreferencesScreen from './PreferencesScreen';
+import ChangePasswordScreen from './ChangePasswordScreen';
+import ManageSubscriptionScreen from './ManageSubscriptionScreen';
+import RedeemVoucherScreen from './RedeemVoucherScreen';
 
 interface ProfileScreenProps {
     navigate: (screen: 'Bookmarks' | 'Preferences' | 'EditProfile') => void;
@@ -33,7 +38,7 @@ interface ProfileScreenProps {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user } = useAppContext();
     const [premiumForAll, setPremiumForAll] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'manageSubscription' | 'redeemVoucher'>('overview');
 
     // Centralisation de la détection Admin
     const isAdminValue = useMemo(() => {
@@ -127,6 +132,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
     const settingsItems = useMemo(() => [
         { icon: BookmarkIcon, label: t('myFavorites'), action: () => navigate('Bookmarks') },
+        { icon: SettingsIcon, label: t('preferences'), action: () => setActiveTab('preferences') },
+        { icon: KeyIcon, label: t('changePassword'), action: () => setActiveTab('changePassword') },
+        { icon: CreditCardIcon, label: t('manageSubscription'), action: () => setActiveTab('manageSubscription') },
+        {
+            icon: TicketIcon,
+            label: t('redeemVoucher'),
+            action: () => setActiveTab('redeemVoucher')
+        },
+    ], [t, navigate]);
+
+    // Mobile settings items - use original navigation
+    const mobileSettingsItems = useMemo(() => [
+        { icon: BookmarkIcon, label: t('myFavorites'), action: () => navigate('Bookmarks') },
         { icon: SettingsIcon, label: t('preferences'), action: () => navigate('Preferences') },
         { icon: KeyIcon, label: t('changePassword'), action: () => navigateRouter('/change-password') },
         { icon: CreditCardIcon, label: t('manageSubscription'), action: () => navigateRouter('/manage-subscription') },
@@ -199,26 +217,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             case 'overview':
                 return (
                     <div className="space-y-6">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                             <img
                                 src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                                 alt="Your avatar"
                                 className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
                             />
                             <div className="flex-1 text-center sm:text-left">
-                                <h2 className="text-2xl font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
+                                <h2 className="text-2xl font-serif font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
                                 <PremiumBadge size="md" showDetails={true} />
                                 <button
                                     onClick={() => navigate('EditProfile')}
-                                    className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold py-2 px-6 rounded-full transition-colors duration-200"
+                                    className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
                                 >
                                     {t('editProfile')}
                                 </button>
                             </div>
                         </div>
                         
-                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-bold mb-4">Liens rapides</h3>
+                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-serif font-bold mb-4">Liens rapides</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {settingsItems.map((item) => (
                                     <button
@@ -231,6 +249,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                         <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
                                     </button>
                                 ))}
+                                <button
+                                    onClick={() => setActiveTab('editProfile')}
+                                    className="flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <SettingsIcon className="w-5 h-5 text-gray-500" />
+                                    <span className="text-gray-900 dark:text-white">{t('editProfile')}</span>
+                                    <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -249,8 +275,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             case 'account':
                 return (
                     <div className="space-y-6">
-                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-xl font-bold mb-4">{t('accountSettings')}</h3>
+                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-xl font-serif font-bold mb-4">{t('accountSettings')}</h3>
                             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
                                 {settingsItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
@@ -258,7 +284,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                         
-                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                             <SettingsItem 
                                 Icon={LogoutIcon} 
                                 label={t('logout')} 
@@ -272,8 +298,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             case 'admin':
                 return (
                     <div className="space-y-6">
-                        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800">
-                            <h3 className="text-xl font-bold mb-4 text-amber-600 dark:text-amber-400">Administration</h3>
+                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-amber-200 dark:border-amber-800">
+                            <h3 className="text-xl font-serif font-bold mb-4 text-amber-600 dark:text-amber-400">Administration</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden divide-y divide-amber-200 dark:divide-amber-800">
                                 <div className="flex items-center justify-between p-4">
                                     <div className="flex items-center">
@@ -301,6 +327,41 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </div>
                 );
             
+            case 'editProfile':
+                return (
+                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <EditProfileScreen onBack={() => setActiveTab('overview')} />
+                    </div>
+                );
+            
+            case 'preferences':
+                return (
+                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <PreferencesScreen onBack={() => setActiveTab('overview')} />
+                    </div>
+                );
+            
+            case 'changePassword':
+                return (
+                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <ChangePasswordScreen />
+                    </div>
+                );
+            
+            case 'manageSubscription':
+                return (
+                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <ManageSubscriptionScreen />
+                    </div>
+                );
+            
+            case 'redeemVoucher':
+                return (
+                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <RedeemVoucherScreen />
+                    </div>
+                );
+            
             default:
                 return null;
         }
@@ -310,17 +371,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         <div className="pt-4">
             {/* Mobile layout - unchanged */}
             <div className="lg:hidden">
-                <div className="flex flex-col items-center p-6 space-y-3 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col items-center p-6 space-y-3 border-b border-gray-200 dark:border-black">
                     <img
                         src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                         alt="Your avatar"
                         className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
                     />
-                    <h2 className="text-2xl font-bold">{userProfile?.display_name || 'User'}</h2>
+                    <h2 className="text-2xl font-serif font-bold">{userProfile?.display_name || 'User'}</h2>
                     <PremiumBadge size="md" showDetails={true} />
                     <button
                         onClick={() => navigate('EditProfile')}
-                        className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold py-2 px-6 rounded-full transition-colors duration-200"
+                        className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
                     >
                         {t('editProfile')}
                     </button>
@@ -334,15 +395,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 />
 
                 <section className="px-4 py-4">
-                    <h3 className="text-xl font-bold mb-3">{t('accountSettings')}</h3>
-                    <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-                        {settingsItems.map((item) => (
+                    <h3 className="text-xl font-serif font-bold mb-3">{t('accountSettings')}</h3>
+                    <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
+                        {mobileSettingsItems.map((item) => (
                             <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                         ))}
                     </div>
                     {isAdminValue && (
                         <div className="mt-4">
-                            <h3 className="text-lg font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
+                            <h3 className="text-lg font-serif font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
                                 <div className="flex items-center justify-between p-4">
                                     <div className="flex items-center">
@@ -368,7 +429,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                     )}
-                    <div className="mt-4 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
+                    <div className="mt-4 border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
                         <SettingsItem 
                             Icon={LogoutIcon} 
                             label={t('logout')} 
@@ -383,7 +444,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             <div className="hidden lg:flex gap-6 px-6 py-4">
                 {/* Sidebar navigation */}
                 <aside className="w-64 flex-shrink-0">
-                    <nav className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <nav className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3">
                                 <img

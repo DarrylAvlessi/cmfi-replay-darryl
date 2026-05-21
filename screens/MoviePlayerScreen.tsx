@@ -679,7 +679,7 @@ const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => (
             />
         </div>
         <div className="flex-1 min-w-0">
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-xl rounded-tl-none shadow-sm group-hover:shadow-md transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900 p-4 rounded-xl rounded-tl-none shadow-sm group-hover:shadow-md transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
                 <p className="font-bold text-sm text-gray-900 dark:text-white mb-1.5">{comment.created_by}</p>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words">{comment.comment}</p>
             </div>
@@ -741,13 +741,13 @@ const CommentSection: React.FC<{ itemUid: string, onAuthRequired: (action: strin
 
     return (
         <div className="space-y-6">
-            <div className="pb-2 border-b border-gray-200 dark:border-gray-800">
+            <div className="pb-2 border-b border-gray-200 dark:border-black">
                 <h3 className="text-2xl font-black text-gray-900 dark:text-white">
                     {t('comments')} <span className="text-amber-500">({comments.length})</span>
                 </h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex items-start space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+            <form onSubmit={handleSubmit} className="flex items-start space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900 p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
                 <img src={userProfile?.photo_url || generateDefaultAvatar(userProfile?.display_name)} alt="you" className="w-12 h-12 rounded-full flex-shrink-0 ring-2 ring-amber-500/20" />
                 <div className="flex-1">
                     <div className="relative">
@@ -1176,7 +1176,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
 
     return (
-        <div className="bg-[#FBF9F3] dark:bg-black min-h-screen animate-fadeIn">
+        <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
             {/* Bouton de retour amélioré avec gradient */}
             <header className="absolute top-4 left-4 z-30">
                 <button
@@ -1231,7 +1231,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-around py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                            <div className="flex items-center justify-around py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-black/50 shadow-lg">
                                 <LikeButton
                                     label={t('likeVideo')}
                                     value={likeCount}
@@ -1256,8 +1256,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                     {/* Colonne de droite - Section des commentaires améliorée */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
-                            <div className="flex-1 overflow-y-auto pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-gray-800">
-                                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50 dark:border-gray-800/50 shadow-xl">
+                            <div className="flex-1 overflow-y-auto pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-black">
+                                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50 dark:border-black/50 shadow-xl">
                                     <CommentSection
                                         itemUid={movieData?.uid || item.id}
                                         onAuthRequired={handleAuthRequired}

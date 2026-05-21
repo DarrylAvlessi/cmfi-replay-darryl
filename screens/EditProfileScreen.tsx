@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import InputField from '../components/InputField';
 import { useAppContext } from '../context/AppContext';
@@ -24,12 +24,14 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    // Initialiser les champs avec les données de l'utilisateur
+    // Initialiser les champs une seule fois au montage
+    const initialized = useRef(false);
     useEffect(() => {
-        if (userProfile) {
+        if (userProfile && !initialized.current) {
             setFullName(userProfile.display_name || '');
             setEmail(userProfile.email || '');
             setPhotoUrl(userProfile.photo_url || '');
+            initialized.current = true;
         }
     }, [userProfile]);
 

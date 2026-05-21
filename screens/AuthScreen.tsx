@@ -37,7 +37,7 @@ const SocialLoginButton: React.FC<{ onClick: () => void; disabled?: boolean }> =
         <button
             onClick={onClick}
             disabled={disabled}
-            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-md font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800/20 hover:bg-gray-50 dark:hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 focus:ring-offset-[#FBF9F3] dark:focus:ring-offset-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-md font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-black/20 hover:bg-gray-50 dark:hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
             <GoogleIcon className="w-6 h-6 mr-3" />
             {disabled ? t('loading') || 'Chargement...' : t('continueWithGoogle')}
@@ -53,7 +53,7 @@ const OrSeparator: React.FC = () => {
                 <div className="w-full border-t border-gray-300/80 dark:border-gray-600/80" />
             </div>
             <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#FBF9F3] dark:bg-black text-gray-500 dark:text-gray-400">
+                <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">
                     {t('orSeparator')}
                 </span>
             </div>
@@ -231,7 +231,7 @@ const AuthScreen: React.FC = () => {
     };
 
     const commonLayout = (title: string, subtitle: string | null, formContent: React.ReactNode, showSocial: boolean) => (
-        <div className="relative min-h-screen bg-[#FBF9F3] dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
             <AuthHeader />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 text-center">

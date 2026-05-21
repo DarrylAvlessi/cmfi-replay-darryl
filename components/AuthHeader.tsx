@@ -35,7 +35,7 @@ const AuthHeader: React.FC = () => {
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     aria-label="Toggle theme"
                 >
                     {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
@@ -45,7 +45,7 @@ const AuthHeader: React.FC = () => {
                 <div className="relative" ref={menuRef}>
                     <button
                         onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                        className="flex items-center space-x-2 p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center space-x-2 p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         aria-label="Select language"
                     >
                         <GlobeIcon className="w-5 h-5" />
@@ -53,7 +53,7 @@ const AuthHeader: React.FC = () => {
                         <ChevronDownIcon className={`w-4 h-4 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isLangMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
                             <button 
                                 onClick={() => handleLanguageChange('en')}
                                 className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"

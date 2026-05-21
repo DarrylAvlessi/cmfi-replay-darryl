@@ -34,10 +34,10 @@ const Breadcrumbs: React.FC = () => {
                 case 'profile':
                     label = t('profile') || 'Profil';
                     break;
-                case 'movies':
+                case 'documentaries':
                     label = t('categoryMovies');
                     break;
-                case 'series':
+                case 'teachings':
                     label = t('categorySeries');
                     break;
                 case 'podcasts':
@@ -55,11 +55,15 @@ const Breadcrumbs: React.FC = () => {
                 case 'watch':
                     label = t('watch');
                     break;
-                case 'movie':
-                case 'serie':
+                case 'documentary':
+                    label = t('movie');
+                    break;
+                case 'teaching':
+                    label = t('serie');
+                    break;
                 case 'podcast':
                     // Pour les détails, on affiche le type
-                    label = t(value as 'movie' | 'serie' | 'podcast');
+                    label = t(value as 'serie' | 'podcast');
                     break;
                 default:
                     // Pour les UIDs, on affiche "Détails"
@@ -86,7 +90,7 @@ const Breadcrumbs: React.FC = () => {
     }
 
     return (
-        <nav className="px-4 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800" aria-label="Breadcrumb">
+        <nav className="px-4 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-black" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2 text-sm">
                 {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;

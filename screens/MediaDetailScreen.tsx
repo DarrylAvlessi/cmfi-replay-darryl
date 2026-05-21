@@ -47,7 +47,7 @@ const EpisodeListItem = React.memo<{
     currentSeasonUid?: string,
     currentSerieTitle?: string
 }>(({ episode, onClick, isPlaying, currentSeasonUid, currentSerieTitle }) => {
-    const playingClasses = isPlaying ? 'bg-amber-100 dark:bg-amber-900/40' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/50';
+    const playingClasses = isPlaying ? 'bg-amber-100 dark:bg-amber-900/40' : 'hover:bg-gray-100/50 dark:hover:bg-black/50';
 
 
 
@@ -109,7 +109,7 @@ const EpisodeListItem = React.memo<{
                     </h4>
                     {isFromOtherSeries && (
                         <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
-                            Autre série
+                            Autre enseignement
                         </span>
                     )}
                 </div>
@@ -491,7 +491,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
             if (type === MediaType.Movie) {
 
-                mediaPath = `/movie/${item.id}`;
+                mediaPath = `/documentary/${item.id}`;
 
                 shareText = `Retrouvez "${item.title}" sur le CMFI Replay${item.description ? ` - ${item.description.substring(0, 80)}...` : ''}`;
 
@@ -507,13 +507,13 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 if (shareType === 'season' && selectedSeason) {
 
-                    mediaPath = `/serie/${item.id}?season=${selectedSeasonUid}`;
+                    mediaPath = `/teaching/${item.id}?season=${selectedSeasonUid}`;
 
                     shareText = `Retrouvez ${selectedSeason.title_season ? `"${selectedSeason.title_season}"` : `"${item.title}"`} sur CMFI Replay`;
 
                 } else {
 
-                    mediaPath = `/serie/${item.id}`;
+                    mediaPath = `/teaching/${item.id}`;
 
                     shareText = `Retrouvez "${item.title}" sur le CMFI Replay`;
 
@@ -595,7 +595,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
     return (
 
-        <div className="animate-fadeIn pb-8 md:pb-12 bg-[#FBF9F3] dark:bg-black min-h-screen">
+        <div className="animate-fadeIn pb-8 md:pb-12 bg-white dark:bg-black min-h-screen">
 
             <div className="relative h-[50vh] md:h-[60vh] lg:h-[65vh]">
 
@@ -603,9 +603,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 {/* Gradient overlay amélioré pour meilleure lisibilité */}
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FBF9F3] via-[#FBF9F3]/80 to-transparent dark:from-black dark:via-black/80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-black dark:via-black/80" />
 
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FBF9F3]/40 dark:to-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/40 dark:to-black/40" />
 
                 <header className="absolute top-0 left-0 right-0 z-10">
 
@@ -685,7 +685,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         {type && (
 
-                            <span className="px-2.5 py-1 rounded-md bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-xs md:text-sm">
+                            <span className="px-2.5 py-1 rounded-md bg-gray-300 dark:bg-gray-600 text-black dark:text-gray-200 font-semibold text-xs md:text-sm">
 
                                 {type === MediaType.Movie ? t('movie') : type === MediaType.Series ? t('series') : t('podcast')}
 
@@ -784,7 +784,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                 className={`order-2 sm:order-1 flex items-center justify-center gap-2 font-bold py-3 px-4 sm:px-6 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 text-sm sm:text-base ${
                                     hasLiked
                                         ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 shadow-lg'
-                                        : 'bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
+                                        : 'bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
                                 }`}
                                 disabled={isLoading}
                             >
@@ -805,7 +805,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                 className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 text-sm sm:text-base ${
                                     isBookmarked
                                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 hover:from-amber-400 hover:to-orange-400 shadow-lg'
-                                        : 'bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
+                                        : 'bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
                                 }`}
                             >
                                 {isBookmarked ? (
@@ -822,7 +822,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                     <button
                                         onClick={() => handleShare('series')}
                                         disabled={isSharing}
-                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
+                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
                                     >
                                         <ShareIcon className="w-5 h-5" />
                                         <span className="hidden sm:inline">{t('share') || 'Partager'}</span>
@@ -832,7 +832,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                     <button
                                         onClick={() => handleShare()}
                                         disabled={isSharing}
-                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
+                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
                                     >
                                         <ShareIcon className="w-5 h-5" />
                                         <span className="hidden sm:inline">{t('share') || 'Partager'}</span>
@@ -915,7 +915,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                         <select
                                             value={selectedSeasonUid || ''}
                                             onChange={(e) => setSelectedSeasonUid(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
+                                            className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
                                         >
                                             {firestoreSeasons.map(season => (
                                                 <option key={season.uid_season} value={season.uid_season}>
@@ -1020,7 +1020,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                                 return (
 
-                                                    <div key={season.seasonNumber} className="bg-gray-100/50 dark:bg-gray-800/40 rounded-lg overflow-hidden transition-all duration-300">
+                                                    <div key={season.seasonNumber} className="bg-gray-100/50 dark:bg-black/40 rounded-lg overflow-hidden transition-all duration-300">
 
                                                         <button
 

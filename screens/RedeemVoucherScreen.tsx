@@ -80,7 +80,7 @@ const RedeemVoucherScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header avec bouton retour */}
         <div className="mb-8">
@@ -104,7 +104,7 @@ const RedeemVoucherScreen: React.FC = () => {
         </div>
 
         {/* Carte principale */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden">
           <div className="p-6 md:p-10">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {t('redeemVoucherTitle')}

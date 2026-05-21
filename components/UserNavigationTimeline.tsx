@@ -10,8 +10,8 @@ interface UserNavigationTimelineProps {
 // Icônes pour les différents types de pages
 const getPageIcon = (pageName: string): string => {
     if (pageName.includes('Accueil') || pageName.includes('Home')) return '🏠';
-    if (pageName.includes('Film')) return '🎬';
-    if (pageName.includes('Série')) return '📺';
+    if (pageName.includes('Film') || pageName.includes('Documentaire')) return '🎬';
+    if (pageName.includes('Série') || pageName.includes('Enseignement')) return '📺';
     if (pageName.includes('Podcast')) return '🎙️';
     if (pageName.includes('Lecture') || pageName.includes('Watch')) return '▶️';
     if (pageName.includes('Profil')) return '👤';

@@ -54,7 +54,7 @@ const ForgotPasswordScreen: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-[#FBF9F3] dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
             <AuthHeader />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 text-center">

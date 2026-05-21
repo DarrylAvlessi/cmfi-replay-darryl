@@ -70,7 +70,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
             </div>
           </div>
         </div>
-        <h3 className="text-gray-900 dark:text-white text-sm font-bold break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3>
+        <h3 className="text-gray-900 dark:text-white text-sm font-serif font-bold break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3>
         {author && <p className="text-gray-500 dark:text-gray-400 text-xs break-words">{author}</p>}
       </div>
     );
@@ -80,7 +80,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
     return (
       <div 
         onClick={handleSelect} 
-        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-gray-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
+        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
           is_premium ? 'ring-1 ring-amber-400/30' : ''
         }`}
       >
@@ -88,7 +88,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Image avec aspect ratio cinématique */}
-        <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
+        <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
           is_premium ? 'ring-1 ring-amber-400/50' : ''
         }`}>
           {is_premium && (
@@ -116,7 +116,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
         {/* Informations */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+            <h3 className="text-lg md:text-xl font-serif font-bold text-gray-900 dark:text-white break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
               {title}
             </h3>
             {is_premium && (
@@ -196,7 +196,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
           </div>
         )}
       </div>
-      <h3 className="text-gray-900 dark:text-white font-bold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
+      <h3 className="text-gray-900 dark:text-white font-serif font-bold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
       {author && <p className="text-gray-500 dark:text-gray-400 text-sm break-words">{author}</p>}
     </div>
   );

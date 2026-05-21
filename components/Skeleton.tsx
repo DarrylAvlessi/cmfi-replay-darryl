@@ -13,7 +13,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     width,
     height
 }) => {
-    const baseClasses = "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 animate-shimmer bg-[length:200%_100%]";
+    const baseClasses = "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-700 dark:to-black animate-shimmer bg-[length:200%_100%]";
 
     const variantClasses = {
         text: "rounded",
@@ -84,7 +84,7 @@ export const HeroSkeleton: React.FC = () => {
     return (
         <div className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
             {/* Background image skeleton */}
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 animate-shimmer bg-[length:200%_100%]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300 dark:from-gray-900 dark:via-black dark:to-gray-900 animate-shimmer bg-[length:200%_100%]" />
 
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -187,8 +187,8 @@ export const MostLikedSkeleton: React.FC = () => {
                 <Skeleton variant="text" height={28} width="200px" />
                 {/* Navigation buttons skeleton */}
                 <div className="flex space-x-2">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-black animate-pulse" />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-black animate-pulse" />
                 </div>
             </div>
             <div className="px-4">

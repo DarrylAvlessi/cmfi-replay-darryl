@@ -98,13 +98,13 @@ const NotificationsScreen: React.FC = () => {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <div className="min-h-screen bg-[#FBF9F3] dark:bg-black">
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="min-h-screen bg-white dark:bg-black">
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-black">
                 <div className="flex items-center justify-between px-4 py-4">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-black rounded-full transition-colors"
                         >
                             <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
@@ -177,7 +177,7 @@ const NotificationsScreen: React.FC = () => {
                                         {!notification.read && (
                                             <button
                                                 onClick={() => handleMarkAsRead(notification.id)}
-                                                className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-full transition-colors"
+                                                className="p-2 hover:bg-white/50 dark:hover:bg-black/50 rounded-full transition-colors"
                                                 title="Marquer comme lu"
                                             >
                                                 <CheckIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -185,7 +185,7 @@ const NotificationsScreen: React.FC = () => {
                                         )}
                                         <button
                                             onClick={() => handleDelete(notification.id)}
-                                            className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-full transition-colors"
+                                            className="p-2 hover:bg-white/50 dark:hover:bg-black/50 rounded-full transition-colors"
                                             title="Supprimer"
                                         >
                                             <TrashIcon className="w-5 h-5 text-red-500" />

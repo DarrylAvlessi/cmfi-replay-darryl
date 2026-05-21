@@ -9,7 +9,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ children, ...props }) => {
   return (
     <div className="relative group w-full">
         <button
-            className="relative w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-gray-900 dark:bg-gray-800 hover:bg-black dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 focus:ring-offset-[#FBF9F3] dark:focus:ring-offset-black transition-all duration-300"
+            className="relative w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-gray-900 dark:bg-black hover:bg-black dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-300"
             {...props}
         >
             <span>{children}</span>
