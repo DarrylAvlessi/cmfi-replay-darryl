@@ -377,7 +377,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                           )}
                           {item.type && (
                             <span className="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-white/95 text-xs md:text-sm font-bold">
-                              {item.type === MediaType.Movie ? 'Documentaire' : item.type === MediaType.Series ? 'Enseignement' : 'Podcast'}
+                               {item.type === MediaType.Movie ? 'Documentaire' : item.type === MediaType.Series ? 'Production' : 'Podcast'}
                             </span>
                           )}
                         </div>

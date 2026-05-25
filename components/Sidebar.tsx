@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { updateEpisodeViews } from '../lib/firestore';
+import { updateEpisodeViews, serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
 import { toast } from 'react-toastify';
 import { ActiveTab } from '../types';
 
@@ -13,8 +14,32 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { t } = useAppContext();
+  const { t, language } = useAppContext();
   const location = useLocation();
+  const [categories, setCategories] = useState<SerieCategory[]>([]);
+  const [isSeriesMenuOpen, setIsSeriesMenuOpen] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const cats = await serieCategoryService.getAllCategories();
+        setCategories(cats);
+      } catch (error) {
+        console.error('Error loading categories in Sidebar:', error);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && location.pathname === '/productions') {
+      setIsSeriesMenuOpen(true);
+    }
+  }, [isOpen, location.pathname]);
 
   interface MenuItem {
     id: string;
@@ -23,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     icon: React.ReactNode;
     isAdmin?: boolean;
     onClick?: (e: React.MouseEvent) => void;
+    isSeries?: boolean;
   }
 
   const menuItems: MenuItem[] = [
@@ -49,7 +75,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     {
       id: 'series',
       label: t('categorySeries'),
-      path: '/teachings',
+      path: '/productions',
+      isSeries: true,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -88,17 +115,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     },
   ];
 
-  // Filtrer les éléments de menu pour n'afficher que ceux accessibles à tous les utilisateurs
   const filteredMenuItems = menuItems;
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  const currentCategoryFromUrl = location.search ? 
+    new URLSearchParams(location.search).get('category') : null;
 
   return (
     <>
-      {/* Overlay pour mobile avec animation */}
       <div
         className={`fixed inset-0 z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} lg:opacity-0 lg:pointer-events-none`}
         onClick={onClose}
@@ -107,7 +134,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300" />
       </div>
 
-      {/* Barre latérale avec animation fluide */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-black border-r border-gray-200 dark:border-black flex flex-col h-full transition-all duration-300 ease-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -120,7 +146,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         role="navigation"
         aria-label="Menu principal"
       >
-        {/* En-tête */}
         <div className="flex items-center justify-between px-4 py-[17.8px] border-b border-gray-200 dark:border-black">
           <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">CMFI Replay</h2>
           <div className="flex items-center">
@@ -142,7 +167,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Champ de recherche */}
         <div className="px-4 py-3 border-b border-gray-200 dark:border-black">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -160,28 +184,103 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => (
               <li key={item.id}>
-                <Link
-                  to={item.path}
-                  onClick={(e) => {
-                    onClose();
-                    if (item.onClick) {
-                      item.onClick(e);
-                    }
-                  }}
-                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50 text-gray-700"
-                  aria-current={isActive(item.path) ? 'page' : undefined}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  <span className="ml-3">{item.label}</span>
-                </Link>
+                {item.isSeries ? (
+                  <div>
+                    <button
+                      onClick={() => setIsSeriesMenuOpen(!isSeriesMenuOpen)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50 text-gray-700 ${
+                        isActive(item.path) ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100' : ''
+                      }`}
+                    >
+                      <span className="flex items-center">
+                        <span className="flex-shrink-0">{item.icon}</span>
+                        <span className="ml-3">{item.label}</span>
+                      </span>
+                      <svg 
+                        className={`w-4 h-4 transition-transform duration-200 ${isSeriesMenuOpen ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isSeriesMenuOpen && (
+                      <ul className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                        {categoriesLoading ? (
+                          <li>
+                            <span className="block px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                              {t('loading') || 'Chargement...'}
+                            </span>
+                          </li>
+                        ) : (
+                          <>
+                            {categories.length > 0 && categories.map((category) => (
+                              <li key={category.id}>
+                                <Link
+                                  to={`/productions?category=${category.id}`}
+                                  onClick={onClose}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                    currentCategoryFromUrl === category.id
+                                      ? 'text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/20'
+                                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-black/50'
+                                  }`}
+                                >
+                                  <div
+                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: category.color || '#3B82F6' }}
+                                  />
+                                  {getCategoryName(category, language)}
+                                </Link>
+                              </li>
+                            ))}
+                            <li>
+                              <Link
+                                to="/productions"
+                                onClick={onClose}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                  isActive('/productions') && !currentCategoryFromUrl
+                                    ? 'text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/20'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-black/50'
+                                }`}
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                {t('viewAll') || 'Voir tout'}
+                              </Link>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={(e) => {
+                      onClose();
+                      if (item.onClick) {
+                        item.onClick(e);
+                      }
+                    }}
+                    className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50 text-gray-700 ${
+                      isActive(item.path) ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100' : ''
+                    }`}
+                    aria-current={isActive(item.path) ? 'page' : undefined}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className="ml-3">{item.label}</span>
+                  </Link>
+                )}
               </li>
             ))}
-            {/* Bouton d'administration (toujours visible) */}
+
             {menuItems.find(item => item.isAdmin) && (
               <div className="mt-8 pt-4 border-t border-gray-200">
                 <p className="px-4 text-xs font-serif font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -205,10 +304,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </ul>
         </nav>
 
-        {/* Espace vide en bas pour laisser de la marge */}
         <div className="mt-auto py-2"></div>
 
-        {/* User section */}
         <div className="p-2 border-t border-gray-200 dark:border-black">
           <Link
             to="/profile"

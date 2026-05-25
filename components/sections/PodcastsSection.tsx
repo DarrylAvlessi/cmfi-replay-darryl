@@ -40,7 +40,7 @@ const PodcastsSection: React.FC<PodcastsSectionProps> = React.memo(({
                     </button>
                 </div>
             </div>
-            <div className="flex space-x-3 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+            <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                 {podcasts.map((podcast) => (
                     <div key={podcast.uid_serie} className="flex-shrink-0">
                         <MediaCard

@@ -37,7 +37,7 @@ const Breadcrumbs: React.FC = () => {
                 case 'documentaries':
                     label = t('categoryMovies');
                     break;
-                case 'teachings':
+                case 'productions':
                     label = t('categorySeries');
                     break;
                 case 'podcasts':
@@ -58,7 +58,7 @@ const Breadcrumbs: React.FC = () => {
                 case 'documentary':
                     label = t('movie');
                     break;
-                case 'teaching':
+                case 'production':
                     label = t('serie');
                     break;
                 case 'podcast':

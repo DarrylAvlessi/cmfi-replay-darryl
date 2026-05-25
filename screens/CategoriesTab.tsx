@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { serieCategoryService, SerieCategory } from '../lib/firestore';
+import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
+import { useAppContext } from '../context/AppContext';
 
 const CategoriesTab: React.FC = () => {
+    const { language } = useAppContext();
     const [categories, setCategories] = useState<SerieCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingCategory, setEditingCategory] = useState<SerieCategory | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
+        nameFr: '',
         description: '',
         color: '#3B82F6',
         order: 0
@@ -41,7 +44,7 @@ const CategoriesTab: React.FC = () => {
             await serieCategoryService.createCategory(formData);
             toast.success('Catégorie créée avec succès');
             setShowCreateModal(false);
-            setFormData({ name: '', description: '', color: '#3B82F6', order: 0 });
+            setFormData({ name: '', nameFr: '', description: '', color: '#3B82F6', order: 0 });
             loadCategories();
         } catch (error: any) {
             console.error('Erreur lors de la création:', error);
@@ -59,7 +62,7 @@ const CategoriesTab: React.FC = () => {
             await serieCategoryService.updateCategory(editingCategory.id, formData);
             toast.success('Catégorie mise à jour avec succès');
             setEditingCategory(null);
-            setFormData({ name: '', description: '', color: '#3B82F6', order: 0 });
+            setFormData({ name: '', nameFr: '', description: '', color: '#3B82F6', order: 0 });
             loadCategories();
         } catch (error: any) {
             console.error('Erreur lors de la mise à jour:', error);
@@ -86,6 +89,7 @@ const CategoriesTab: React.FC = () => {
         setEditingCategory(category);
         setFormData({
             name: category.name,
+            nameFr: category.nameFr || '',
             description: category.description || '',
             color: category.color || '#3B82F6',
             order: category.order || 0
@@ -103,7 +107,7 @@ const CategoriesTab: React.FC = () => {
                 <button
                     onClick={() => {
                         setShowCreateModal(true);
-                        setFormData({ name: '', description: '', color: '#3B82F6', order: 0 });
+                        setFormData({ name: '', nameFr: '', description: '', color: '#3B82F6', order: 0 });
                     }}
                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                 >
@@ -128,7 +132,7 @@ const CategoriesTab: React.FC = () => {
                                         className="w-4 h-4 rounded-full"
                                         style={{ backgroundColor: category.color || '#3B82F6' }}
                                     />
-                                    <h3 className="font-semibold text-gray-900 dark:text-white">{category.name}</h3>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">{getCategoryName(category, language)}</h3>
                                 </div>
                                 <div className="flex gap-2">
                                     <button
@@ -172,6 +176,18 @@ const CategoriesTab: React.FC = () => {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                                     placeholder="Ex: UMPJ"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Nom (FR)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.nameFr}
+                                    onChange={(e) => setFormData({ ...formData, nameFr: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Nom en français"
                                 />
                             </div>
                             <div>
@@ -221,7 +237,7 @@ const CategoriesTab: React.FC = () => {
                                     onClick={() => {
                                         setShowCreateModal(false);
                                         setEditingCategory(null);
-                                        setFormData({ name: '', description: '', color: '#3B82F6', order: 0 });
+                                        setFormData({ name: '', nameFr: '', description: '', color: '#3B82F6', order: 0 });
                                     }}
                                     className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
                                 >

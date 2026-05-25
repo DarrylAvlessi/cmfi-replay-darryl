@@ -36,7 +36,7 @@ $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'];
 // Valeurs par défaut
 // ===================================================================
 $title = 'CMFI Replay';
-$description = 'Plateforme de replay chrétienne — Documentaires, enseignements et podcasts.';
+$description = 'Plateforme de replay chrétienne — Documentaires, productions et podcasts.';
 $image = $baseUrl . '/cmfireplay.svg';
 $ogType = 'website';
 $url = $baseUrl . '/' . $path;
@@ -69,8 +69,8 @@ if (!empty($uid)) {
             }
             break;
 
-        // --- Enseignement ---
-        case 'teaching':
+        // --- Production ---
+        case 'production':
         // --- Série ou Podcast ---
         case 'serie':
         case 'podcast':

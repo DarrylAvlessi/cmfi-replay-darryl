@@ -47,12 +47,20 @@ export interface UserProfile {
 export interface SerieCategory {
     id: string;
     name: string;
+    nameFr?: string;
     description?: string;
     color?: string; // Couleur pour l'affichage (optionnel)
     order?: number; // Ordre d'affichage
     createdAt: string;
     updatedAt: string;
 }
+
+export const getCategoryName = (category: SerieCategory, language: 'en' | 'fr'): string => {
+    if (language === 'fr' && category.nameFr?.trim()) {
+        return category.nameFr;
+    }
+    return category.name;
+};
 
 // Interface pour la collection series
 export interface Serie {

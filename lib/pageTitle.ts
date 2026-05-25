@@ -32,7 +32,7 @@ export const usePageTitle = () => {
     
     // Pages de catégories
     if (pathname === '/documentaries') return `${safeT('categoryMovies')} - CMFI Replay`;
-    if (pathname === '/teachings') return `${safeT('categorySeries')} - CMFI Replay`;
+    if (pathname === '/productions') return `${safeT('categorySeries')} - CMFI Replay`;
     if (pathname === '/podcasts') return `${safeT('categoryPodcasts')} - CMFI Replay`;
     
     // Autres pages
@@ -44,7 +44,7 @@ export const usePageTitle = () => {
     
     // Pages de détails
     if (pathname.startsWith('/documentary/')) return `${safeT('movie')} - CMFI Replay`;
-    if (pathname.startsWith('/teaching/')) return `${safeT('serie')} - CMFI Replay`;
+    if (pathname.startsWith('/production/')) return `${safeT('serie')} - CMFI Replay`;
     if (pathname.startsWith('/podcast/')) return `${safeT('podcast')} - CMFI Replay`;
     
     // Par défaut

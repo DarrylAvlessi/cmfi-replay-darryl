@@ -96,7 +96,7 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
     const handleBack = () => {
         if (media) {
             // Convertir le type de média en route appropriée
-            const route = media.type === MediaType.Series ? 'teaching' :
+            const route = media.type === MediaType.Series ? 'production' :
                 media.type === MediaType.Movie ? 'documentary' :
                     'podcast';
             navigate(`/${route}/${media.id}`);

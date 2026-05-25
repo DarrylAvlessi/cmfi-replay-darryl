@@ -3,7 +3,7 @@
 import { MediaContent, User, MediaType, Comment } from '../types';
 
 export const mockComments: Comment[] = [
-  { id: 'c1', user: { name: 'Maria S.', avatarUrl: 'https://picsum.photos/seed/user2/100/100' }, text: 'This teaching was so insightful, thank you!', timestamp: '2 days ago', likes: 152 },
+  { id: 'c1', user: { name: 'Maria S.', avatarUrl: 'https://picsum.photos/seed/user2/100/100' }, text: 'This production was so insightful, thank you!', timestamp: '2 days ago', likes: 152 },
   { id: 'c2', user: { name: 'John D.', avatarUrl: 'https://picsum.photos/seed/user1/100/100' }, text: 'Powerful message. I was truly blessed.', timestamp: '1 day ago', likes: 230 },
   { id: 'c3', user: { name: 'David L.', avatarUrl: 'https://picsum.photos/seed/user3/100/100' }, text: 'Can anyone recommend a follow-up series to this one?', timestamp: '5 hours ago', likes: 45 },
   { id: 'c4', user: { name: 'Samuel P.', avatarUrl: 'https://picsum.photos/seed/user7/100/100' }, text: 'Amen! The truth of the Gospel is so clear here.', timestamp: '30 minutes ago', likes: 88 },

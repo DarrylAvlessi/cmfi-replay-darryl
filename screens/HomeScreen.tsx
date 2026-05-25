@@ -81,7 +81,7 @@ const MediaRow: React.FC<{ title: string; items: MediaContent[]; onSelectMedia: 
                 {/* Carrousel avec scroll smooth et snap */}
                 <div
                     ref={scrollContainerRef}
-                    className="flex space-x-4 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6 scroll-smooth snap-x snap-mandatory"
+                    className="flex space-x-2 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6 scroll-smooth snap-x snap-mandatory"
                     style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
                 >
                     {items.map((item, index) => (
@@ -113,7 +113,7 @@ const RankedMediaRow: React.FC<{
             </div>
 
             {/* Container simple sans effets de défilement */}
-            <div className="flex space-x-4 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6">
+            <div className="flex space-x-2 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6">
                 {items.map((item, index) => (
                     <div key={item.content.id} className="flex-shrink-0">
                         <RankedMediaCard
@@ -429,8 +429,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         </div>
                         <div className="flex space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="flex-shrink-0 w-56 md:w-64 lg:w-72">
-                                    <div className="aspect-video bg-gray-200 dark:bg-black rounded-lg animate-pulse mb-3"></div>
+                                 <div key={i} className="flex-shrink-0 w-36 md:w-48 lg:w-72">
+                                    <div className="aspect-video bg-gray-200 dark:bg-black rounded-2xl animate-pulse mb-3"></div>
                                     <div className="h-4 w-3/4 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                                 </div>
                             ))}
@@ -446,10 +446,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                                 </h3>
                             </div>
                         </div>
-                        <div className="flex space-x-3 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+                        <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {continueWatchingItems.slice(0, 10).map((item) => (
-                                <div key={item.id} className="flex-shrink-0 w-36 md:w-48 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
-                                    <div className="relative aspect-[2/3] rounded-lg border-2 border-gray-300 dark:border-gray-600 overflow-hidden mb-3 transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400">
+                                 <div key={item.id} className="flex-shrink-0 w-28 md:w-48 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
+                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3">
                                         {/* Fond qui prolonge l'image avec effet de flou */}
                                         <div className="absolute inset-0 w-full h-full">
                                             <img

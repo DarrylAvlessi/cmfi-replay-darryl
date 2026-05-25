@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { adminApiService } from '../lib/adminApiService';
 import { adminAllowlistService } from '../lib/adminAllowlistService';
-import { serieService, seasonSerieService, episodeSerieService, serieCategoryService, userService, Serie, SeasonSerie, EpisodeSerie, SerieCategory, UserProfile } from '../lib/firestore';
+import { serieService, seasonSerieService, episodeSerieService, serieCategoryService, userService, Serie, SeasonSerie, EpisodeSerie, SerieCategory, UserProfile, getCategoryName } from '../lib/firestore';
 import CategoriesTab from './CategoriesTab';
 import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
@@ -179,6 +179,7 @@ const AdminBackupVideosScreen: React.FC = () => {
 
 // Onglet 1: Vidéos App - Arborescence Séries → Saisons → Épisodes
 const AppVideosTab: React.FC = () => {
+    const { language } = useAppContext();
     const [series, setSeries] = useState<any[]>([]);
     const [seriesData, setSeriesData] = useState<Record<string, { seasons: any[]; episodes: Record<string, any[]> }>>({});
     const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set());
@@ -1680,7 +1681,7 @@ const AppVideosTab: React.FC = () => {
                                     <option value="">Aucune catégorie</option>
                                     {categories.map(category => (
                                         <option key={category.id} value={category.id}>
-                                            {category.name}
+                                            {getCategoryName(category, language)}
                                         </option>
                                     ))}
                                 </select>

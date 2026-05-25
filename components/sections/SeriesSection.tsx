@@ -26,7 +26,7 @@ const SeriesSection: React.FC<SeriesSectionProps> = React.memo(({
             <div className="px-4 md:px-6 lg:px-8 mb-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                        {t('seriesTitle') || 'Teachings'}
+                        {t('seriesTitle') || 'Productions'}
                     </h3>
                     <button
                         onClick={() => navigateToCategory(MediaType.Series)}
@@ -36,7 +36,7 @@ const SeriesSection: React.FC<SeriesSectionProps> = React.memo(({
                     </button>
                 </div>
             </div>
-            <div className="flex space-x-3 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+            <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                 {series.map((serie) => (
                     <div key={serie.uid_serie} className="flex-shrink-0">
                         <MediaCard

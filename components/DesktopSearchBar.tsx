@@ -19,8 +19,9 @@ const DesktopSearchBar: React.FC = () => {
     if (value.trim()) {
       navigate(`/search?q=${encodeURIComponent(value.trim())}`);
     } else if (searchTerm) {
-      navigate('/home');
       setIsExpanded(false);
+      navigate('/home');
+      inputRef.current?.blur();
     }
   };
 

@@ -55,10 +55,10 @@ import { usePageTitle } from './lib/pageTitle';
 const getTitleFromPath = (path: string, t: (key: string) => string): string => {
     if (path === '/home') return t('home');
     if (path === '/documentaries') return t('categoryMovies');
-    if (path === '/teachings') return t('categorySeries');
+    if (path === '/productions') return t('categorySeries');
     if (path === '/podcasts') return t('categoryPodcasts');
     if (path.startsWith('/documentary/')) return t('movie');
-    if (path.startsWith('/teaching/')) return t('serie');
+    if (path.startsWith('/production/')) return t('serie');
     if (path.startsWith('/podcast/')) return t('podcast');
     if (path === '/search') return t('search');
     if (path === '/profile') return t('profile');
@@ -108,10 +108,10 @@ const AppContent: React.FC = () => {
         const getPageName = (path: string): string => {
             if (path === '/home') return 'Accueil';
             if (path === '/documentaries') return 'Documentaires';
-            if (path === '/teachings') return 'Enseignements';
+            if (path === '/productions') return 'Productions';
             if (path === '/podcasts') return 'Podcasts';
             if (path.startsWith('/documentary/')) return 'Détail Documentaire';
-            if (path.startsWith('/teaching/')) return 'Détail Enseignement';
+            if (path.startsWith('/production/')) return 'Détail Production';
             if (path.startsWith('/podcast/')) return 'Détail Podcast';
             if (path.startsWith('/watch/')) return 'Lecture Vidéo';
             if (path === '/search') return 'Recherche';
@@ -200,45 +200,14 @@ const AppContent: React.FC = () => {
     }, [hasStarted]);
 
     const handlePlay = async (media: MediaContent, episode?: EpisodeSerie) => {
-        const route = media.type === MediaType.Series ? 'teaching' :
+        const route = media.type === MediaType.Series ? 'production' :
             media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
-        const detailPath = `/${route}/${media.id}`;
-
-        // Pour les films, séries et podcasts, si on n'a pas d'épisode spécifique et qu'on n'est pas déjà
-        // sur la page de détails, on redirige vers celle-ci au lieu de lancer la lecture.
-        if (!episode && location.pathname !== detailPath) {
-            // Pour les séries/podcasts, on vérifie si c'est bien une série top-level
-            if (media.type === MediaType.Series || media.type === MediaType.Podcast) {
-                const serie = await serieService.getSerieByUid(media.id);
-                if (serie) {
-                    handleSelectMedia(media);
-                    return;
-                }
-            } else if (media.type === MediaType.Movie) {
-                // Pour les films, on redirige systématiquement vers les détails si on n'y est pas déjà
-                handleSelectMedia(media);
-                return;
-            }
-        }
-
-        let episodeToPlay = episode;
-        setPlayingItem({ media, episode: episodeToPlay });
-
-        // Navigate to watch screen with appropriate UID
-        // Fallback to ID if uid_episode is missing (legacy records)
-        const watchUid = episodeToPlay ? (episodeToPlay.uid_episode || episodeToPlay.id) : media.id;
-        navigate(`/watch/${watchUid}`);
-    };
-
-    const handleReturnHome = () => {
-        setContextActiveTab(ActiveTab.Home);
-        setPlayingItem(null);
-        navigate('/home');
+        navigate(`/${route}/${media.id}`);
     };
 
     const handleSelectMedia = (media: MediaContent) => {
-        const route = media.type === MediaType.Series ? 'teaching' :
+        const route = media.type === MediaType.Series ? 'production' :
             media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
         navigate(`/${route}/${media.id}`);
@@ -246,7 +215,7 @@ const AppContent: React.FC = () => {
 
     const handleNavigateToCategory = (type: MediaType) => {
         // Series est déjà au pluriel, Movie et Podcast ont besoin d'un "s"
-        const route = type === MediaType.Series ? 'teachings' :
+        const route = type === MediaType.Series ? 'productions' :
             type === MediaType.Movie ? 'documentaries' :
                 'podcasts';
         console.log('🔍 Navigation vers catégorie:', { type, route, fullPath: `/${route}` });
@@ -264,6 +233,10 @@ const AppContent: React.FC = () => {
 
     const handleBack = () => {
         navigate(-1);
+    };
+
+    const handleReturnHome = () => {
+        navigate('/home');
     };
 
     if (!hasStarted && location.pathname !== '/privacy') {
@@ -417,7 +390,7 @@ const AppContent: React.FC = () => {
                                 />
                             } />
 
-                            <Route path="/teachings" element={
+                            <Route path="/productions" element={
                                 <SeriesScreen
                                     onSelectMedia={handleSelectMedia}
                                     onPlay={handlePlay}
@@ -439,7 +412,7 @@ const AppContent: React.FC = () => {
                                 />
                             } />
 
-                            <Route path="/teaching/:uid" element={
+                            <Route path="/production/:uid" element={
                                 <MediaDetailWrapper
                                     onPlay={handlePlay}
                                     playingItem={playingItem}
@@ -519,7 +492,9 @@ const AppContent: React.FC = () => {
                     {/* Redirects */}
                     <Route path="/get-started" element={<Navigate to="/home" replace />} />
                     <Route path="/serie/:uid" element={<SeriesToTeachingsRedirect />} />
-                    <Route path="/series" element={<Navigate to="/teachings" replace />} />
+                    <Route path="/series" element={<Navigate to="/productions" replace />} />
+                    <Route path="/teachings" element={<Navigate to="/productions" replace />} />
+                    <Route path="/teaching/:uid" element={<SeriesToTeachingsRedirect />} />
                     <Route path="/movie/:uid" element={<MoviesToDocumentariesRedirect />} />
                     <Route path="/movies" element={<Navigate to="/documentaries" replace />} />
                     <Route path="/" element={<Navigate to="/home" replace />} />
@@ -567,7 +542,7 @@ const MoviesToDocumentariesRedirect = () => {
 
 const SeriesToTeachingsRedirect = () => {
     const { uid } = useParams();
-    return <Navigate to={`/teaching/${uid}`} replace />;
+    return <Navigate to={`/production/${uid}`} replace />;
 };
 
 // Dans App.tsx, ajoutez cette ligne temporairement

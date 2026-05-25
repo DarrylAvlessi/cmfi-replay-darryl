@@ -31,8 +31,8 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
 
   if (variant === 'poster') {
     return (
-      <div onClick={handleSelect} className="flex-shrink-0 w-36 md:w-48 space-y-2.5 cursor-pointer group relative">
-        <div className={`relative aspect-[2/3] rounded-lg border-2 border-gray-300 dark:border-gray-600 overflow-hidden transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400 ${
+      <div onClick={handleSelect} className="flex-shrink-0 w-28 md:w-48 space-y-2.5 cursor-pointer group relative">
+        <div className={`relative aspect-[2/3] rounded-2xl overflow-hidden transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400 ${
           is_premium ? 'ring-2 ring-amber-400/60' : ''
         }`}>
           {/* Fond qui prolonge l'image avec effet de flou */}
@@ -80,7 +80,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
     return (
       <div 
         onClick={handleSelect} 
-        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
+        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 ${
           is_premium ? 'ring-1 ring-amber-400/30' : ''
         }`}
       >
@@ -157,8 +157,8 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
 
   // Default variant: 'thumbnail'
   return (
-    <div onClick={handleSelect} className="flex-shrink-0 w-64 md:w-80 space-y-2.5 cursor-pointer group relative">
-      <div className={`relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden ${
+    <div onClick={handleSelect} className="flex-shrink-0 w-44 md:w-80 space-y-2.5 cursor-pointer group relative">
+      <div className={`relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-2xl overflow-hidden ${
         is_premium ? 'ring-2 ring-amber-400/60' : ''
       }`}>
         {is_premium && (

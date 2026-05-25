@@ -259,7 +259,7 @@ const ManageNotificationsScreen: React.FC = () => {
                         <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Ex: Un nouvel épisode de votre enseignement préféré est disponible !"
+                            placeholder="Ex: Un nouvel épisode de votre production préférée est disponible !"
                             rows={5}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                         />

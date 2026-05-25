@@ -90,7 +90,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
   const getTypeLabel = (type: SearchResult['type']): string => {
     const labels = {
       movie: t('categoryMovies') || 'Documentaire',
-      serie: t('categorySeries') || 'Teaching',
+      serie: t('categorySeries') || 'Production',
       podcast: t('categoryPodcasts') || 'Podcast',
       season: t('season') || 'Saison',
       episode: t('episode') || 'Épisode'
@@ -112,7 +112,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
   const filters: Array<{ value: typeof selectedFilter; label: string }> = [
     { value: 'all', label: t('all') || 'Tout' },
     { value: 'movie', label: t('categoryMovies') || 'Documentaires' },
-    { value: 'serie', label: t('categorySeries') || 'Teachings' },
+    { value: 'serie', label: t('categorySeries') || 'Productions' },
     { value: 'podcast', label: t('categoryPodcasts') || 'Podcasts' },
     { value: 'season', label: t('season') || 'Saison' },
     { value: 'episode', label: t('episode') || 'Épisode' }

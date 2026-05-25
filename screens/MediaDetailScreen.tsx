@@ -109,7 +109,7 @@ const EpisodeListItem = React.memo<{
                     </h4>
                     {isFromOtherSeries && (
                         <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
-                            Autre enseignement
+                            Autre production
                         </span>
                     )}
                 </div>
@@ -507,13 +507,13 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 if (shareType === 'season' && selectedSeason) {
 
-                    mediaPath = `/teaching/${item.id}?season=${selectedSeasonUid}`;
+                    mediaPath = `/production/${item.id}?season=${selectedSeasonUid}`;
 
                     shareText = `Retrouvez ${selectedSeason.title_season ? `"${selectedSeason.title_season}"` : `"${item.title}"`} sur CMFI Replay`;
 
                 } else {
 
-                    mediaPath = `/teaching/${item.id}`;
+                    mediaPath = `/production/${item.id}`;
 
                     shareText = `Retrouvez "${item.title}" sur le CMFI Replay`;
 

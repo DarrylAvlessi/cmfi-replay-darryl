@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import { PlayIcon, PlusIcon, CheckIcon, InfoIcon, VolumeHighIcon, VolumeMuteIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
@@ -14,10 +15,10 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [slideProgress, setSlideProgress] = useState(0);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const randomStartTimeRef = React.useRef<number>(0);
@@ -25,6 +26,8 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const slideStartTimeRef = React.useRef<number | null>(null);
   const slideElapsedBeforePauseRef = React.useRef<number>(0);
   const slideRafIdRef = React.useRef<number | null>(null);
+  const progressBarRef = React.useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { t, bookmarkedIds, toggleBookmark, isPremium } = useAppContext();
   const SLIDE_DURATION_MS = 30000;
 
@@ -88,7 +91,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   useEffect(() => {
     if (items.length <= 1) {
-      setSlideProgress(0);
+      if (progressBarRef.current) progressBarRef.current.style.width = '0%';
       slideStartTimeRef.current = null;
       slideElapsedBeforePauseRef.current = 0;
       if (slideRafIdRef.current !== null) {
@@ -110,6 +113,20 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
       return;
     }
 
+    const hasVideo = !!(currentItem?.video_path_hd && !videoError);
+    if (hasVideo && !videoLoaded) {
+      if (progressBarRef.current) progressBarRef.current.style.width = '0%';
+      slideStartTimeRef.current = null;
+      slideElapsedBeforePauseRef.current = 0;
+      if (slideRafIdRef.current !== null) {
+        cancelAnimationFrame(slideRafIdRef.current);
+        slideRafIdRef.current = null;
+      }
+      return;
+    }
+
+    const slideDurationMs = hasVideo ? SLIDE_DURATION_MS : 7000;
+
     slideStartTimeRef.current = performance.now();
 
     const tick = () => {
@@ -117,13 +134,15 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
       const elapsed =
         slideElapsedBeforePauseRef.current + (performance.now() - slideStartTimeRef.current);
-      const progress = Math.min(elapsed / SLIDE_DURATION_MS, 1);
-      setSlideProgress(progress);
+      const progress = Math.min(elapsed / slideDurationMs, 1);
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = `${progress * 100}%`;
+      }
 
       if (progress >= 1) {
         slideElapsedBeforePauseRef.current = 0;
         slideStartTimeRef.current = performance.now();
-        setSlideProgress(0);
+        if (progressBarRef.current) progressBarRef.current.style.width = '0%';
         setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
         setVideoError(false);
       }
@@ -143,7 +162,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
         slideStartTimeRef.current = null;
       }
     };
-  }, [items.length, isPaused]);
+  }, [items.length, isPaused, videoLoaded, videoError, currentItem?.video_path_hd]);
 
   // Gérer la vidéo : jouer un extrait de 30 secondes aléatoire en boucle
   useEffect(() => {
@@ -221,6 +240,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
     const handleLoadedData = () => {
       // Quand les données sont chargées, essayer de jouer la vidéo
+      setVideoLoaded(true);
       video.play().catch((error) => {
         console.error('Error playing video:', error);
         setVideoError(true);
@@ -234,8 +254,9 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
     video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('seeked', handleSeeked);
 
-    // Réinitialiser l'erreur vidéo quand on change d'item
+    // Réinitialiser l'erreur vidéo et l'état de chargement quand on change d'item
     setVideoError(false);
+    setVideoLoaded(false);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -260,7 +281,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const restartCarouselTimer = () => {
     slideElapsedBeforePauseRef.current = 0;
     slideStartTimeRef.current = isPaused ? null : performance.now();
-    setSlideProgress(0);
+    if (progressBarRef.current) progressBarRef.current.style.width = '0%';
   };
 
   const handlePrev = () => {
@@ -281,7 +302,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   };
 
   const handlePlay = () => {
-    onPlay(currentItem);
+    navigate(`/watch/${currentItem.id}`);
   };
 
   const handleBookmark = () => {
@@ -305,40 +326,50 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
     >
       {/* Vidéo ou Image de fond */}
       <div className="absolute inset-0">
-        {showVideo ? (
+        {/* Fond flou dynamique - toujours visible */}
+        <div className="absolute inset-0">
+          <img
+            src={currentItem.imageUrl}
+            alt=""
+            className="w-full h-full object-cover blur-2xl scale-110 opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        </div>
+
+        {/* Vidéo superposée si disponible */}
+        {showVideo && (
           <video
             ref={videoRef}
             key={currentItem.id}
             src={videoUrl}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none transition-opacity duration-1000"
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 ${
+              videoLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
             muted={isMuted}
             playsInline
             loop
             autoPlay
             preload="metadata"
           />
-        ) : (
-          <>
-            {/* Fond flou dynamique */}
-            <div className="absolute inset-0">
-              <img
-                src={currentItem.imageUrl}
-                alt=""
-                className="w-full h-full object-cover blur-2xl scale-110 opacity-40"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
-            </div>
-            
-            {/* Image principale centrée */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                key={currentItem.id}
-                src={currentItem.imageUrl}
-                alt={currentItem.title}
-                className="h-full w-auto max-w-full object-contain transition-opacity duration-1000 z-10"
-              />
-            </div>
-          </>
+        )}
+
+        {/* Indicateur de chargement vidéo */}
+        {showVideo && !videoLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <div className="w-12 h-12 border-[3px] border-white/20 border-t-white/80 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Image principale centrée - fallback si pas de vidéo */}
+        {!showVideo && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img
+              key={currentItem.id}
+              src={currentItem.imageUrl}
+              alt={currentItem.title}
+              className="h-full w-auto max-w-full object-contain transition-opacity duration-1000 z-10"
+            />
+          </div>
         )}
       </div>
 
@@ -474,7 +505,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
           {/* Barre de progression séparée */}
           <div className="absolute bottom-14 md:bottom-16 left-1/2 -translate-x-1/2 z-20 w-32 md:w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-white/80 transition-[width] duration-100" style={{ width: `${slideProgress * 100}%` }} />
+            <div ref={progressBarRef} className="h-full bg-white/80" style={{ width: '0%' }} />
           </div>
 
           {/* Indicateurs centrés entre les flèches */}

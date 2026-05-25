@@ -1,8 +1,9 @@
 import React from 'react';
 import { MediaContent, MediaType } from '../../types';
-import { Serie, SerieCategory } from '../../lib/firestore';
+import { Serie, SerieCategory, getCategoryName } from '../../lib/firestore';
 import MediaCard from '../MediaCard';
 import { transformSerieToMediaContent } from '../../utils/mediaTransformers';
+import { useAppContext } from '../../context/AppContext';
 
 interface CategorySectionsProps {
     serieCategories: SerieCategory[];
@@ -19,6 +20,8 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
     onSelectMedia,
     onPlay
 }) => {
+    const { language } = useAppContext();
+
     if (loading) return null;
 
     if (serieCategories.length === 0) {
@@ -45,7 +48,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                         style={{ backgroundColor: category.color || '#3B82F6' }}
                                     />
                                     <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
-                                        {category.name}
+                                        {getCategoryName(category, language)}
                                     </h3>
                                 </div>
                             </div>
@@ -67,7 +70,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                     style={{ backgroundColor: category.color || '#3B82F6' }}
                                 />
                                 <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
-                                    {category.name}
+                                    {getCategoryName(category, language)}
                                 </h3>
                             </div>
                             {category.description && (
@@ -76,7 +79,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                 </p>
                             )}
                         </div>
-                        <div className="flex space-x-3 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+                        <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {categorySeries.map((serie) => (
                                 <div key={serie.uid_serie} className="flex-shrink-0">
                                     <MediaCard

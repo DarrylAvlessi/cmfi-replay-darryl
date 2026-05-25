@@ -82,7 +82,7 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
         if (media) {
             switch (media.type) {
                 case MediaType.Series:
-                    navigate('/teachings');
+                    navigate('/productions');
                     break;
                 case MediaType.Movie:
                     navigate('/documentaries');
@@ -100,7 +100,7 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
 
     const handleSelectMedia = (media: MediaContent) => {
         // Convertir le type de média en route appropriée
-        const route = media.type === MediaType.Series ? 'teaching' :
+        const route = media.type === MediaType.Series ? 'production' :
             media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
         navigate(`/${route}/${media.id}`);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import MediaCard from '../components/MediaCard';
-import { serieService, Serie, seasonSerieService, SeasonSerie, episodeSerieService, EpisodeSerie, serieCategoryService, SerieCategory } from '../lib/firestore';
+import { serieService, Serie, seasonSerieService, SeasonSerie, episodeSerieService, EpisodeSerie, serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
@@ -199,7 +199,7 @@ const SeriesCard: React.FC<{
 
 const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) => {
     const navigate = useNavigate();
-    const { t, theme } = useAppContext();
+    const { t, theme, language } = useAppContext();
     const [series, setSeries] = useState<SerieWithStats[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -208,29 +208,45 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
     const [filterOption, setFilterOption] = useState<FilterOption>('all');
     const [showFilters, setShowFilters] = useState(false);
     const [categories, setCategories] = useState<SerieCategory[]>([]);
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const selectedCategoryId = searchParams.get('category') || null;
 
     // Convertir une Serie en MediaContent avec stats (optimisé - utilise les stats pré-calculées)
     const convertSerieToMediaContent = async (serie: Serie): Promise<SerieWithStats> => {
-        // Utiliser les stats pré-calculées si elles existent
         let seasonsCount = serie.seasonsCount;
         let episodesCount = serie.episodesCount;
+
+        const needsStatsRefresh = () => {
+            if (seasonsCount === undefined || episodesCount === undefined) {
+                return true;
+            }
+            if (seasonsCount === 0 && episodesCount === 0) {
+                return true;
+            }
+            if (serie.statsUpdatedAt) {
+                const statsAgeMs = Date.now() - new Date(serie.statsUpdatedAt as any).getTime();
+                const statsAgeHours = statsAgeMs / (1000 * 60 * 60);
+                if (statsAgeHours > 24) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+            return false;
+        };
         
-        // Fallback: calculer les stats uniquement si elles ne sont pas pré-calculées
-        if (seasonsCount === undefined || episodesCount === undefined) {
-            console.warn(`⚠️ Stats non pré-calculées pour la série ${serie.uid_serie}, calcul en cours...`);
+        if (needsStatsRefresh()) {
+            console.warn(`⚠️ Recalcul des stats pour la série ${serie.uid_serie}...`);
             try {
                 const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie);
                 seasonsCount = seasons.length;
 
-                // Compter les épisodes pour toutes les saisons
                 const episodesPromises = seasons.map(season =>
                     episodeSerieService.getEpisodesBySeason(season.uid_season)
                 );
                 const episodesArrays = await Promise.all(episodesPromises);
                 episodesCount = episodesArrays.reduce((total, episodes) => total + episodes.length, 0);
                 
-                // Mettre à jour la série avec les stats calculées pour la prochaine fois
                 try {
                     await serieService.calculateAndUpdateSeriesStats(serie.uid_serie);
                 } catch (updateError) {
@@ -238,8 +254,8 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                 }
             } catch (error) {
                 console.error('Error loading series stats:', error);
-                seasonsCount = 0;
-                episodesCount = 0;
+                seasonsCount = seasonsCount ?? 0;
+                episodesCount = episodesCount ?? 0;
             }
         }
 
@@ -375,7 +391,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
-                            {t('seriesScreenTitle') || 'Teachings'}
+                            {t('seriesScreenTitle') || 'Productions'}
                         </h1>
                         <div className="w-10"></div>
                     </div>
@@ -517,7 +533,11 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             <div className="flex flex-wrap gap-2 items-center">
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Catégories:</span>
                                 <button
-                                    onClick={() => setSelectedCategoryId(null)}
+                                    onClick={() => {
+                                        const newParams = new URLSearchParams(searchParams);
+                                        newParams.delete('category');
+                                        setSearchParams(newParams);
+                                    }}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                         selectedCategoryId === null
                                             ? 'bg-amber-500 text-gray-900'
@@ -529,7 +549,11 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 {categories.map((category) => (
                                     <button
                                         key={category.id}
-                                        onClick={() => setSelectedCategoryId(category.id)}
+                                        onClick={() => {
+                                            const newParams = new URLSearchParams(searchParams);
+                                            newParams.set('category', category.id);
+                                            setSearchParams(newParams);
+                                        }}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                                             selectedCategoryId === category.id
                                                 ? 'bg-amber-500 text-gray-900'
@@ -540,7 +564,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                             className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: category.color || '#3B82F6' }}
                                         />
-                                        {category.name}
+                                        {getCategoryName(category, language)}
                                     </button>
                                 ))}
                             </div>
@@ -550,18 +574,18 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                     {/* Légende des icônes de stats */}
                     <div className="pt-2 pb-2 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="font-medium">Légende:</span>
+                            <span className="font-medium">{t('seriesScreenLegends') || 'Légendes'}:</span>
                             <div className="flex items-center gap-1">
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                                <span>Saisons</span>
+                                <span>{t('seasons') || "Saisons"}</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
-                                <span>Épisodes</span>
+                                <span>{t('episodes') || "Épisodes"}</span>
                             </div>
                         </div>
                     </div>
@@ -584,12 +608,12 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noSeries') || 'No teachings found'}
+                                 {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noSeries') || 'No productions found'}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {searchTerm
                                     ? t('tryDifferentSearch') || 'Essayez une autre recherche'
-                                    : t('noSeriesAvailable') || 'No teachings available'}
+                                     : t('noSeriesAvailable') || 'No productions available'}
                             </p>
                             {searchTerm && (
                                 <button
@@ -606,7 +630,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         {/* Compteur de résultats */}
                         <div className="mb-6">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'teachings' : t('serie') || 'teaching'}
+                                 {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'productions' : t('serie') || 'production'}
                                 {searchTerm && ` ${t('foundFor') || 'trouvée(s) pour'} "${searchTerm}"`}
                             </p>
                         </div>
