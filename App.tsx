@@ -200,6 +200,10 @@ const AppContent: React.FC = () => {
     }, [hasStarted]);
 
     const handlePlay = async (media: MediaContent, episode?: EpisodeSerie) => {
+        if (episode?.uid_episode) {
+            navigate(`/watch/${episode.uid_episode}`);
+            return;
+        }
         const route = media.type === MediaType.Series ? 'production' :
             media.type === MediaType.Movie ? 'documentary' :
                 'podcast';
