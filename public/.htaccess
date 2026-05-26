@@ -27,6 +27,38 @@
     RewriteRule ^ index.html [L]
 </IfModule>
 
+# ===================================================================
+# Gestion stricte du Cache pour éviter les problèmes de mise à jour
+# ===================================================================
+# 1. On interdit DIRECTEMENT le cache sur le fichier index.html
+<FilesMatch "index\.html$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </IfModule>
+</FilesMatch>
+
+# 2. Cache global et des assets statiques (géré par mod_expires)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Sécurité : par défaut, on ne cache pas (sera surchargé par les types ci-dessous)
+    ExpiresDefault "access plus 0 seconds"
+
+    # Vos assets ont un hash unique généré par Vite (ex: index-C7a8b9.js)
+    # On peut donc les cacher sans risque, car si le code change, le nom change !
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 month"
+    
+    # Augmenté à 1 mois au lieu d'une semaine, car Vite hash aussi le CSS et le JS
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
 # Empêcher le listing des répertoires
 Options -Indexes
 
@@ -44,18 +76,6 @@ Options -Indexes
     AddType image/svg+xml .svg
     AddType image/webp .webp
     AddType application/json .json
-</IfModule>
-
-# Cache des assets statiques (fichiers dans /assets/ sont hashés par Vite)
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/svg+xml "access plus 1 month"
-    ExpiresByType image/webp "access plus 1 month"
-    ExpiresByType text/css "access plus 1 week"
-    ExpiresByType application/javascript "access plus 1 week"
-    ExpiresByType font/woff2 "access plus 1 month"
 </IfModule>
 
 # Compression Gzip

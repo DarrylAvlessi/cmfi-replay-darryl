@@ -48,6 +48,7 @@ import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
+import UpdatePrompt from './components/UpdatePrompt';
 import { ActiveTab, MediaContent, MediaType } from './types';
 import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/firestore';
 import { usePageTitle } from './lib/pageTitle';
@@ -523,6 +524,8 @@ const AppContent: React.FC = () => {
                     }}
                 />
             )}
+
+            <UpdatePrompt />
         </div>
     );
 };
