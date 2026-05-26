@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
           manifest: {
             name: 'CMFI Replay',
             short_name: 'CMFI Replay',
+            lang: 'fr',
             description: 'Replay application for CMFI',
             theme_color: '#ffffff',
             icons: [

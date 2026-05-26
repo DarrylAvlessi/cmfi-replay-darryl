@@ -205,9 +205,11 @@ const AppContent: React.FC = () => {
             navigate(`/watch/${episode.uid_episode}`);
             return;
         }
-        const route = media.type === MediaType.Series ? 'production' :
-            media.type === MediaType.Movie ? 'documentary' :
-                'podcast';
+        if (media.type === MediaType.Movie) {
+            navigate(`/watch/${media.id}`);
+            return;
+        }
+        const route = media.type === MediaType.Series ? 'production' : 'podcast';
         navigate(`/${route}/${media.id}`);
     };
 
