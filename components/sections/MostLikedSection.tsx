@@ -23,7 +23,7 @@ const MostLikedSection: React.FC<MostLikedSectionProps> = React.memo(({
                 <div className="px-4 md:px-6 lg:px-8 mb-6">
                     <div className="h-8 w-64 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
                 </div>
-                <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+<div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className="flex-shrink-0 w-28 md:w-48 lg:w-52">
                             <div className="aspect-[2/3] bg-gray-200 dark:bg-black rounded animate-pulse mb-3"></div>
@@ -46,7 +46,7 @@ const MostLikedSection: React.FC<MostLikedSectionProps> = React.memo(({
                     </h3>
                 </div>
             </div>
-            <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+            <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                 {items.slice(0, 10).map((item, index) => (
                     <div key={item.content.id} className="flex-shrink-0">
                         <MediaCard

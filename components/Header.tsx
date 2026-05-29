@@ -66,6 +66,10 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-black">
           {/* Logo et titre */}
           <div className="flex items-center space-x-4">
+            {/* Hamburger pour tablette (quand la Navbar est cachée) */}
+            <div className="md:flex lg:hidden">
+              <HamburgerMenu isOpen={isSidebarOpen} onClick={onToggleSidebar} className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700" />
+            </div>
             {onBack ? (
               <button
                 onClick={onBack}

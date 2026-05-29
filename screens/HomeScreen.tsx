@@ -81,7 +81,7 @@ const MediaRow: React.FC<{ title: string; items: MediaContent[]; onSelectMedia: 
                 {/* Carrousel avec scroll smooth et snap */}
                 <div
                     ref={scrollContainerRef}
-                    className="flex space-x-2 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6 scroll-smooth snap-x snap-mandatory"
+                    className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6 scroll-smooth snap-x snap-mandatory"
                     style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
                 >
                     {items.map((item, index) => (
@@ -446,10 +446,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                                 </h3>
                             </div>
                         </div>
-                        <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+                        <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {continueWatchingItems.slice(0, 10).map((item) => (
-                                 <div key={item.id} className="flex-shrink-0 w-28 md:w-48 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
-                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3">
+                                 <div key={item.id} className="flex-shrink-0 w-28 md:w-48 lg:w-56 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
+                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400">
                                         {/* Fond qui prolonge l'image avec effet de flou */}
                                         <div className="absolute inset-0 w-full h-full">
                                             <img

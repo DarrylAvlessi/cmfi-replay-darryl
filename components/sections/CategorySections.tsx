@@ -79,7 +79,7 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                                 </p>
                             )}
                         </div>
-                        <div className="flex space-x-2 md:space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+                        <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {categorySeries.map((serie) => (
                                 <div key={serie.uid_serie} className="flex-shrink-0">
                                     <MediaCard

@@ -331,16 +331,16 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const isBookmarked = bookmarkedIds.includes(item.id);
 
     const currentIndex = useMemo(() => {
-        if (!episode || episodesInSerie.length === 0) return -1;
-        let idx = episodesInSerie.findIndex(e => e.uid_episode === episode.uid_episode);
+        if (!episode || episodesInSeason.length === 0) return -1;
+        let idx = episodesInSeason.findIndex(e => e.uid_episode === episode.uid_episode);
         if (idx === -1) {
-            idx = episodesInSerie.findIndex(e => e.episode_numero === episode.episode_numero && e.title === episode.title);
+            idx = episodesInSeason.findIndex(e => e.episode_numero === episode.episode_numero && e.title === episode.title);
         }
         return idx;
-    }, [episodesInSerie, episode]);
+    }, [episodesInSeason, episode]);
 
     const hasPrevEpisode = currentIndex > 0;
-    const hasNextEpisode = currentIndex !== -1 && currentIndex < episodesInSerie.length - 1;
+    const hasNextEpisode = currentIndex !== -1 && currentIndex < episodesInSeason.length - 1;
 
     const handleVideoEnded = () => {
         if (!userProfile) {

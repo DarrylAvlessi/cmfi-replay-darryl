@@ -251,11 +251,9 @@ export const VolumeMuteIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const PipIcon: React.FC<IconProps> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        {/* Grand rectangle (écran principal) */}
-        <rect x="2" y="2" width="18" height="14" rx="1" />
-        {/* Petit rectangle (fenêtre PiP) superposé en bas à droite */}
-        <rect x="13" y="11" width="8" height="6" rx="0.5" strokeWidth={2} />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 18" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <rect x="2" y="2" width="18" height="14" rx="1.5" />
+        <rect x="12" y="9" width="8" height="7" rx="0.75" />
     </svg>
 );
 

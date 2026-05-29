@@ -41,7 +41,7 @@ const RankedMediaCard: React.FC<RankedMediaCardProps> = ({
     return (
         <div
             onClick={handleCardClick}
-            className="flex-shrink-0 w-44 md:w-80 cursor-pointer group transition-all duration-500 hover:scale-105"
+            className="flex-shrink-0 w-44 md:w-72 lg:w-80 cursor-pointer group transition-all duration-500 hover:scale-105"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -51,7 +51,7 @@ const RankedMediaCard: React.FC<RankedMediaCardProps> = ({
                 }
             }}
         >
-            <div className="relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500">
+            <div className="relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500 border-2 border-gray-200/80 dark:border-gray-700/80 group-hover:border-blue-500 dark:group-hover:border-blue-400">
                 {/* Badge de vues amélioré */}
                 {viewCount !== undefined && (
                     <div className="absolute top-3 right-3 z-10 flex items-center bg-black/90 text-white text-xs font-bold px-3 py-1.5 rounded-full">

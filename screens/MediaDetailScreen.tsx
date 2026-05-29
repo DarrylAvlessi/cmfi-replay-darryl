@@ -151,12 +151,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     const [firestoreSeasons, setFirestoreSeasons] = useState<SeasonSerie[]>([]);
-
     const [seasonEpisodes, setSeasonEpisodes] = useState<{ [key: string]: EpisodeSerie[] }>({});
-
     const [selectedSeasonUid, setSelectedSeasonUid] = useState<string | null>(null);
-
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingEpisodes, setIsLoadingEpisodes] = useState(false);
 
     const [movieData, setMovieData] = useState<Movie | null>(null);
 
@@ -297,79 +295,40 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
     const loadSeasonsAndEpisodes = async () => {
-
         setIsLoading(true);
-
         try {
-
-            // Récupérer la série depuis Firestore
-
             const serie = await serieService.getSerieByUid(item.id);
-
             if (serie) {
-
-                // Récupérer les saisons de la série (filtrées selon les permissions)
-
                 const userUid = userProfile?.uid;
-
                 const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie, userUid);
-
                 setFirestoreSeasons(seasons);
 
-
-
-                // Récupérer les épisodes pour toutes les saisons en parallèle (évite le problème N+1)
-                const episodesPromises = seasons.map(season => 
-                    episodeSerieService.getEpisodesBySeason(season.uid_season)
-                );
-                
-                const episodesResults = await Promise.all(episodesPromises);
-                
-                const episodesData: { [key: string]: EpisodeSerie[] } = {};
-                seasons.forEach((season, index) => {
-                    episodesData[season.uid_season] = episodesResults[index];
-                });
-                
-                setSeasonEpisodes(episodesData);
-
-                
-
-                // Initialiser la saison sélectionnée avec la première saison ou la saison de l'épisode en cours ou celle de l'URL
-
                 if (seasons.length > 0) {
-
-                    const playingSeason = playingItem?.episode && 'uid_episode' in playingItem.episode
-
-                        ? seasons.find(s => {
-
-                            const episodes = episodesData[s.uid_season] || [];
-
-                            return episodes.some(e => e.uid_episode === playingItem.episode?.uid_episode);
-
-                        })
-
-                        : null;
-
-                    
-
-                    // Priorité : saison de l'URL > saison de l'épisode en cours > première saison
-
-                    setSelectedSeasonUid(initialSeasonUid || playingSeason?.uid_season || seasons[0].uid_season);
-
+                    setSelectedSeasonUid(initialSeasonUid || seasons[0].uid_season);
                 }
-
             }
-
         } catch (error) {
-
             console.error('Error loading seasons and episodes:', error);
-
         } finally {
-
             setIsLoading(false);
-
         }
+    };
 
+    useEffect(() => {
+        if (!selectedSeasonUid) return;
+        loadEpisodesForSeason(selectedSeasonUid);
+    }, [selectedSeasonUid]);
+
+    const loadEpisodesForSeason = async (seasonUid: string) => {
+        setIsLoadingEpisodes(true);
+        try {
+            const episodes = await episodeSerieService.getEpisodesBySeason(seasonUid);
+            setSeasonEpisodes(prev => ({ ...prev, [seasonUid]: episodes }));
+        } catch (error) {
+            console.error('Error loading episodes:', error);
+        } finally {
+            setIsLoadingEpisodes(false);
+        }
     };
 
 
@@ -963,7 +922,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                         const selectedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
 
-                                        const episodes = seasonEpisodes[selectedSeasonUid] || [];
+                                        const episodes = seasonEpisodes[selectedSeasonUid];
 
                                         if (!selectedSeason) return null;
 
@@ -973,7 +932,17 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                             <div className="space-y-1">
 
-                                                {episodes.length > 0 ? (
+                                                {isLoadingEpisodes ? (
+
+                                                    <div className="text-center py-8">
+
+                                                        <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+
+                                                        <div className="text-gray-500 dark:text-gray-400 text-sm mt-2">{t('loading') || 'Chargement...'}</div>
+
+                                                    </div>
+
+                                                ) : episodes && episodes.length > 0 ? (
 
                                                     episodes.map(episode => {
 
@@ -1001,7 +970,6 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                 )}
 
                                             </div>
-
                                         );
 
                                     })()

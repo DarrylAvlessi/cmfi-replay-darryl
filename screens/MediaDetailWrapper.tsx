@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
-import { movieService, serieService } from '../lib/firestore';
+import { movieService, serieService, episodeSerieService } from '../lib/firestore';
 import MediaDetailScreen from './MediaDetailScreen';
 import { useAppContext } from '../context/AppContext';
 
@@ -63,6 +63,13 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
                         premium_text: serie.premium_text
                     });
                     setLoading(false);
+                    return;
+                }
+
+                // Essayer de récupérer comme épisode
+                const episode = await episodeSerieService.getEpisodeByUid(uid);
+                if (episode) {
+                    navigate(`/watch/${uid}`);
                     return;
                 }
 

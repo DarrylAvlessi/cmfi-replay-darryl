@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import {
     PlayIcon, PauseIcon,
     VolumeHighIcon, VolumeMuteIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon,
-    BackwardIcon, ForwardPlaybackIcon
 } from './icons';
 
 const formatTime = (seconds: number) => {
@@ -73,6 +72,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const { userProfile } = useAppContext();
     const [unavailable, setUnavailable] = useState(false);
+    const previewVideoRef = useRef<HTMLVideoElement>(null);
+    const [hoverPos, setHoverPos] = useState(0);
+    const [previewHoverTime, setPreviewHoverTime] = useState(0);
+    const [showPreview, setShowPreview] = useState(false);
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [isLongPressing, setIsLongPressing] = useState(false);
+    const speedBeforeLongPressRef = useRef(1);
+    const [playPauseFeedback, setPlayPauseFeedback] = useState<'play' | 'pause' | null>(null);
+    const playPauseFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Sync external autoplayEnabled (from EpisodePlayerScreen state) into internal state
     useEffect(() => {
@@ -167,10 +175,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         };
     }, [userProfile?.uid, videoUid, isEpisode, episodeRef]);
 
+    const showPlayPauseFeedback = (type: 'play' | 'pause') => {
+        if (isTouch) return;
+        setPlayPauseFeedback(type);
+        if (playPauseFeedbackTimeoutRef.current) {
+            clearTimeout(playPauseFeedbackTimeoutRef.current);
+        }
+        playPauseFeedbackTimeoutRef.current = setTimeout(() => {
+            setPlayPauseFeedback(null);
+        }, 500);
+    };
+
     const togglePlay = () => {
         const wasPlaying = !videoRef.current?.paused;
         wasPlaying ? videoRef.current?.pause() : videoRef.current?.play();
         setShowControls(wasPlaying);
+        showPlayPauseFeedback(wasPlaying ? 'pause' : 'play');
         if (!wasPlaying) {
             resetControlsTimeout();
             sessionStorage.setItem(`video_paused_${videoUid}`, 'true');
@@ -178,6 +198,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             sessionStorage.removeItem(`video_paused_${videoUid}`);
         }
     };
+
+    const isTouchDevice = useRef(typeof window !== 'undefined' && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+    const isTouch = isTouchDevice.current;
 
     const resetControlsTimeout = () => {
         setShowControls(true);
@@ -355,6 +378,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     const lastTapRef = useRef<{ time: number; x: number } | null>(null);
     const ignoreClickUntilRef = useRef(0);
+    const singleTapTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
         const container = containerRef.current;
@@ -372,6 +396,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const DOUBLE_TAP_MAX_DISTANCE_PX = 60;
 
         if (prev && now - prev.time <= DOUBLE_TAP_DELAY_MS && Math.abs(x - prev.x) <= DOUBLE_TAP_MAX_DISTANCE_PX) {
+            if (singleTapTimerRef.current) {
+                clearTimeout(singleTapTimerRef.current);
+                singleTapTimerRef.current = null;
+            }
             const isLeft = x < rect.width / 2;
             if (isLeft) {
                 handleRewind();
@@ -387,15 +415,113 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
 
         lastTapRef.current = { time: now, x };
+
+        if (isTouch) {
+            e.preventDefault();
+            if (singleTapTimerRef.current) {
+                clearTimeout(singleTapTimerRef.current);
+            }
+            singleTapTimerRef.current = setTimeout(() => {
+                singleTapTimerRef.current = null;
+                setShowControls(true);
+                resetControlsTimeout();
+            }, DOUBLE_TAP_DELAY_MS);
+        }
     };
 
-    const handlePlaybackRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newRate = parseFloat(e.target.value);
-        if (videoRef.current) {
-            videoRef.current.playbackRate = newRate;
+    const LONG_PRESS_DELAY = 500;
+    const LONG_PRESS_MOVE_THRESHOLD = 20;
+
+    const handleContainerTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (!isPlaying) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const el = e.currentTarget;
+        (el as any)._lpStart = { x: touch.clientX, y: touch.clientY };
+
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
         }
-        setPlaybackRate(newRate);
+        longPressTimerRef.current = setTimeout(() => {
+            setIsLongPressing(true);
+            lastTapRef.current = null;
+            if (videoRef.current) {
+                speedBeforeLongPressRef.current = videoRef.current.playbackRate;
+                videoRef.current.playbackRate = 2;
+                setPlaybackRate(2);
+            }
+        }, LONG_PRESS_DELAY);
     };
+
+    const handleContainerTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (!longPressTimerRef.current) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+        const start = (e.currentTarget as any)._lpStart;
+        if (!start) return;
+        const dx = Math.abs(touch.clientX - start.x);
+        const dy = Math.abs(touch.clientY - start.y);
+        if (dx > LONG_PRESS_MOVE_THRESHOLD || dy > LONG_PRESS_MOVE_THRESHOLD) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+    };
+
+    const handleContainerTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        if (isLongPressing) {
+            if (singleTapTimerRef.current) {
+                clearTimeout(singleTapTimerRef.current);
+                singleTapTimerRef.current = null;
+            }
+            setIsLongPressing(false);
+            if (videoRef.current) {
+                videoRef.current.playbackRate = speedBeforeLongPressRef.current;
+                setPlaybackRate(speedBeforeLongPressRef.current);
+            }
+            e.preventDefault();
+            return;
+        }
+        handleTouchEnd(e);
+    };
+
+    const SPEED_PRESETS = [1, 1.25, 1.5, 2, 3];
+    const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const speedMenuRef = useRef<HTMLDivElement>(null);
+    const speedSliderRef = useRef<HTMLInputElement>(null);
+
+    const setPlaybackSpeed = (rate: number) => {
+        const clamped = Math.max(0.25, Math.min(3, Math.round(rate * 20) / 20));
+        if (videoRef.current) {
+            videoRef.current.playbackRate = clamped;
+        }
+        setPlaybackRate(clamped);
+        resetControlsTimeout();
+    };
+
+    const handleSpeedSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rate = parseFloat(e.target.value);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = rate;
+        }
+        setPlaybackRate(rate);
+        resetControlsTimeout();
+    };
+
+    useEffect(() => {
+        if (!showSpeedMenu) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (speedMenuRef.current && !speedMenuRef.current.contains(e.target as Node)) {
+                setShowSpeedMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showSpeedMenu]);
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
         resetControlsTimeout();
@@ -424,6 +550,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const nextTime = (pct / 100) * video.duration;
         video.currentTime = nextTime;
         setCurrentTime(nextTime);
+        const pos = pct / 100;
+        setHoverPos(pos);
+        setPreviewHoverTime(nextTime);
+        if (previewVideoRef.current && !isNaN(nextTime) && isFinite(nextTime) && nextTime >= 0) {
+            previewVideoRef.current.currentTime = nextTime;
+        }
     };
 
     const handleSliderMouseDown = () => {
@@ -440,6 +572,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         setIsScrubbing(false);
         if (wasPlayingRef.current && videoRef.current) {
             videoRef.current.play();
+        }
+    };
+
+    const handleSeekBarHover = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        setHoverPos(pos);
+        const time = pos * duration;
+        setPreviewHoverTime(time);
+        if (previewVideoRef.current && !isNaN(time) && isFinite(time) && time >= 0) {
+            previewVideoRef.current.currentTime = time;
         }
     };
 
@@ -533,20 +676,28 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const container = containerRef.current;
         if (!container) return;
         if (!document.fullscreenElement) {
-            container.requestFullscreen().catch(err => console.error(err));
+            container.requestFullscreen()
+                .then(() => {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(() => {});
+                    }
+                })
+                .catch(err => console.error(err));
         } else {
             document.exitFullscreen();
         }
     };
 
     useEffect(() => {
-        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+            if (!document.fullscreenElement && screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
-
-    const playbackControlSize = "w-10 h-10 sm:w-12 sm:h-12";
-    const seekControlSize = "w-6 h-6 sm:w-8 sm:h-8";
 
     if (unavailable) {
         return (
@@ -589,20 +740,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (Date.now() < ignoreClickUntilRef.current) {
             return;
         }
-        if (!showControls) {
-            resetControlsTimeout();
-            return;
-        }
+        if (isTouch) return;
         togglePlay();
     };
 
     return (
         <div
             ref={containerRef}
-            className="relative w-full aspect-video bg-black group overflow-hidden"
+            className="relative w-full aspect-video bg-black group overflow-hidden touch-manipulation"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            onTouchEnd={handleTouchEnd}
+            onTouchStart={handleContainerTouchStart}
+            onTouchMove={handleContainerTouchMove}
+            onTouchEnd={handleContainerTouchEnd}
         >
             {/* Glide Loading Spinner */}
             <div className={`absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-10 transition-all duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -629,39 +779,69 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         +10s
                     </div>
                 </div>
-            </div>
-            <div className={`absolute inset-0 bg-black/30 transition-opacity flex flex-col justify-between ${showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <div className="flex justify-end p-2 sm:p-4">
-                    <div className="flex items-center space-x-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm">
-                        <span className="text-white font-semibold text-sm w-12 text-center">{playbackRate.toFixed(2)}x</span>
-                        <input
-                            type="range"
-                            min="0.5"
-                            max="2"
-                            step="0.25"
-                            value={playbackRate}
-                            onChange={handlePlaybackRateChange}
-                            className="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-amber-500"
-                            aria-label={t('playbackSpeed')}
-                        />
+                <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-150 ${isLongPressing ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                    <div className="px-4 py-2 rounded-xl bg-black/70 text-amber-400 font-bold text-lg backdrop-blur-sm border border-amber-500/30 shadow-lg">
+                        2x
                     </div>
                 </div>
+                {playPauseFeedback && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="feedback-pop bg-black/50 rounded-full p-4 backdrop-blur-sm">
+                            {playPauseFeedback === 'pause' ? (
+                                <PauseIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
+                            ) : (
+                                <PlayIcon className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div className={`absolute inset-0 transition-opacity flex flex-col justify-between ${showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                <div className="flex-1" onClick={isTouch ? undefined : handleVideoClick} />
+                {isTouch && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <button
+                            onClick={togglePlay}
+                            className="pointer-events-auto w-16 h-16 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                        >
+                            {isPlaying ? <PauseIcon className="w-8 h-8 text-white" /> : <PlayIcon className="w-8 h-8 text-white ml-0.5" />}
+                        </button>
+                    </div>
+                )}
 
-                <div className="flex-1 flex items-center justify-center space-x-4">
-                    <button onClick={handleRewind} className="text-white p-2 bg-black/50 rounded-full transition-transform hover:scale-110">
-                        <BackwardIcon className={seekControlSize} />
-                    </button>
-                    <button onClick={togglePlay} className="text-white p-2 bg-black/50 rounded-full transition-transform hover:scale-110">
-                        {isPlaying ? <PauseIcon className={playbackControlSize} /> : <PlayIcon className={playbackControlSize} />}
-                    </button>
-                    <button onClick={handleFastForward} className="text-white p-2 bg-black/50 rounded-full transition-transform hover:scale-110">
-                        <ForwardPlaybackIcon className={seekControlSize} />
-                    </button>
-                </div>
+                <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    <div className="px-2 sm:px-4 pt-2 pb-0.5">
+                        <div
+                            className="relative w-full h-1.5 hover:h-2.5 transition-all duration-200 bg-white/20 rounded-full cursor-pointer group"
+                            onClick={handleSeek}
+                            onMouseMove={handleSeekBarHover}
+                            onMouseEnter={(e) => { setShowPreview(true); handleSeekBarHover(e); }}
+                            onMouseLeave={() => setShowPreview(false)}
+                        >
+                            {/* Thumbnail Preview on Hover/Scrub — always mounted for preloading */}
+                            <div
+                                className={`absolute bottom-full mb-3 pointer-events-none z-30 transition-all duration-150 ${(showPreview || isScrubbing) && duration > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                                style={{
+                                    left: `${Math.max(8, Math.min(92, hoverPos * 100))}%`,
+                                    transform: 'translateX(-50%)',
+                                }}
+                            >
+                                <div className="bg-black rounded-lg overflow-hidden shadow-xl border border-white/20">
+                                    <video
+                                        ref={previewVideoRef}
+                                        src={src}
+                                        className="w-40 h-[90px] object-cover"
+                                        preload="auto"
+                                        muted
+                                        playsInline
+                                        crossOrigin="anonymous"
+                                    />
+                                    <div className="text-white text-[11px] text-center py-0.5 px-2 bg-black/80 font-medium">
+                                        {formatTime(previewHoverTime)}
+                                    </div>
+                                </div>
+                            </div>
 
-                <div className="p-2 sm:p-4">
-                    <div className="space-y-2">
-                        <div className="relative w-full h-1.5 hover:h-2.5 transition-all duration-200 bg-white/20 rounded-full cursor-pointer group" onClick={handleSeek}>
                             {/* Buffered Bar */}
                             <div className="absolute inset-y-0 left-0 bg-white/30 rounded-full transition-all duration-200" style={{ width: `${buffered}%` }} />
 
@@ -688,24 +868,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                                 aria-label="Seek"
                             />
                         </div>
+                    </div>
+                    <div className="px-2 sm:px-4 pb-2 sm:pb-3">
                         <div className="flex items-center justify-between text-white text-sm font-medium">
-                            <div className="flex items-center space-x-2 sm:space-x-4">
-                                <button onClick={togglePlay}>
-                                    {isPlaying ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6" />}
+                            <div className="flex items-center space-x-1 sm:space-x-2">
+                                <button onClick={togglePlay} className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200">
+                                    {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
                                 </button>
-                                <button onClick={toggleMute}>
-                                    {isMuted ? <VolumeMuteIcon className="w-6 h-6" /> : <VolumeHighIcon className="w-6 h-6" />}
+                                <button onClick={toggleMute} className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200">
+                                    {isMuted ? <VolumeMuteIcon className="w-5 h-5" /> : <VolumeHighIcon className="w-5 h-5" />}
                                 </button>
-                                <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                <span className="text-[13px] text-white/80 font-medium tabular-nums leading-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
                             </div>
-                            <div className="flex items-center space-x-2 sm:space-x-4">
+                            <div className="flex items-center space-x-1 sm:space-x-2">
                                 {showAutoplayToggle && (
                                     <button 
                                         onClick={toggleAutoplay}
-                                        className={`relative w-12 h-6 rounded-full p-0.5 transition-colors duration-200 ${autoplayEnabled ? 'bg-amber-500' : 'bg-gray-700'}`}
+                                        className={`relative w-11 h-5 rounded-full p-0.5 transition-colors duration-200 ${autoplayEnabled ? 'bg-amber-500' : 'bg-gray-700'}`}
                                         title={`Lecture automatique ${autoplayEnabled ? 'activée' : 'désactivée'}`}
                                     >
-                                        <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${autoplayEnabled ? 'translate-x-6' : 'translate-x-0'}`}>
+                                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${autoplayEnabled ? 'translate-x-6' : 'translate-x-0'}`}>
                                             {autoplayEnabled ? (
                                                 <svg 
                                                     viewBox="0 0 24 24" 
@@ -728,20 +910,135 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                                         </div>
                                     </button>
                                 )}
-                                <button 
-                                    onClick={togglePip} 
-                                    className="p-1 text-white hover:bg-white/20 rounded-full transition-colors duration-200"
+                                <div className="relative" ref={speedMenuRef}>
+                                    <button
+                                        onClick={() => setShowSpeedMenu(v => !v)}
+                                        className="px-2 py-1 rounded-full bg-white/10 text-white text-xs font-medium hover:bg-white/20 transition-colors leading-none"
+                                    >
+                                        {playbackRate % 1 === 0 ? playbackRate.toFixed(0) : playbackRate.toFixed(2).replace(/0$/, '')}x
+                                    </button>
+                                    {showSpeedMenu && (
+                                        <>
+                                            {/* Desktop: small popover near the button */}
+                                            <div className="hidden md:block absolute bottom-full right-0 mb-2 py-3 px-3 w-52 bg-black/95 rounded-lg border border-white/10 shadow-xl z-50">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[11px] text-white/40 font-medium">0.25x</span>
+                                                    <span className="text-xs text-white/80 font-semibold tabular-nums">{playbackRate.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}x</span>
+                                                    <span className="text-[11px] text-white/40 font-medium">3x</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => setPlaybackSpeed(playbackRate - 0.05)}
+                                                        disabled={playbackRate <= 0.25}
+                                                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs leading-none"
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <input
+                                                        ref={speedSliderRef}
+                                                        type="range"
+                                                        min={0.25}
+                                                        max={3}
+                                                        step={0.05}
+                                                        value={playbackRate}
+                                                        onChange={handleSpeedSliderChange}
+                                                        className="flex-1 h-1 appearance-none bg-white/20 rounded-full cursor-pointer accent-amber-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
+                                                    />
+                                                    <button
+                                                        onClick={() => setPlaybackSpeed(playbackRate + 0.05)}
+                                                        disabled={playbackRate >= 3}
+                                                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs leading-none"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center justify-between gap-1 mt-3">
+                                                    {SPEED_PRESETS.map(rate => (
+                                                        <button
+                                                            key={rate}
+                                                            onClick={() => { setPlaybackSpeed(rate); setShowSpeedMenu(false); }}
+                                                            className={`px-2 py-1 text-xs rounded-md transition-colors leading-none ${
+                                                                Math.abs(rate - playbackRate) < 0.01
+                                                                    ? 'bg-amber-500/20 text-amber-400 font-semibold'
+                                                                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            {rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(2).replace(/0$/, '')}x
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Mobile/tablet: centered overlay panel */}
+                                            <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowSpeedMenu(false)}>
+                                                <div className="w-72 mx-4 bg-black/95 backdrop-blur-md rounded-xl border border-white/10 shadow-xl py-6 px-5" onClick={e => e.stopPropagation()}>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <span className="text-sm text-white/60 font-medium">Speed</span>
+                                                        <span className="text-lg text-white font-semibold tabular-nums">{playbackRate.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}x</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setPlaybackSpeed(playbackRate - 0.05)}
+                                                            disabled={playbackRate <= 0.25}
+                                                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <input
+                                                            ref={speedSliderRef}
+                                                            type="range"
+                                                            min={0.25}
+                                                            max={3}
+                                                            step={0.05}
+                                                            value={playbackRate}
+                                                            onChange={handleSpeedSliderChange}
+                                                            className="flex-1 h-1.5 appearance-none bg-white/20 rounded-full cursor-pointer accent-amber-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
+                                                        />
+                                                        <button
+                                                            onClick={() => setPlaybackSpeed(playbackRate + 0.05)}
+                                                            disabled={playbackRate >= 3}
+                                                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex justify-between text-[11px] text-white/40 mt-1">
+                                                        <span>0.25x</span>
+                                                        <span>3x</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-2 mt-5">
+                                                        {SPEED_PRESETS.map(rate => (
+                                                            <button
+                                                                key={rate}
+                                                                onClick={() => { setPlaybackSpeed(rate); setShowSpeedMenu(false); }}
+                                                                className={`flex-1 py-2 text-sm rounded-lg transition-colors leading-none ${
+                                                                    Math.abs(rate - playbackRate) < 0.01
+                                                                        ? 'bg-amber-500/20 text-amber-400 font-semibold'
+                                                                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                                                                }`}
+                                                            >
+                                                                {rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(2).replace(/0$/, '')}x
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={togglePip}
+                                    className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
                                     title="Mode image dans l'image"
                                 >
-                                    <PipIcon className="w-6 h-6" />
+                                    <PipIcon className="w-5 h-5" />
                                 </button>
-                                <button 
+                                <button
                                     onClick={toggleFullscreen}
-                                    className="p-1 text-white hover:bg-white/20 rounded-full transition-colors duration-200"
+                                    className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
                                 >
-                                    {isFullscreen ? 
-                                        <FullscreenExitIcon className="w-6 h-6" /> : 
-                                        <FullscreenEnterIcon className="w-6 h-6" />
+                                    {isFullscreen ?
+                                        <FullscreenExitIcon className="w-5 h-5" /> :
+                                        <FullscreenEnterIcon className="w-5 h-5" />
                                     }
                                 </button>
                             </div>
