@@ -395,6 +395,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const DOUBLE_TAP_DELAY_MS = 300;
         const DOUBLE_TAP_MAX_DISTANCE_PX = 60;
 
+        const target = e.target as HTMLElement;
+        const isInteractive = target.closest('button, input, [role="slider"]');
+
+        if (isInteractive) {
+            lastTapRef.current = null;
+            return;
+        }
+
         if (prev && now - prev.time <= DOUBLE_TAP_DELAY_MS && Math.abs(x - prev.x) <= DOUBLE_TAP_MAX_DISTANCE_PX) {
             if (singleTapTimerRef.current) {
                 clearTimeout(singleTapTimerRef.current);
@@ -490,38 +498,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const SPEED_PRESETS = [1, 1.25, 1.5, 2, 3];
-    const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-    const speedMenuRef = useRef<HTMLDivElement>(null);
-    const speedSliderRef = useRef<HTMLInputElement>(null);
 
-    const setPlaybackSpeed = (rate: number) => {
-        const clamped = Math.max(0.25, Math.min(3, Math.round(rate * 20) / 20));
+    const cyclePlaybackSpeed = () => {
+        const idx = SPEED_PRESETS.indexOf(playbackRate);
+        const next = SPEED_PRESETS[(idx + 1) % SPEED_PRESETS.length];
         if (videoRef.current) {
-            videoRef.current.playbackRate = clamped;
+            videoRef.current.playbackRate = next;
         }
-        setPlaybackRate(clamped);
+        setPlaybackRate(next);
         resetControlsTimeout();
     };
-
-    const handleSpeedSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const rate = parseFloat(e.target.value);
-        if (videoRef.current) {
-            videoRef.current.playbackRate = rate;
-        }
-        setPlaybackRate(rate);
-        resetControlsTimeout();
-    };
-
-    useEffect(() => {
-        if (!showSpeedMenu) return;
-        const handleClickOutside = (e: MouseEvent) => {
-            if (speedMenuRef.current && !speedMenuRef.current.contains(e.target as Node)) {
-                setShowSpeedMenu(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showSpeedMenu]);
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
         resetControlsTimeout();
@@ -697,6 +683,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    // Hide controls when clicking/tapping outside the player
+    useEffect(() => {
+        const handleOutsideInteraction = (e: MouseEvent | TouchEvent) => {
+            if (!containerRef.current) return;
+            const target = e.target as Node;
+            if (target && !containerRef.current.contains(target)) {
+                setShowControls(false);
+                if (controlsTimeoutRef.current) {
+                    clearTimeout(controlsTimeoutRef.current);
+                    controlsTimeoutRef.current = null;
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideInteraction);
+        document.addEventListener('touchstart', handleOutsideInteraction, { passive: true });
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideInteraction);
+            document.removeEventListener('touchstart', handleOutsideInteraction);
+        };
     }, []);
 
     if (unavailable) {
@@ -910,121 +917,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                                         </div>
                                     </button>
                                 )}
-                                <div className="relative" ref={speedMenuRef}>
-                                    <button
-                                        onClick={() => setShowSpeedMenu(v => !v)}
-                                        className="px-2 py-1 rounded-full bg-white/10 text-white text-xs font-medium hover:bg-white/20 transition-colors leading-none"
-                                    >
-                                        {playbackRate % 1 === 0 ? playbackRate.toFixed(0) : playbackRate.toFixed(2).replace(/0$/, '')}x
-                                    </button>
-                                    {showSpeedMenu && (
-                                        <>
-                                            {/* Desktop: small popover near the button */}
-                                            <div className="hidden md:block absolute bottom-full right-0 mb-2 py-3 px-3 w-52 bg-black/95 rounded-lg border border-white/10 shadow-xl z-50">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[11px] text-white/40 font-medium">0.25x</span>
-                                                    <span className="text-xs text-white/80 font-semibold tabular-nums">{playbackRate.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}x</span>
-                                                    <span className="text-[11px] text-white/40 font-medium">3x</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <button
-                                                        onClick={() => setPlaybackSpeed(playbackRate - 0.05)}
-                                                        disabled={playbackRate <= 0.25}
-                                                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs leading-none"
-                                                    >
-                                                        −
-                                                    </button>
-                                                    <input
-                                                        ref={speedSliderRef}
-                                                        type="range"
-                                                        min={0.25}
-                                                        max={3}
-                                                        step={0.05}
-                                                        value={playbackRate}
-                                                        onChange={handleSpeedSliderChange}
-                                                        className="flex-1 h-1 appearance-none bg-white/20 rounded-full cursor-pointer accent-amber-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
-                                                    />
-                                                    <button
-                                                        onClick={() => setPlaybackSpeed(playbackRate + 0.05)}
-                                                        disabled={playbackRate >= 3}
-                                                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs leading-none"
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
-                                                <div className="flex items-center justify-between gap-1 mt-3">
-                                                    {SPEED_PRESETS.map(rate => (
-                                                        <button
-                                                            key={rate}
-                                                            onClick={() => { setPlaybackSpeed(rate); setShowSpeedMenu(false); }}
-                                                            className={`px-2 py-1 text-xs rounded-md transition-colors leading-none ${
-                                                                Math.abs(rate - playbackRate) < 0.01
-                                                                    ? 'bg-amber-500/20 text-amber-400 font-semibold'
-                                                                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                                                            }`}
-                                                        >
-                                                            {rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(2).replace(/0$/, '')}x
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {/* Mobile/tablet: centered overlay panel */}
-                                            <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowSpeedMenu(false)}>
-                                                <div className="w-72 mx-4 bg-black/95 backdrop-blur-md rounded-xl border border-white/10 shadow-xl py-6 px-5" onClick={e => e.stopPropagation()}>
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-sm text-white/60 font-medium">Speed</span>
-                                                        <span className="text-lg text-white font-semibold tabular-nums">{playbackRate.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}x</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => setPlaybackSpeed(playbackRate - 0.05)}
-                                                            disabled={playbackRate <= 0.25}
-                                                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
-                                                        >
-                                                            −
-                                                        </button>
-                                                        <input
-                                                            ref={speedSliderRef}
-                                                            type="range"
-                                                            min={0.25}
-                                                            max={3}
-                                                            step={0.05}
-                                                            value={playbackRate}
-                                                            onChange={handleSpeedSliderChange}
-                                                            className="flex-1 h-1.5 appearance-none bg-white/20 rounded-full cursor-pointer accent-amber-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md"
-                                                        />
-                                                        <button
-                                                            onClick={() => setPlaybackSpeed(playbackRate + 0.05)}
-                                                            disabled={playbackRate >= 3}
-                                                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
-                                                        >
-                                                            +
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex justify-between text-[11px] text-white/40 mt-1">
-                                                        <span>0.25x</span>
-                                                        <span>3x</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between gap-2 mt-5">
-                                                        {SPEED_PRESETS.map(rate => (
-                                                            <button
-                                                                key={rate}
-                                                                onClick={() => { setPlaybackSpeed(rate); setShowSpeedMenu(false); }}
-                                                                className={`flex-1 py-2 text-sm rounded-lg transition-colors leading-none ${
-                                                                    Math.abs(rate - playbackRate) < 0.01
-                                                                        ? 'bg-amber-500/20 text-amber-400 font-semibold'
-                                                                        : 'text-white/60 hover:text-white hover:bg-white/10'
-                                                                }`}
-                                                            >
-                                                                {rate % 1 === 0 ? rate.toFixed(0) : rate.toFixed(2).replace(/0$/, '')}x
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                <button
+                                    onClick={cyclePlaybackSpeed}
+                                    className="px-2 py-1 rounded-full bg-white/10 text-white text-xs font-medium hover:bg-white/20 transition-colors leading-none"
+                                >
+                                    {playbackRate % 1 === 0 ? playbackRate.toFixed(0) : playbackRate.toFixed(2).replace(/0$/, '')}x
+                                </button>
                                 <button
                                     onClick={togglePip}
                                     className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
