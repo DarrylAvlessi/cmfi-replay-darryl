@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeftIcon, SunIcon, MoonIcon } from './icons';
 import HeaderMenu from './HeaderMenu';
 import { useAppContext } from '../context/AppContext';
@@ -23,6 +23,7 @@ const Header: React.FC<HeaderProps> = ({
   isWatchRoute = false
 }) => {
   const { theme, setTheme, t } = useAppContext();
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -63,9 +64,9 @@ const Header: React.FC<HeaderProps> = ({
       {/* Header pour les écrans plus larges */}
       <header className={`bg-white dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' : 'lg:left-0'
         } ${isWatchRoute ? 'bg-opacity-60' : ''}`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-black">
+        <div className="relative flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-black">
           {/* Logo et titre */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 z-10">
             {/* Hamburger pour tablette (quand la Navbar est cachée) */}
             <div className="md:flex lg:hidden">
               <HamburgerMenu isOpen={isSidebarOpen} onClick={onToggleSidebar} className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700" />
@@ -82,13 +83,16 @@ const Header: React.FC<HeaderProps> = ({
             <h1 className="text-lg font-serif font-semibold text-gray-900 dark:text-white">CMFI Replay</h1>
           </div>
 
-          {/* Navbar central */}
-          {!isWatchRoute && <Navbar />}
+          {/* Navbar central (caché quand la recherche est active) */}
+          {!isWatchRoute && !isSearchActive && <Navbar />}
+          {!isWatchRoute && isSearchActive && <div className="flex-1" />}
 
           {/* Contrôles alignés à droite */}
-          <div className="flex items-center space-x-4">
-            {!isWatchRoute && <DesktopSearchBar />}
-            {!isWatchRoute && <NotificationBell />}
+          <div className="flex items-center space-x-4 z-10">
+            <div className={`${isSearchActive ? 'absolute left-0 right-0 flex justify-center px-6' : ''}`}>
+              <DesktopSearchBar onActiveChange={setIsSearchActive} fullWidth={isSearchActive} />
+            </div>
+            {!isSearchActive && !isWatchRoute && <NotificationBell />}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"

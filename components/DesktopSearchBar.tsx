@@ -1,12 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon } from './icons';
 
-const DesktopSearchBar: React.FC = () => {
+interface DesktopSearchBarProps {
+  onActiveChange?: (active: boolean) => void;
+  fullWidth?: boolean;
+}
+
+const DesktopSearchBar: React.FC<DesktopSearchBarProps> = ({ onActiveChange, fullWidth = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onActiveChange?.(isExpanded);
+  }, [isExpanded, onActiveChange]);
 
   const handleExpand = () => {
     setIsExpanded(true);
@@ -45,7 +54,7 @@ const DesktopSearchBar: React.FC = () => {
     <div
       className={`flex items-center transition-all duration-300 ease-in-out rounded-full ${
         isExpanded
-          ? 'w-64 bg-gray-100 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700'
+          ? `${fullWidth ? 'w-full' : 'w-64'} bg-gray-100 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700`
           : 'w-10'
       }`}
     >

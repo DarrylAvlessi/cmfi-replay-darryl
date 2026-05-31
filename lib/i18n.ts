@@ -338,6 +338,11 @@ const translations = {
         privacySection11Item1: 'Your profile settings in the application',
         privacySection11Item2: 'Your local data protection authority if you believe your rights are not respected',
         lastUpdated: 'Last updated:',
+        // Update Prompt
+        updateAvailable: 'New version available',
+        updateAvailableDescription: 'A new version is available. Update now for the best experience.',
+        updateLater: 'Later',
+        updateNow: 'Update',
     },
     fr: {
         home: 'Accueil',
@@ -676,7 +681,12 @@ const translations = {
         skip: 'Passer',
         adLoading: 'Chargement de la publicité...',
         loadingInProgress: 'Chargement en cours',
-        noDescription: 'Aucune description disponible'
+        noDescription: 'Aucune description disponible',
+        // Update Prompt
+        updateAvailable: 'Nouvelle version disponible',
+        updateAvailableDescription: 'Une nouvelle version est disponible. Actualisez maintenant pour une expérience optimale.',
+        updateLater: 'Plus tard',
+        updateNow: 'Actualiser',
     }
 };
 

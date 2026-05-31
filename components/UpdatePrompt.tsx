@@ -1,7 +1,9 @@
 /// <reference types="vite-plugin-pwa/react" />
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useAppContext } from '../context/AppContext'
 
 const UpdatePrompt = () => {
+  const { t } = useAppContext()
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -14,27 +16,32 @@ const UpdatePrompt = () => {
   if (!needRefresh) return null
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md animate-slideUp">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 shadow-2xl border border-amber-400/50">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm">Nouvelle version disponible</p>
-            <p className="text-white/80 text-xs mt-0.5">Actualisez pour profiter des dernières améliorations</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="mx-4 w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-amber-400/50 overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <svg className="w-8 h-8 flex-shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <div>
+              <p className="text-white font-bold text-lg">{t('updateAvailable')}</p>
+              <p className="text-white/80 text-sm mt-0.5">{t('updateAvailableDescription')}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={close}
-              className="px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              Plus tard
-            </button>
-            <button
-              onClick={() => updateServiceWorker()}
-              className="px-4 py-1.5 text-xs font-bold text-amber-600 bg-white rounded-lg hover:bg-amber-50 transition-colors shadow-lg"
-            >
-              Actualiser
-            </button>
-          </div>
+        </div>
+        <div className="p-6 space-y-3">
+          <button
+            onClick={() => updateServiceWorker()}
+            className="w-full py-3 text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-[0.98]"
+          >
+            {t('updateNow')}
+          </button>
+          <button
+            onClick={close}
+            className="w-full py-3 text-sm font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            {t('updateLater')}
+          </button>
         </div>
       </div>
     </div>
