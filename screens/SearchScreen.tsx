@@ -191,7 +191,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = 'https://via.placeholder.com/96x144?text=No+Image';
+                        target.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2796%27 height=%27144%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2796%27 height=%27144%27/%3E%3Ctext fill=%27%239ca3af%27 font-family=%27sans-serif%27 font-size=%2712%27 text-anchor=%27middle%27 x=%2748%27 y=%2776%27%3ENo Image%3C/text%3E%3C/svg%3E';
                       }}
                     />
                   ) : (
