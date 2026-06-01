@@ -449,7 +449,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {continueWatchingItems.slice(0, 10).map((item) => (
                                  <div key={item.id} className="flex-shrink-0 w-28 md:w-48 lg:w-56 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
-                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400">
+                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-amber-500 dark:group-hover:border-amber-400">
                                         {/* Fond qui prolonge l'image avec effet de flou */}
                                         <div className="absolute inset-0 w-full h-full">
                                             <img
@@ -467,7 +467,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                                         {/* Progress bar */}
                                         <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
                                             <div
-                                                className="h-full bg-blue-500 transition-all duration-300"
+                                                className="h-full bg-amber-500 transition-all duration-300"
                                                 style={{ width: `${item.progress}%` }}
                                             />
                                         </div>
@@ -478,7 +478,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                                             </div>
                                         </div>
                                     </div>
-                                    <h4 className="text-gray-900 dark:text-white text-sm md:text-base font-semibold break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    <h4 className="text-gray-900 dark:text-white text-sm md:text-base font-semibold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                                         {item.title}
                                     </h4>
                                 </div>
@@ -486,15 +486,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         </div>
                     </div>
                 )}
-
-                {/* Section Films */}
-                <MoviesSection
-                    movies={movies}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    navigateToCategory={navigateToCategory}
-                    t={t}
-                />
 
                 {/* Section Séries */}
                 <SeriesSection
@@ -512,6 +503,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                     loading={loadingSeriesByCategory}
                     onSelectMedia={onSelectMedia}
                     onPlay={onPlay}
+                />
+
+                {/* Section Films */}
+                <MoviesSection
+                    movies={movies}
+                    onSelectMedia={onSelectMedia}
+                    onPlay={onPlay}
+                    navigateToCategory={navigateToCategory}
+                    t={t}
                 />
 
                 {/* Section Podcasts */}

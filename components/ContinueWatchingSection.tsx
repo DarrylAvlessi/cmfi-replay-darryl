@@ -26,7 +26,7 @@ const ContinueWatchingCard: React.FC<ContinueWatchingCardProps> = ({ item, onCli
         >
             <div className="group cursor-pointer transition-all duration-500 hover:scale-105 flex flex-col">
                 {/* Image container avec meilleur design */}
-                <div className="relative w-full aspect-[2/3] rounded-lg md:rounded-xl overflow-hidden bg-black dark:bg-gray-900 shadow-xl group-hover:shadow-2xl mb-3 transition-all duration-500">
+                <div className="relative w-full aspect-[2/3] rounded-lg md:rounded-xl overflow-hidden bg-black dark:bg-gray-900 shadow-xl group-hover:shadow-2xl mb-3 transition-all duration-500 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60">
                     <img
                         src={item.imageUrl}
                         alt={item.title}

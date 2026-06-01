@@ -27,7 +27,7 @@ const LikedMediaCard: React.FC<LikedMediaCardProps> = ({
     if (variant === 'poster') {
         return (
             <div onClick={handleSelect} className="flex-shrink-0 w-36 md:w-48 space-y-2 cursor-pointer group">
-                <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg transform group-hover:scale-105 transition-transform duration-300">
+                <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg transform group-hover:scale-105 transition-all duration-300 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60">
                     <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
                     <div
                         onClick={handlePlay}
@@ -57,7 +57,7 @@ const LikedMediaCard: React.FC<LikedMediaCardProps> = ({
     // Default variant: 'thumbnail'
     return (
         <div onClick={handleSelect} className="flex-shrink-0 w-64 md:w-80 space-y-2 cursor-pointer">
-            <div className="relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg group">
+            <div className="relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg group border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60 transition-all duration-300">
                 <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
                 <div
                     onClick={handlePlay}

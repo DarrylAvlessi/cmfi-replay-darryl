@@ -110,7 +110,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
   // Variant poster optimisé pour 4 cartes par ligne sur mobile
   return (
     <div onClick={handleSelect} className="flex-shrink-0 w-24 sm:w-32 md:w-40 lg:w-44 xl:w-48 space-y-1.5 sm:space-y-2 cursor-pointer group">
-      <div className={`relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2 ${
+      <div className={`relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2 ${
         is_premium ? 'ring-2 ring-amber-400/60 shadow-amber-400/30' : ''
       }`}>
         {is_premium && (

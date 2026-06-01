@@ -3,6 +3,12 @@
     RewriteBase /
 
     # ===================================================================
+    # Redirection HTTP → HTTPS
+    # ===================================================================
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+    # ===================================================================
     # Détection des crawlers de réseaux sociaux
     # ===================================================================
     # Si le User-Agent correspond à un bot de réseau social

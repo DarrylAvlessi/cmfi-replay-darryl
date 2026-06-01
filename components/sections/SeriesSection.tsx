@@ -30,7 +30,7 @@ const SeriesSection: React.FC<SeriesSectionProps> = React.memo(({
                     </h3>
                     <button
                         onClick={() => navigateToCategory(MediaType.Series)}
-                        className="text-sm md:text-base text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors"
+                        className="text-sm md:text-base text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold transition-colors"
                     >
                         {t('viewAll') || 'Voir plus'} →
                     </button>

@@ -32,7 +32,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
   if (variant === 'poster') {
     return (
       <div onClick={handleSelect} className="flex-shrink-0 w-28 md:w-48 lg:w-56 space-y-2.5 cursor-pointer group relative">
-        <div className={`relative aspect-[2/3] rounded-2xl overflow-hidden border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400 ${
+        <div className={`relative aspect-[2/3] rounded-2xl overflow-hidden border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-amber-500 dark:group-hover:border-amber-400 ${
           is_premium ? 'ring-2 ring-amber-400/60' : ''
         }`}>
           {/* Fond qui prolonge l'image avec effet de flou */}
@@ -70,7 +70,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
             </div>
           </div>
         </div>
-        <h3 className="text-gray-900 dark:text-white text-sm font-serif font-bold break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3>
+        <h3 className="text-gray-900 dark:text-white text-sm font-serif font-bold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
         {author && <p className="text-gray-500 dark:text-gray-400 text-xs break-words">{author}</p>}
       </div>
     );
@@ -80,7 +80,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
     return (
       <div 
         onClick={handleSelect} 
-        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 ${
+        className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border-2 border-gray-200/80 dark:border-gray-700/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 transition-colors duration-300 ${
           is_premium ? 'ring-1 ring-amber-400/30' : ''
         }`}
       >
@@ -158,7 +158,7 @@ const MediaCard: React.FC<MediaCardProps> = React.memo(({ item, variant = 'thumb
   // Default variant: 'thumbnail'
   return (
     <div onClick={handleSelect} className="flex-shrink-0 w-44 md:w-72 lg:w-80 space-y-2.5 cursor-pointer group relative">
-      <div className={`relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-2xl overflow-hidden border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-blue-500 dark:group-hover:border-blue-400 ${
+      <div className={`relative aspect-video bg-gray-300 dark:bg-gray-700 rounded-2xl overflow-hidden border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-amber-500 dark:group-hover:border-amber-400 ${
         is_premium ? 'ring-2 ring-amber-400/60' : ''
       }`}>
         {is_premium && (

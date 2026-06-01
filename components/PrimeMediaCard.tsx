@@ -53,7 +53,7 @@ const PrimeMediaCard: React.FC<PrimeMediaCardProps> = ({
                 }
             }}
         >
-            <div className="relative aspect-[16/9] bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-300">
+            <div className="relative aspect-[16/9] bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-300 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60">
                 {/* Image */}
                 <img
                     src={imageUrl}
