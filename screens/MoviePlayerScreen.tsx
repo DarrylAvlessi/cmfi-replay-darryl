@@ -409,50 +409,51 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                     <div className="lg:col-span-2 space-y-6">
                         <div>
                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
-                            {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
-                            <div
-                                className={
-                                    isMini
-                                        ? 'fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black'
-                                        : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
-                                }
-                            >
-                                {isMini && (
-                                    <>
-                                        <div
-                                            onClick={closeMiniPlayer}
-                                            className="absolute inset-0 z-40 cursor-pointer"
-                                            aria-label="Tap to restore video to full view"
-                                        />
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
-                                            className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                            aria-label="Restore video to full view"
-                                        >
-                                            ✕
-                                        </button>
-                                    </>
-                                )}
-                                {showAd && (
-                                    <PromotionPlayer
-                                        onPromotionEnd={handleAdEnd}
-                                        onSkip={handleAdSkip}
-                                    />
-                                )}
-                                {!showAd && (
-                                    <VideoPlayer
-                                        key={item.id}
-                                        src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
-                                        poster={item.imageUrl || ''}
-                                        onEnded={handleVideoEnded}
-                                        onPlayingStateChange={setVideoIsPlaying}
-                                        initialPosition={initialPlaybackPosition}
-                                        videoUid={item.id}
-                                        isEpisode={false}
-                                        hideControls={isMini}
-                                    />
-                                )}
-                            </div>
+                             {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                              <div
+                                  className={
+                                      isMini
+                                          ? 'fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black'
+                                          : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                  }
+                                  style={isMini ? { position: 'fixed', bottom: 16, right: 16, zIndex: 50 } : undefined}
+                              >
+                                 {isMini && (
+                                     <>
+                                         <div
+                                             onClick={closeMiniPlayer}
+                                             className="absolute inset-0 z-40 cursor-pointer"
+                                             aria-label="Tap to restore video to full view"
+                                         />
+                                         <button
+                                             onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
+                                             className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                             aria-label="Restore video to full view"
+                                         >
+                                             ✕
+                                         </button>
+                                     </>
+                                 )}
+                                 {showAd && (
+                                     <PromotionPlayer
+                                         onPromotionEnd={handleAdEnd}
+                                         onSkip={handleAdSkip}
+                                     />
+                                 )}
+                                 {!showAd && (
+                                     <VideoPlayer
+                                         key={item.id}
+                                         src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
+                                         poster={item.imageUrl || ''}
+                                         onEnded={handleVideoEnded}
+                                         onPlayingStateChange={setVideoIsPlaying}
+                                         initialPosition={initialPlaybackPosition}
+                                         videoUid={item.id}
+                                         isEpisode={false}
+                                         hideControls={isMini}
+                                     />
+                                 )}
+                             </div>
                         </div>
 
                         <div className="space-y-6">

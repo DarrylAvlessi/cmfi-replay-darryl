@@ -1,7 +1,6 @@
 // screens/EpisodePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent } from '../types';
 import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/firestore';
@@ -462,31 +461,35 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                         )}
                         
                         <div>
-                            <div ref={sentinelRef} className="h-px" aria-hidden="true" />
-                            {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
-                            {isMini ? createPortal(
-                                <div className="fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black">
-                                    <div
-                                        onClick={closeMiniPlayer}
-                                        className="absolute inset-0 z-40 cursor-pointer"
-                                        aria-label="Tap to restore video to full view"
-                                    />
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
-                                        className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                        aria-label="Restore video to full view"
-                                    >
-                                        ✕
-                                    </button>
-                                    {playerContent}
-                                </div>,
-                                document.body
-                            ) : (
-                                <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5">
-                                    {playerContent}
-                                </div>
-                            )}
-                        </div>
+                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+                             {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                             <div
+                                 className={
+                                     isMini
+                                         ? 'fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black'
+                                         : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                 }
+                                 style={isMini ? { position: 'fixed', bottom: 16, right: 16, zIndex: 50 } : undefined}
+                             >
+                                 {isMini && (
+                                     <>
+                                         <div
+                                             onClick={closeMiniPlayer}
+                                             className="absolute inset-0 z-40 cursor-pointer"
+                                             aria-label="Tap to restore video to full view"
+                                         />
+                                         <button
+                                             onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
+                                             className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                             aria-label="Restore video to full view"
+                                         >
+                                             ✕
+                                         </button>
+                                     </>
+                                 )}
+                                 {playerContent}
+                             </div>
+                         </div>
 
                         <div className="space-y-2 md:space-y-4">
                             <div>
