@@ -71,7 +71,6 @@ export interface Serie {
     image_path: string;
     back_path: string;
     lang: string;
-    premium_text: string;
     runtime_h_m: string;
     homedisplayed: boolean;
     is_hidden: boolean;
@@ -97,7 +96,6 @@ export interface SeasonSerie {
     season_number: number;
     nb_episodes: number;
     year_season: number;
-    premium_text: string;
     isSecret?: boolean; // Si true, la saison n'est visible que par les utilisateurs autorisés
     allowedUserIds?: string[]; // Liste des UIDs des utilisateurs autorisés à voir cette saison
 }
@@ -142,8 +140,6 @@ export interface Movie {
     video_path_sd: string;
     hidden: boolean;
     homedisplayed: boolean;
-    is_premium: boolean;
-    premium_text: string;
     runtime: string;
     runtime_h_m: string;
     popular: boolean;
@@ -998,21 +994,6 @@ export const serieService = {
             return querySnapshot.docs.map(doc => doc.data() as Serie);
         } catch (error) {
             console.error('Error getting series by language:', error);
-            return [];
-        }
-    },
-
-    async getPremiumSeries(): Promise<Serie[]> {
-        try {
-            const q = query(
-                collection(db, SERIES_COLLECTION),
-                where('premium_text', '!=', ''),
-                where('is_hidden', '==', false)
-            );
-            const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => doc.data() as Serie);
-        } catch (error) {
-            console.error('Error getting premium series:', error);
             return [];
         }
     },
@@ -3959,7 +3940,6 @@ export interface AppSettings {
     homeViewMode: 'default' | 'prime' | 'netflix';
     updatedAt: Date | Timestamp;
     updatedBy?: string;
-    premiumForAll?: boolean;
 }
 
 // Service pour gérer les paramètres globaux de l'application
@@ -3984,7 +3964,6 @@ export const appSettingsService = {
             // Si aucun paramètre n'existe, créer les paramètres par défaut
             const defaultSettings: AppSettings = {
                 homeViewMode: 'default',
-                premiumForAll: false,
                 updatedAt: new Date()
             };
             await setDoc(settingsRef, {
@@ -4395,7 +4374,7 @@ export const notificationService = {
     /**
      * Récupérer les utilisateurs par catégorie
      */
-    async getUsersByCategory(category: 'all' | 'premium' | 'non-premium' | 'admin' | 'non-admin'): Promise<string[]> {
+    async getUsersByCategory(category: 'all' | 'admin' | 'non-admin'): Promise<string[]> {
         try {
             const allUsersSnapshot = await getDocs(collection(db, USERS_COLLECTION));
             const allUsers = allUsersSnapshot.docs.map(doc => ({
@@ -4415,23 +4394,6 @@ export const notificationService = {
                         return isAdminValue ? userIsAdmin : !userIsAdmin;
                     })
                     .map(u => u.uid);
-            }
-
-            // Pour premium/non-premium, vérifier les abonnements
-            if (category === 'premium' || category === 'non-premium') {
-                const { subscriptionService } = await import('./subscriptionService');
-                const userIds: string[] = [];
-                
-                for (const user of allUsers) {
-                    const isPremium = await subscriptionService.isUserPremium(user.uid);
-                    if (category === 'premium' && isPremium) {
-                        userIds.push(user.uid);
-                    } else if (category === 'non-premium' && !isPremium) {
-                        userIds.push(user.uid);
-                    }
-                }
-                
-                return userIds;
             }
 
             return [];
@@ -4502,7 +4464,7 @@ export const notificationService = {
      * Créer une notification pour une catégorie spécifique d'utilisateurs
      */
     async createNotificationForCategory(
-        category: 'all' | 'premium' | 'non-premium' | 'admin' | 'non-admin',
+        category: 'all' | 'admin' | 'non-admin',
         title: string,
         message: string,
         type: 'info' | 'success' | 'warning' | 'error' = 'info',

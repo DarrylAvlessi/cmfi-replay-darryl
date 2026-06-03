@@ -3,34 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
 const PaymentSuccessScreen: React.FC = () => {
-    const { t, user, refreshSubscription } = useAppContext();
+    const { t } = useAppContext();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const verifyPayment = async () => {
-            // Récupérer la session ID depuis les paramètres URL
-            const sessionId = searchParams.get('session_id');
-
-            if (!sessionId) {
-                console.error('No session ID found');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                // Rafraîchir le statut d'abonnement
-                await refreshSubscription();
-                setLoading(false);
-            } catch (error) {
-                console.error('Error verifying payment:', error);
-                setLoading(false);
-            }
-        };
-
-        verifyPayment();
-    }, [searchParams, refreshSubscription]);
+    const [loading, setLoading] = useState(false);
 
     const handleContinue = () => {
         navigate('/home');
@@ -64,46 +40,19 @@ const PaymentSuccessScreen: React.FC = () => {
                             {t('paymentSuccess') || 'Paiement réussi !'}
                         </h1>
                         <p className="text-white/90">
-                            {t('welcomeToPremium') || 'Bienvenue dans Premium'}
+                            {t('paymentSuccess') || 'Paiement réussi !'}
                         </p>
                     </div>
 
                     {/* Content */}
                     <div className="p-8">
                         <div className="text-center mb-6">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clipRule="evenodd" />
-                                </svg>
-                            </div>
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                {t('yourePremium') || 'Vous êtes maintenant Premium !'}
+                                {t('paymentSuccess') || 'Paiement réussi !'}
                             </h2>
                             <p className="text-gray-600 dark:text-gray-400">
-                                {t('enjoyPremiumContent') || 'Profitez de tout le contenu premium sans limite'}
+                                {t('paymentSuccessMessage') || 'Votre paiement a été traité avec succès'}
                             </p>
-                        </div>
-
-                        {/* Benefits recap */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-6">
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                {t('yourBenefits') || 'Vos avantages'}
-                            </h3>
-                            <ul className="space-y-2">
-                                {[
-                                    t('premiumFeature1') || 'Accès illimité',
-                                    t('premiumFeature2') || 'Qualité HD',
-                                    t('premiumFeature3') || 'Sans publicités',
-                                    t('premiumFeature4') || 'Accès anticipé',
-                                ].map((benefit, idx) => (
-                                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        {benefit}
-                                    </li>
-                                ))}
-                            </ul>
                         </div>
 
                         {/* Email confirmation notice */}

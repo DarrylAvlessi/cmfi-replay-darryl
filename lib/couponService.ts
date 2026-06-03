@@ -69,15 +69,6 @@ export const redeemCoupon = async (code: string, userId: string): Promise<{ succ
 
     const couponDoc = querySnapshot.docs[0];
 
-    // Activer l'abonnement premium pour l'utilisateur
-    try {
-      await subscriptionService.activatePremiumSubscription(userId, couponData.type_coupon);
-      console.log('✅ Premium subscription activated');
-    } catch (error) {
-      console.error('❌ Error activating subscription:', error);
-      return { success: false, error: 'Erreur lors de l\'activation de l\'abonnement' };
-    }
-
     // Mettre à jour le coupon comme utilisé
     await updateDoc(couponDoc.ref, {
       is_active: false,

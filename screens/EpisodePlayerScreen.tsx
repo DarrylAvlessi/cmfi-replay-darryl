@@ -1,6 +1,7 @@
 // screens/EpisodePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent } from '../types';
 import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/firestore';
@@ -13,12 +14,11 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 import AuthPrompt from '../components/AuthPrompt';
-import PremiumPaywall from '../components/PremiumPaywall';
 import PromotionPlayer from '../components/PromotionPlayer';
-import { appSettingsService } from '../lib/appSettingsService';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { useMiniPlayer } from '../hooks/useMiniPlayer';
 
 // --- Main Screen Component ---
 interface EpisodePlayerScreenProps {
@@ -31,8 +31,7 @@ interface EpisodePlayerScreenProps {
 
 const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode, onBack, onNavigateEpisode, onReturnHome }) => {
     const navigate = useNavigate();
-    const { t, bookmarkedIds, toggleSeriesBookmark, userProfile, autoplay, isPremium } = useAppContext();
-    const [episodesInSerie, setEpisodesInSerie] = useState<EpisodeSerie[]>([]);
+    const { t, bookmarkedIds, toggleSeriesBookmark, userProfile, autoplay } = useAppContext();
     const [episodesInSeason, setEpisodesInSeason] = useState<EpisodeSerie[]>([]);
     const [currentSeason, setCurrentSeason] = useState<SeasonSerie | null>(null);
     const [serieUid, setSerieUid] = useState<string | null>(null);
@@ -41,106 +40,47 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
     const [authAction, setAuthAction] = useState('');
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
-    const [isPremiumContent, setIsPremiumContent] = useState(false);
-    const [isCheckingPremium, setIsCheckingPremium] = useState(true);
     // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
     const getAdStateKey = () => `ad_shown_${episode.uid_episode}`;
     const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
     const [showAd, setShowAd] = useState(!wasAdShown);
-    const [premiumForAll, setPremiumForAll] = useState(false);
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
+    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd });
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
         setShowAuthPrompt(true);
     };
 
-    // Charger l'état de premiumForAll
+    // Récupérer les informations de la saison
     useEffect(() => {
-        const loadPremiumForAll = async () => {
+        const fetchSeasonInfo = async () => {
             try {
-                const isEnabled = await appSettingsService.isPremiumForAll();
-                setPremiumForAll(isEnabled);
-            } catch (error) {
-                console.error('Error loading premiumForAll setting:', error);
-            }
-        };
-        loadPremiumForAll();
-    }, []);
-
-    // Récupérer les informations de la saison et vérifier si le contenu est premium
-    useEffect(() => {
-        const checkPremiumStatus = async () => {
-            try {
-                // Récupérer la saison de l'épisode
                 const season = await seasonSerieService.getSeasonByUid(episode.uid_season);
-                if (!season) {
-                    console.error('Saison non trouvée');
-                    setIsPremiumContent(false);
-                    return;
-                }
-
-                // Stocker les informations de la saison
-                setCurrentSeason(season);
-                setSerieUid(season.uid_serie);
-
-                // Récupérer la série
-                const serie = await serieService.getSerieByUid(season.uid_serie);
-                if (!serie) {
-                    console.error('Série non trouvée');
-                    setIsPremiumContent(false);
-                    return;
-                }
-
-                // Vérifier si la série ou la saison est premium
-                const isContentPremium = Boolean(serie.premium_text?.trim() || season.premium_text?.trim());
-                setIsPremiumContent(isContentPremium);
-
-                // Si c'est du contenu premium et que l'utilisateur n'est pas premium, afficher le paywall
-                if (isContentPremium && (!userProfile?.uid || !isPremium)) {
-                    if (!userProfile?.uid) {
-                        handleAuthRequired('accéder à ce contenu premium');
-                    }
+                if (season) {
+                    setCurrentSeason(season);
+                    setSerieUid(season.uid_serie);
                 }
             } catch (error) {
-                console.error('Erreur lors de la vérification du statut premium:', error);
-                setIsPremiumContent(false);
-            } finally {
-                setIsCheckingPremium(false);
+                console.error('Erreur lors de la récupération de la saison:', error);
             }
         };
-
-        checkPremiumStatus();
-    }, [episode.uid_season, userProfile]);
+        fetchSeasonInfo();
+    }, [episode.uid_season]);
 
     useEffect(() => {
         const fetchEpisodes = async () => {
             try {
                 const serie = await serieService.getSerieByUid(item.id);
                 if (!serie) { 
-                    setEpisodesInSerie([]); 
                     setEpisodesInSeason([]);
                     return; 
                 }
-                const userUid = userProfile?.uid;
-                const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie, userUid);
-                if (seasons.length === 0) { 
-                    setEpisodesInSerie([]); 
-                    setEpisodesInSeason([]);
-                    return; 
-                }
-                const episodesBySeason = await Promise.all(
-                    seasons.map(async (s) => await episodeSerieService.getEpisodesBySeason(s.uid_season))
+                setEpisodesInSeason(
+                    await episodeSerieService.getEpisodesBySeason(episode.uid_season)
                 );
-                const allEpisodes = episodesBySeason.flat();
-                setEpisodesInSerie(allEpisodes);
-                
-                // Filtrer les épisodes de la même saison que l'épisode actuel
-                const currentSeasonEpisodes = await episodeSerieService.getEpisodesBySeason(episode.uid_season);
-                setEpisodesInSeason(currentSeasonEpisodes);
             } catch (error) {
                 console.error('Error fetching episodes list:', error);
-                setEpisodesInSerie([]);
                 setEpisodesInSeason([]);
             }
         };
@@ -455,37 +395,31 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
         sessionStorage.setItem(getAdStateKey(), 'true');
     }, []);
 
-    // Afficher un indicateur de chargement pendant la vérification du statut premium
-    if (isCheckingPremium) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
-            </div>
-        );
-    }
-
-    // Si le contenu est premium et que l'utilisateur n'est pas premium, afficher le paywall
-    if (isPremiumContent && (!userProfile?.uid || !isPremium) && !premiumForAll) {
-        return (
-            <div className="bg-white dark:bg-black min-h-screen">
-                <header className="absolute top-4 left-4 z-20">
-                    <button
-                        onClick={onBack}
-                        className="p-2 rounded-full text-white bg-black/60 hover:bg-black/80 backdrop-blur-sm transition-all duration-200"
-                        aria-label="Go back"
-                    >
-                        <ArrowLeftIcon className="w-6 h-6" />
-                    </button>
-                </header>
-                <div className="container mx-auto px-4 py-20">
-                    <PremiumPaywall
-                        contentTitle={episode.title}
-                        contentType="episode"
-                    />
-                </div>
-            </div>
-        );
-    }
+    const playerContent = (
+        <>
+            {showAd && (
+                <PromotionPlayer
+                    onPromotionEnd={handleAdEnd}
+                    onSkip={handleAdSkip}
+                />
+            )}
+            {!showAd && (
+                <VideoPlayer
+                    key={episode.uid_episode || episode.title}
+                    src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
+                    poster={episode.picture_path || item.imageUrl}
+                    onUnavailable={onReturnHome}
+                    onEnded={handleVideoEnded}
+                    onPlayingStateChange={setVideoIsPlaying}
+                    initialPosition={initialPlaybackPosition}
+                    videoUid={episode.uid_episode}
+                    isEpisode={true}
+                    showAutoplayToggle={true}
+                    hideControls={isMini}
+                />
+            )}
+        </>
+    );
 
     return (
         <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
@@ -527,26 +461,30 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                             </div>
                         )}
                         
-                        <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5">
-                            {showAd && (
-                                <PromotionPlayer
-                                    onPromotionEnd={handleAdEnd}
-                                    onSkip={handleAdSkip}
-                                />
-                            )}
-                            {!showAd && (
-                                <VideoPlayer
-                                    key={episode.uid_episode || episode.title}
-                                    src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
-                                    poster={episode.picture_path || item.imageUrl}
-                                    onUnavailable={onReturnHome}
-                                    onEnded={handleVideoEnded}
-                                    onPlayingStateChange={setVideoIsPlaying}
-                                    initialPosition={initialPlaybackPosition}
-                                    videoUid={episode.uid_episode}
-                                    isEpisode={true}
-                                    showAutoplayToggle={true}
-                                />
+                        <div>
+                            <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+                            {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                            {isMini ? createPortal(
+                                <div className="fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black">
+                                    <div
+                                        onClick={closeMiniPlayer}
+                                        className="absolute inset-0 z-40 cursor-pointer"
+                                        aria-label="Tap to restore video to full view"
+                                    />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
+                                        className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                        aria-label="Restore video to full view"
+                                    >
+                                        ✕
+                                    </button>
+                                    {playerContent}
+                                </div>,
+                                document.body
+                            ) : (
+                                <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5">
+                                    {playerContent}
+                                </div>
                             )}
                         </div>
 

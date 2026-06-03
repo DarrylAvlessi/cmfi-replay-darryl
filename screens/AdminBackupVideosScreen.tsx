@@ -585,7 +585,6 @@ const AppVideosTab: React.FC = () => {
             backdrop_path: season.backdrop_path || '',
             season_number: season.season_number || 1,
             year_season: season.year_season || new Date().getFullYear(),
-            premium_text: season.premium_text || '',
             nb_episodes: season.nb_episodes || 0,
             isSecret: season.isSecret || false,
             allowedUserIds: season.allowedUserIds || []
@@ -1597,18 +1596,6 @@ const AppVideosTab: React.FC = () => {
                                     onChange={(e) => setEditSeasonForm({ ...editSeasonForm, backdrop_path: e.target.value })}
                                     className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                                     placeholder="https://..."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Texte Premium
-                                </label>
-                                <input
-                                    type="text"
-                                    value={editSeasonForm.premium_text}
-                                    onChange={(e) => setEditSeasonForm({ ...editSeasonForm, premium_text: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="🄿🅁🄾🄼🄾 🄵🅁🄴🄴"
                                 />
                             </div>
                             <div>

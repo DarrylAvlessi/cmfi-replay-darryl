@@ -13,7 +13,6 @@ interface MoviesScreenProps {
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'title' | 'newest' | 'oldest' | 'popular';
-type FilterOption = 'all' | 'premiumContent' | 'free';
 
 const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) => {
     const navigate = useNavigate();
@@ -23,8 +22,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [sortOption, setSortOption] = useState<SortOption>('title');
-    const [filterOption, setFilterOption] = useState<FilterOption>('all');
-    const [showFilters, setShowFilters] = useState(false);
 
     // Convertir un Movie en MediaContent
     const convertMovieToMediaContent = (movie: Movie): MediaContent => ({
@@ -38,8 +35,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
         languages: movie.original_language ? [movie.original_language] : [],
         progress: undefined,
         video_path_hd: movie.video_path_hd,
-        is_premium: movie.is_premium || false,
-        premium_text: movie.premium_text || ''
     });
 
     // Charger les films depuis Firestore
@@ -74,13 +69,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
             );
         }
 
-        // Filtre Premium/Free
-        if (filterOption === 'premiumContent') {
-            filtered = filtered.filter(movie => movie.is_premium);
-        } else if (filterOption === 'free') {
-            filtered = filtered.filter(movie => !movie.is_premium);
-        }
-
         // Tri
         filtered.sort((a, b) => {
             switch (sortOption) {
@@ -100,7 +88,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
         });
 
         return filtered;
-    }, [movies, searchTerm, filterOption, sortOption]);
+    }, [movies, searchTerm, sortOption]);
 
     const handleBack = () => {
         navigate('/home');
@@ -144,32 +132,12 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
 
                     {/* Contrôles: Filtres, Tri, Vue */}
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Bouton Filtres */}
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                                showFilters || filterOption !== 'all'
-                                    ? 'bg-amber-500 text-gray-900'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                            }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
-                            <span className="text-sm">{t('filters') || 'Filtres'}</span>
-                            {filterOption !== 'all' && (
-                                <span className="ml-1 px-1.5 py-0.5 bg-gray-900 text-white text-xs rounded-full">
-                                    {filterOption === 'premiumContent' ? 'Premium' : 'Gratuit'}
-                                </span>
-                            )}
-                        </button>
-
                         {/* Menu de tri */}
                         <div className="relative">
                             <select
                                 value={sortOption}
                                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                                className="appearance-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 pr-8 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer transition-all duration-200"
+                                className="appearance-none bg-white dark:bg-black border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 pr-8 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer transition-all duration-200"
                             >
                                 <option value="title">{t('sortByTitle') || 'Trier par titre'}</option>
                                 <option value="newest">{t('sortByNewest') || 'Plus récents'}</option>
@@ -184,12 +152,12 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
 
                         {/* Toggle vue Grille/Liste */}
-                        <div className="ml-auto flex items-center gap-2 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                        <div className="ml-auto flex items-center gap-2 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded transition-all duration-200 ${
                                     viewMode === 'grid'
-                                        ? 'bg-white dark:bg-gray-600 text-amber-600 dark:text-amber-400 shadow-md'
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 aria-label="Vue grille"
@@ -202,7 +170,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 onClick={() => setViewMode('list')}
                                 className={`p-2 rounded transition-all duration-200 ${
                                     viewMode === 'list'
-                                        ? 'bg-white dark:bg-gray-600 text-amber-600 dark:text-amber-400 shadow-md'
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 aria-label="Vue liste"
@@ -213,49 +181,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             </button>
                         </div>
                     </div>
-
-                    {/* Panneau de filtres déroulant */}
-                    {showFilters && (
-                        <div className="pt-2 pb-2 border-t border-gray-200 dark:border-gray-700 animate-fadeIn">
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => setFilterOption('all')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'all'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    {t('all') || 'Tous'}
-                                </button>
-                                <button
-                                    onClick={() => setFilterOption('premiumContent')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'premiumContent'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-1.5">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                                        </svg>
-                                        {t('premiumContent') || 'Premium'}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setFilterOption('free')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'free'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    {t('free') || 'Gratuit'}
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 

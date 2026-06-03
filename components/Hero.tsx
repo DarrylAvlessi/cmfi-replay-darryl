@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MediaContent, MediaType } from '../types';
-import { PlayIcon, PauseIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, PlusIcon, LockClosedIcon, StarIcon } from './icons';
+import { PlayIcon, PauseIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, PlusIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { movieService, Movie } from '../lib/firestore';
 
@@ -15,10 +15,9 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
   const [isPaused, setIsPaused] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t, bookmarkedIds, toggleBookmark, theme, isPremium } = useAppContext();
+  const { t, bookmarkedIds, toggleBookmark, theme } = useAppContext();
   
   // Traductions
-  const unlockText = t('unlockPremium');
   const playText = t('play') || 'Lire';
 
   // Récupérer les 10 films les plus populaires depuis Firestore
@@ -48,8 +47,6 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
     description: movie.overview,
     video_path_hd: movie.video_path_hd,
     languages: [movie.original_language],
-    is_premium: movie.is_premium || false,
-    premium_text: movie.premium_text || ''
   })) : propItems || [];
 
   useEffect(() => {
@@ -319,13 +316,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                   isCurrent 
                     ? 'ring-2 md:ring-4 lg:ring-4 ring-white/50 shadow-[0_0_60px_rgba(255,255,255,0.4)]' 
                     : 'ring-0 opacity-70 hover:opacity-85'
-                } ${item.is_premium ? 'border-2 border-amber-400 shadow-amber-400/30' : ''}`}>
-                  {item.is_premium && !isPremium && (
-                    <div className="absolute top-2 right-2 z-10 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-                      <StarIcon className="w-3 h-3" />
-                      <span>Premium</span>
-                    </div>
-                  )}
+                }`}>
                   <img
                     src={item.imageUrl}
                     alt={item.title}
@@ -333,15 +324,10 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                       isCurrent 
                         ? 'brightness-100 scale-100' 
                         : 'brightness-80 scale-105'
-                    } ${item.is_premium ? 'brightness-90' : ''}`}
+                    }`}
                   />
-                  {item.is_premium && !isPremium && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <LockClosedIcon className="w-12 h-12 text-white/80" />
-                    </div>
-                  )}
 
-                  {/* Overlay gradient premium - Multi-couches */}
+                  {/* Overlay gradient - Multi-couches */}
                   <div className={`absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent transition-opacity duration-700 ${
                     isCurrent ? 'opacity-100' : 'opacity-70'
                   }`} />
@@ -351,7 +337,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                     <div className="absolute inset-0 bg-black/20 transition-opacity duration-700" />
                   )}
 
-                  {/* Info du slide actuel - Design premium avec meilleure lisibilité */}
+                  {/* Info du slide actuel */}
                   {isCurrent && (
                     <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-8 space-y-3 md:space-y-4 animate-fadeIn">
                       {/* Titre avec gestion du texte améliorée */}
@@ -385,22 +371,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
 
                       {/* Action buttons améliorés */}
                       <div className="flex items-center gap-3 md:gap-4 pt-2" onClick={(e) => e.stopPropagation()}>
-                        {item.is_premium && !isPremium ? (
-                          // Bouton Unlock Premium pour les utilisateurs non premium sur du contenu premium
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Ici vous pouvez ajouter la logique pour gérer l'accès premium
-                              // Par exemple, rediriger vers une page d'abonnement
-                            }}
-                            className="flex items-center gap-1.5 md:gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-semibold hover:from-yellow-300 hover:to-yellow-400 transition-all duration-300 hover:scale-105 shadow-lg"
-                          >
-                            <StarIcon className="w-4 h-4 md:w-5 md:h-5" />
-                            <span>{unlockText}</span>
-                          </button>
-                        ) : (
-                          // Bouton Play premium style Netflix
-                          <button
+                        <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onPlay(item);

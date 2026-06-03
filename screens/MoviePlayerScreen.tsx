@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MediaType } from '../types';
 import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie } from '../lib/firestore';
-import { appSettingsService } from '../lib/appSettingsService';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon,
@@ -14,10 +13,10 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 import AuthPrompt from '../components/AuthPrompt';
-import PremiumPaywall from '../components/PremiumPaywall';
 import PromotionPlayer from '../components/PromotionPlayer';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { useMiniPlayer } from '../hooks/useMiniPlayer';
 
 // --- Main Screen Component ---
 interface PlayableItem {
@@ -36,7 +35,7 @@ interface MoviePlayerScreenProps {
 }
 
 const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) => {
-    const { t, bookmarkedIds, toggleBookmark, userProfile, isPremium, autoplay } = useAppContext();
+    const { t, bookmarkedIds, toggleBookmark, userProfile, autoplay } = useAppContext();
     const [movieData, setMovieData] = useState<Movie | null>(null);
     const [likeCount, setLikeCount] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
@@ -356,8 +355,6 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
         sessionStorage.setItem(getAdStateKey(), 'true');
     }, []);
 
-    const [premiumForAll, setPremiumForAll] = useState(false);
-
     // Mettre à jour le titre de la page avec le nom du film
     useEffect(() => {
         if (item?.title) {
@@ -388,25 +385,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
         loadPlaybackPosition();
     }, [userProfile?.uid, item?.id]);
 
-    // Charger l'état de premiumForAll
-    useEffect(() => {
-        const loadPremiumForAll = async () => {
-            try {
-                const isEnabled = await appSettingsService.isPremiumForAll();
-                setPremiumForAll(isEnabled);
-            } catch (error) {
-                console.error('Error loading premiumForAll setting:', error);
-            }
-        };
-        loadPremiumForAll();
-    }, []);
-
-    // Vérifier si le contenu est premium et si l'utilisateur n'a pas accès
-    if (movieData?.is_premium && !isPremium && !premiumForAll) {
-        return <PremiumPaywall contentTitle={movieData.title} contentType="movie" />;
-    }
-
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
+    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd });
 
     return (
         <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
@@ -427,25 +407,52 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Colonne de gauche - Lecteur vidéo et métadonnées */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5">
-                            {showAd && (
-                                <PromotionPlayer
-                                    onPromotionEnd={handleAdEnd}
-                                    onSkip={handleAdSkip}
-                                />
-                            )}
-                            {!showAd && (
-                                <VideoPlayer
-                                    key={item.id}
-                                    src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
-                                    poster={item.imageUrl || ''}
-                                    onEnded={handleVideoEnded}
-                                    onPlayingStateChange={setVideoIsPlaying}
-                                    initialPosition={initialPlaybackPosition}
-                                    videoUid={item.id}
-                                    isEpisode={false}
-                                />
-                            )}
+                        <div>
+                            <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+                            {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                            <div
+                                className={
+                                    isMini
+                                        ? 'fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black'
+                                        : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                }
+                            >
+                                {isMini && (
+                                    <>
+                                        <div
+                                            onClick={closeMiniPlayer}
+                                            className="absolute inset-0 z-40 cursor-pointer"
+                                            aria-label="Tap to restore video to full view"
+                                        />
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
+                                            className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                            aria-label="Restore video to full view"
+                                        >
+                                            ✕
+                                        </button>
+                                    </>
+                                )}
+                                {showAd && (
+                                    <PromotionPlayer
+                                        onPromotionEnd={handleAdEnd}
+                                        onSkip={handleAdSkip}
+                                    />
+                                )}
+                                {!showAd && (
+                                    <VideoPlayer
+                                        key={item.id}
+                                        src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
+                                        poster={item.imageUrl || ''}
+                                        onEnded={handleVideoEnded}
+                                        onPlayingStateChange={setVideoIsPlaying}
+                                        initialPosition={initialPlaybackPosition}
+                                        videoUid={item.id}
+                                        isEpisode={false}
+                                        hideControls={isMini}
+                                    />
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-6">

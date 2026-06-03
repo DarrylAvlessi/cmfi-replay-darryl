@@ -28,7 +28,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const slideRafIdRef = React.useRef<number | null>(null);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { t, bookmarkedIds, toggleBookmark, isPremium } = useAppContext();
+  const { t, bookmarkedIds, toggleBookmark } = useAppContext();
   const SLIDE_DURATION_MS = 30000;
 
   // Détecter la taille d'écran pour une gestion précise des titres
@@ -82,8 +82,6 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
     description: movie.overview,
     video_path_hd: movie.video_path_hd,
     languages: [movie.original_language],
-    is_premium: movie.is_premium || false,
-    premium_text: movie.premium_text || ''
   })) : propItems || [];
 
   // Définir currentItem tôt pour éviter les erreurs
@@ -382,16 +380,6 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Colonne gauche - Contenu textuel */}
             <div className="space-y-6 md:space-y-8">
-              {/* Logo/Badge si premium */}
-              {currentItem.is_premium && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 backdrop-blur-sm rounded-lg border border-amber-500/30">
-                  <svg className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                  </svg>
-                  <span className="text-amber-400 font-bold text-sm">PREMIUM</span>
-                </div>
-              )}
-
               {/* Titre principal adaptatif */}
               <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl overflow-hidden">
                 <h1 

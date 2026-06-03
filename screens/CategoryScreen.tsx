@@ -45,8 +45,6 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ mediaType, onBack, onSe
         description: serie.overview_serie,
         languages: serie.lang ? [serie.lang] : [],
         progress: undefined,
-        is_premium: serie.premium_text !== undefined && serie.premium_text !== '',
-        premium_text: serie.premium_text
     });
 
     // Convertir un Movie en MediaContent (pour les films)
@@ -61,8 +59,6 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ mediaType, onBack, onSe
         languages: movie.original_language ? [movie.original_language] : [],
         progress: undefined,
         video_path_hd: movie.video_path_hd,
-        is_premium: movie.is_premium,
-        premium_text: movie.premium_text
     });
 
     // Convertir un Podcast (Serie avec serie_type: 'podcast') en MediaContent
@@ -76,8 +72,6 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ mediaType, onBack, onSe
         description: podcast.overview_serie,
         languages: podcast.lang ? [podcast.lang] : [],
         progress: undefined,
-        is_premium: podcast.premium_text !== undefined && podcast.premium_text !== '',
-        premium_text: podcast.premium_text
     });
 
     // Charger les données depuis Firestore

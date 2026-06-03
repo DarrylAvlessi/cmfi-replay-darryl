@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { i18n, Language, TranslationKey } from '../lib/i18n';
 import { auth, db } from '../lib/firebase';
-import { userService, UserProfile, bookDocService, bookSeriesService, subscriptionService } from '../lib/firestore';
+import { userService, UserProfile, bookDocService, bookSeriesService } from '../lib/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { ActiveTab } from '../types';
@@ -31,13 +31,6 @@ interface AppContextType {
     toggleSidebarCollapse: () => void;
     activeTab: ActiveTab;
     setActiveTab: (tab: ActiveTab) => void;
-    isPremium: boolean;
-    subscriptionDetails: {
-        planType: string;
-        endDate: Date | null;
-        daysRemaining: number | null;
-    } | null;
-    refreshSubscription: () => Promise<void>;
     homeViewMode: HomeViewMode;
     setHomeViewMode: (mode: HomeViewMode) => void;
 }
@@ -51,7 +44,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (typeof window !== 'undefined') {
             const savedTheme = window.localStorage.getItem('theme') as 'light' | 'dark';
             if (savedTheme) {
-                // Appliquer le thème au chargement
                 const root = window.document.documentElement;
                 root.classList.remove('light', 'dark');
                 root.classList.add(savedTheme);
@@ -64,6 +56,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return 'light';
     });
+
+    const themeRef = useRef(theme);
+    themeRef.current = theme;
 
     const setTheme = useCallback((newTheme: 'light' | 'dark') => {
         setThemeState(prevTheme => {
@@ -179,63 +174,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
         }
     };
-
-    // États pour le statut premium
-    const [isPremium, setIsPremium] = useState<boolean | null>(null); // null signifie que le chargement est en cours
-    const [subscriptionDetails, setSubscriptionDetails] = useState<{
-        planType: string;
-        endDate: Date | null;
-        daysRemaining: number | null;
-    } | null>(null);
-
-    // Fonction pour rafraîchir le statut d'abonnement
-    const refreshSubscription = useMemo(() => {
-        return async () => {
-            console.log(' [refreshSubscription] Début de la vérification du statut premium');
-            const currentUser = auth.currentUser; // Utiliser directement auth.currentUser
-            
-            if (!currentUser) {
-                console.log(' [refreshSubscription] Aucun utilisateur connecté, statut premium désactivé');
-                setIsPremium(false);
-                setSubscriptionDetails(null);
-                return;
-            }
-
-            try {
-                console.log(' [refreshSubscription] Vérification du statut premium pour l\'utilisateur:', currentUser.uid);
-                const details = await subscriptionService.getSubscriptionDetails(currentUser.uid);
-                console.log(' [refreshSubscription] Détails de l\'abonnement:', details);
-
-                setIsPremium(details.isPremium);
-                setSubscriptionDetails({
-                    planType: details.planType,
-                    endDate: details.endDate,
-                    daysRemaining: details.daysRemaining
-                });
-
-                // Stocker en localStorage pour une récupération immédiate au chargement
-                if (typeof window !== 'undefined') {
-                    // Vérifier que endDate est une Date valide avant d'appeler toISOString()
-                    const endDateISO = details.endDate && details.endDate instanceof Date && !isNaN(details.endDate.getTime())
-                        ? details.endDate.toISOString()
-                        : null;
-                    
-                    localStorage.setItem('premiumStatus', JSON.stringify({
-                        isPremium: details.isPremium,
-                        planType: details.planType,
-                        endDate: endDateISO,
-                        timestamp: new Date().toISOString()
-                    }));
-                }
-
-                console.log(' [refreshSubscription] Statut premium mis à jour:', details.isPremium);
-            } catch (error) {
-                console.error('Error refreshing subscription:', error);
-                setIsPremium(false);
-                setSubscriptionDetails(null);
-            }
-        };
-    }, []);
 
     // Mettre à jour le statut de présence de l'utilisateur avec lastSeen
     const updateUserPresence = async (uid: string, status: 'online' | 'offline' | 'idle' | 'away') => {
@@ -366,7 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     const profile = await userService.getUserProfile(user.uid);
                     if (profile) {
                         setUserProfile(profile);
-                        setThemeState(profile.theme);
+                        setTheme(profile.theme);
                         setBookmarkedIds(profile.bookmarkedIds || []);
 
                         // Charger les bookmarks depuis bookDoc et bookSeries
@@ -378,8 +316,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         ];
                         setBookmarkedIds(allBookmarkIds);
 
-                        // Charger le statut d'abonnement
-                        await refreshSubscription();
                     } else {
                         await userService.createUserProfile({
                             uid: user.uid,
@@ -393,9 +329,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             bookmarkedIds: []
                         });
 
-                        // Créer un abonnement gratuit pour le nouvel utilisateur
-                        await subscriptionService.createFreeSubscription(user.uid);
-                        await refreshSubscription();
                     }
 
                     // S'abonner aux changements du profil en temps réel (pour détecter isAdmin, etc.)
@@ -413,9 +346,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             const updatedProfile = rawData as UserProfile;
                             console.log('🔄 Profil mis à jour en temps réel - isAdmin:', updatedProfile.isAdmin, 'Type:', typeof updatedProfile.isAdmin);
                             setUserProfile(updatedProfile);
-                            // Mettre à jour le thème si changé
-                            if (updatedProfile.theme && updatedProfile.theme !== theme) {
-                                setThemeState(updatedProfile.theme);
+                            if (updatedProfile.theme && updatedProfile.theme !== themeRef.current) {
+                                setTheme(updatedProfile.theme);
                             }
                         }
                     }, (error) => {
@@ -445,8 +377,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
                 setUserProfile(null);
                 setBookmarkedIds([]);
-                setIsPremium(false);
-                setSubscriptionDetails(null);
             }
 
             setLoading(false);
@@ -568,9 +498,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleSidebarCollapse,
         activeTab,
         setActiveTab,
-        isPremium: isPremium ?? false,
-        subscriptionDetails,
-        refreshSubscription,
         homeViewMode,
         setHomeViewMode,
     }), [
@@ -585,8 +512,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         autoplay,
         isSidebarCollapsed,
         activeTab,
-        isPremium,
-        subscriptionDetails,
         homeViewMode,
         // Fonctions
         setTheme,
@@ -599,7 +524,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsSidebarCollapsed,
         toggleSidebarCollapse,
         setActiveTab,
-        refreshSubscription,
         setHomeViewMode,
     ]);
 

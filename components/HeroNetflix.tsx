@@ -15,7 +15,7 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
   const [isPaused, setIsPaused] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t, bookmarkedIds, toggleBookmark, isPremium } = useAppContext();
+  const { t, bookmarkedIds, toggleBookmark } = useAppContext();
 
   // Récupérer les films populaires
   useEffect(() => {
@@ -43,8 +43,6 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
     description: movie.overview,
     video_path_hd: movie.video_path_hd,
     languages: [movie.original_language],
-    is_premium: movie.is_premium || false,
-    premium_text: movie.premium_text || ''
   })) : propItems || [];
 
   useEffect(() => {

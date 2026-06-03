@@ -32,6 +32,7 @@ interface VideoPlayerProps {
     episodeRef?: any;
     autoplayEnabled?: boolean;
     showAutoplayToggle?: boolean;
+    hideControls?: boolean;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -46,6 +47,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     episodeRef,
     autoplayEnabled: externalAutoplayEnabled,
     showAutoplayToggle = false,
+    hideControls = false,
 }) => {
     const { t } = useAppContext();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -259,6 +261,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
         const handleWaiting = () => setIsLoading(true);
         const handlePlaying = () => setIsLoading(false);
+        const handleSeeking = () => setIsLoading(true);
+        const handleSeeked = () => setIsLoading(false);
 
         const handlePlay = () => {
             setIsPlaying(true);
@@ -275,12 +279,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     setProgress((video.currentTime / video.duration) * 100);
                 }
             }
-            try {
-                if (video.buffered && video.buffered.length > 0 && video.duration) {
-                    const end = video.buffered.end(video.buffered.length - 1);
-                    setBuffered(Math.min(100, (end / video.duration) * 100));
-                }
-            } catch { }
+            updateBuffered();
         };
         const handleLoadedMetadata = () => setDuration(video.duration);
         const handleVolumeChange = () => {
@@ -301,6 +300,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         video.addEventListener('canplay', handleCanPlay);
         video.addEventListener('waiting', handleWaiting);
         video.addEventListener('playing', handlePlaying);
+        video.addEventListener('seeking', handleSeeking);
+        video.addEventListener('seeked', handleSeeked);
 
         handleVolumeChange();
 
@@ -316,6 +317,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             video.removeEventListener('canplay', handleCanPlay);
             video.removeEventListener('waiting', handleWaiting);
             video.removeEventListener('playing', handlePlaying);
+            video.removeEventListener('seeking', handleSeeking);
+            video.removeEventListener('seeked', handleSeeked);
         };
     }, [onEnded, isScrubbing, autoplayEnabled]);
 
@@ -357,13 +360,38 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         } catch { }
     }, [src]);
 
+    const updateBuffered = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        try {
+            if (video.buffered && video.buffered.length > 0 && video.duration) {
+                const end = video.buffered.end(video.buffered.length - 1);
+                setBuffered(Math.min(100, (end / video.duration) * 100));
+            } else {
+                setBuffered(0);
+            }
+        } catch {
+            setBuffered(0);
+        }
+    };
+
     const handleRewind = () => {
         resetControlsTimeout();
-        if (videoRef.current) videoRef.current.currentTime -= 10;
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime -= 10;
+        setCurrentTime(video.currentTime);
+        if (video.duration) setProgress((video.currentTime / video.duration) * 100);
+        updateBuffered();
     };
     const handleFastForward = () => {
         resetControlsTimeout();
-        if (videoRef.current) videoRef.current.currentTime += 10;
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime += 10;
+        setCurrentTime(video.currentTime);
+        if (video.duration) setProgress((video.currentTime / video.duration) * 100);
+        updateBuffered();
     };
 
     const showSeekFeedback = (type: 'rewind' | 'forward') => {
@@ -591,7 +619,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             }
         };
         window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            if (clickTimerRef.current) {
+                clearTimeout(clickTimerRef.current);
+                clickTimerRef.current = null;
+            }
+        };
     }, []);
 
     const toggleMute = () => {
@@ -743,12 +777,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
     };
 
-    const handleVideoClick = () => {
-        if (Date.now() < ignoreClickUntilRef.current) {
-            return;
-        }
+    const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleVideoClick = (e: React.MouseEvent) => {
+        if (Date.now() < ignoreClickUntilRef.current) return;
         if (isTouch) return;
-        togglePlay();
+
+        const container = containerRef.current;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+            const isLeft = x < rect.width / 2;
+            if (isLeft) {
+                handleRewind();
+                showSeekFeedback('rewind');
+            } else {
+                handleFastForward();
+                showSeekFeedback('forward');
+            }
+            ignoreClickUntilRef.current = Date.now() + 500;
+        } else {
+            clickTimerRef.current = setTimeout(() => {
+                clickTimerRef.current = null;
+                togglePlay();
+            }, 300);
+        }
     };
 
     return (
@@ -762,7 +819,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             onTouchEnd={handleContainerTouchEnd}
         >
             {/* Glide Loading Spinner */}
-            <div className={`absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-10 transition-all duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 flex items-center justify-center z-10 transition-all duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <div className="glide-spinner">
                     <div className="glide-spinner__track">
                         <div className="glide-spinner__circle"></div>
@@ -770,7 +827,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         <div className="glide-spinner__circle"></div>
                         <div className="glide-spinner__circle"></div>
                     </div>
-                    <div className="glide-spinner__label text-amber-400 text-sm font-medium mt-6">{t('loadingInProgress') || 'Chargement en cours'}</div>
                 </div>
             </div>
             <video ref={videoRef} src={src} poster={poster} className="w-full h-full" onClick={handleVideoClick} onError={() => setUnavailable(true)} />
@@ -791,7 +847,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         2x
                     </div>
                 </div>
-                {playPauseFeedback && (
+                {playPauseFeedback && !isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="feedback-pop bg-black/50 rounded-full p-4 backdrop-blur-sm">
                             {playPauseFeedback === 'pause' ? (
@@ -803,9 +859,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     </div>
                 )}
             </div>
-            <div className={`absolute inset-0 transition-opacity flex flex-col justify-between ${showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 transition-opacity flex flex-col justify-between ${showControls && !hideControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                 <div className="flex-1" onClick={isTouch ? undefined : handleVideoClick} />
-                {isTouch && (
+                {isTouch && !isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <button
                             onClick={togglePlay}

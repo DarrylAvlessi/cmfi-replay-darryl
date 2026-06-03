@@ -20,14 +20,13 @@ import {
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
 import { UserProfile, userService } from '../lib/firestore';
-import { appSettingsService } from '../lib/appSettingsService';
-import PremiumBadge from '../components/PremiumBadge';
+
+
 import { authService } from '../lib/authService';
 import EditProfileScreen from './EditProfileScreen';
 import PreferencesScreen from './PreferencesScreen';
 import ChangePasswordScreen from './ChangePasswordScreen';
-import ManageSubscriptionScreen from './ManageSubscriptionScreen';
-import RedeemVoucherScreen from './RedeemVoucherScreen';
+
 
 interface ProfileScreenProps {
     navigate: (screen: 'Bookmarks' | 'Preferences' | 'EditProfile') => void;
@@ -37,8 +36,7 @@ interface ProfileScreenProps {
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user } = useAppContext();
-    const [premiumForAll, setPremiumForAll] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'manageSubscription' | 'redeemVoucher'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword'>('overview');
 
     // Centralisation de la détection Admin
     const isAdminValue = useMemo(() => {
@@ -49,17 +47,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
     useEffect(() => {
         console.log('ProfileScreen - isAdmin:', isAdminValue, 'userProfile:', userProfile);
     }, [isAdminValue, userProfile]);
-
-    // Charger l'état de premiumForAll au montage du composant
-    useEffect(() => {
-        const loadPremiumForAll = async () => {
-            if (isAdminValue) {
-                const isEnabled = await appSettingsService.isPremiumForAll();
-                setPremiumForAll(isEnabled);
-            }
-        };
-        loadPremiumForAll();
-    }, [isAdminValue]);
 
     const navigateRouter = useNavigate();
     const [historyItems, setHistoryItems] = useState<ContinueWatchingItem[]>([]);
@@ -134,12 +121,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         { icon: BookmarkIcon, label: t('myFavorites'), action: () => navigate('Bookmarks') },
         { icon: SettingsIcon, label: t('preferences'), action: () => setActiveTab('preferences') },
         { icon: KeyIcon, label: t('changePassword'), action: () => setActiveTab('changePassword') },
-        { icon: CreditCardIcon, label: t('manageSubscription'), action: () => setActiveTab('manageSubscription') },
-        {
-            icon: TicketIcon,
-            label: t('redeemVoucher'),
-            action: () => setActiveTab('redeemVoucher')
-        },
     ], [t, navigate]);
 
     // Mobile settings items - use original navigation
@@ -147,12 +128,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         { icon: BookmarkIcon, label: t('myFavorites'), action: () => navigate('Bookmarks') },
         { icon: SettingsIcon, label: t('preferences'), action: () => navigate('Preferences') },
         { icon: KeyIcon, label: t('changePassword'), action: () => navigateRouter('/change-password') },
-        { icon: CreditCardIcon, label: t('manageSubscription'), action: () => navigateRouter('/manage-subscription') },
-        {
-            icon: TicketIcon,
-            label: t('redeemVoucher'),
-            action: () => navigateRouter('/redeem-voucher')
-        },
     ], [t, navigate, navigateRouter]);
 
     // Items admin
@@ -225,7 +200,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             />
                             <div className="flex-1 text-center sm:text-left">
                                 <h2 className="text-2xl font-serif font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
-                                <PremiumBadge size="md" showDetails={true} />
                                 <button
                                     onClick={() => navigate('EditProfile')}
                                     className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
@@ -301,21 +275,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         <div className="p-6 bg-white dark:bg-black rounded-lg border border-amber-200 dark:border-amber-800">
                             <h3 className="text-xl font-serif font-bold mb-4 text-amber-600 dark:text-amber-400">Administration</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden divide-y divide-amber-200 dark:divide-amber-800">
-                                <div className="flex items-center justify-between p-4">
-                                    <div className="flex items-center">
-                                        <SettingsIcon className="w-6 h-6 text-gray-400 mr-4" />
-                                        <span className="text-gray-900 dark:text-white">Accès premium pour tous</span>
-                                    </div>
-                                    <ToggleSwitch 
-                                        enabled={premiumForAll} 
-                                        onChange={async (enabled) => {
-                                            const success = await appSettingsService.setPremiumForAll(enabled);
-                                            if (success) {
-                                                setPremiumForAll(enabled);
-                                            }
-                                        }} 
-                                    />
-                                </div>
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
@@ -348,20 +307,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </div>
                 );
             
-            case 'manageSubscription':
-                return (
-                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <ManageSubscriptionScreen />
-                    </div>
-                );
-            
-            case 'redeemVoucher':
-                return (
-                    <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <RedeemVoucherScreen />
-                    </div>
-                );
-            
             default:
                 return null;
         }
@@ -378,7 +323,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
                     />
                     <h2 className="text-2xl font-serif font-bold">{userProfile?.display_name || 'User'}</h2>
-                    <PremiumBadge size="md" showDetails={true} />
                     <button
                         onClick={() => navigate('EditProfile')}
                         className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
@@ -405,21 +349,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         <div className="mt-4">
                             <h3 className="text-lg font-serif font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
-                                <div className="flex items-center justify-between p-4">
-                                    <div className="flex items-center">
-                                        <SettingsIcon className="w-6 h-6 text-gray-400 mr-4" />
-                                        <span className="text-gray-900 dark:text-white">Accès premium pour tous</span>
-                                    </div>
-                                    <ToggleSwitch 
-                                        enabled={premiumForAll} 
-                                        onChange={async (enabled) => {
-                                            const success = await appSettingsService.setPremiumForAll(enabled);
-                                            if (success) {
-                                                setPremiumForAll(enabled);
-                                            }
-                                        }} 
-                                    />
-                                </div>
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
@@ -454,7 +383,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                 />
                                 <div>
                                     <p className="font-semibold text-gray-900 dark:text-white">{userProfile?.display_name || 'User'}</p>
-                                    <PremiumBadge size="sm" showDetails={false} />
                                 </div>
                             </div>
                         </div>

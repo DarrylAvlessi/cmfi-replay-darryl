@@ -40,8 +40,6 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
                         theme: '',
                         languages: [movie.original_language || 'fr'],
                         video_path_hd: movie.video_path_hd || movie.video_path_sd || '',
-                        is_premium: movie.is_premium,
-                        premium_text: movie.premium_text
                     });
                     setLoading(false);
                     return;
@@ -59,8 +57,6 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
                         duration: serie.runtime_h_m || '',
                         theme: '',
                         languages: Array.isArray(serie.lang) ? serie.lang : [serie.lang || 'fr'],
-                        is_premium: serie.premium_text !== undefined && serie.premium_text !== '',
-                        premium_text: serie.premium_text
                     });
                     setLoading(false);
                     return;

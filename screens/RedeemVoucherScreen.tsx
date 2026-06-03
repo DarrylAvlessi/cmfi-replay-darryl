@@ -10,7 +10,7 @@ const RedeemVoucherScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState<any>(null);
-  const { user, t, refreshSubscription } = useAppContext();
+  const { user, t } = useAppContext();
   const navigate = useNavigate();
 
   // Mise à jour du titre de la page
@@ -59,9 +59,6 @@ const RedeemVoucherScreen: React.FC = () => {
       const result = await redeemCoupon(coupon.code, user?.uid || '');
 
       if (result.success) {
-        // Rafraîchir le statut d'abonnement
-        await refreshSubscription();
-
         toast.success(t('codeValidatedSuccess'));
         navigate('/');
       } else {

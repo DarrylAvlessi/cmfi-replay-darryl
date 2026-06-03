@@ -13,7 +13,7 @@ const ManageNotificationsScreen: React.FC = () => {
     const [message, setMessage] = useState('');
     const [type, setType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
     const [link, setLink] = useState('');
-    const [category, setCategory] = useState<'all' | 'premium' | 'non-premium' | 'admin' | 'non-admin'>('all');
+    const [category, setCategory] = useState<'all' | 'admin' | 'non-admin'>('all');
     const [sending, setSending] = useState(false);
     const [sentNotifications, setSentNotifications] = useState<Array<{
         title: string;
@@ -96,8 +96,6 @@ const ManageNotificationsScreen: React.FC = () => {
             
             const categoryLabel = {
                 'all': 'tous les utilisateurs',
-                'premium': 'utilisateurs premium',
-                'non-premium': 'utilisateurs non premium',
                 'admin': 'administrateurs',
                 'non-admin': 'utilisateurs non admin'
             }[category];
@@ -271,12 +269,10 @@ const ManageNotificationsScreen: React.FC = () => {
                         </label>
                         <select
                             value={category}
-                            onChange={(e) => setCategory(e.target.value as 'all' | 'premium' | 'non-premium' | 'admin' | 'non-admin')}
+                            onChange={(e) => setCategory(e.target.value as 'all' | 'admin' | 'non-admin')}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                         >
                             <option value="all">Tous les utilisateurs</option>
-                            <option value="premium">Utilisateurs Premium uniquement</option>
-                            <option value="non-premium">Utilisateurs Non Premium uniquement</option>
                             <option value="admin">Administrateurs uniquement</option>
                             <option value="non-admin">Utilisateurs non admin uniquement</option>
                         </select>

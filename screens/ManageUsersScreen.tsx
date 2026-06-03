@@ -840,21 +840,16 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                     </div>
 
                     {/* Informations supplémentaires */}
-                    {(user.isPremium !== undefined || user.isAdmin !== undefined) && (
+                    {user.isAdmin !== undefined && (
                         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                             <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-2">Statut</p>
                             <div className="flex flex-wrap gap-2">
-                                {user.isPremium && (
-                                    <span className="px-3 py-1 bg-amber-500 text-white rounded-full text-sm font-medium">
-                                        Premium
-                                    </span>
-                                )}
                                 {user.isAdmin && (
                                     <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-sm font-medium">
                                         Administrateur
                                     </span>
                                 )}
-                                {!user.isPremium && !user.isAdmin && (
+                                {!user.isAdmin && (
                                     <span className="px-3 py-1 bg-gray-500 text-white rounded-full text-sm font-medium">
                                         Utilisateur standard
                                     </span>

@@ -13,7 +13,6 @@ interface SeriesScreenProps {
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'title' | 'newest' | 'oldest' | 'seasons';
-type FilterOption = 'all' | 'premiumContent' | 'free';
 
 interface SerieWithStats extends MediaContent {
     seasonsCount?: number;
@@ -36,32 +35,18 @@ const SeriesCard: React.FC<{
         onSelect(serie);
     };
 
-    const CrownIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-        </svg>
-    );
 
     if (variant === 'list') {
         return (
             <div
                 onClick={handleSelect}
-                className={`group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden ${
-                    serie.is_premium ? 'ring-1 ring-amber-400/30' : ''
-                }`}
+                className="group relative flex items-center gap-5 p-4 md:p-5 rounded-2xl bg-white dark:bg-gray-900/50 border border-gray-200/80 dark:border-black/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden"
             >
                 {/* Ligne de gradient au hover */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Image avec aspect ratio cinématique */}
-                <div className={`relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105 ${
-                    serie.is_premium ? 'ring-1 ring-amber-400/50' : ''
-                }`}>
-                    {serie.is_premium && (
-                        <div className="absolute top-1.5 right-1.5 z-10 p-1 bg-black/85 backdrop-blur-sm rounded-md">
-                            <CrownIcon />
-                        </div>
-                    )}
+                <div className="relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105">
                     <img 
                         src={serie.imageUrl} 
                         alt={serie.title} 
@@ -87,12 +72,6 @@ const SeriesCard: React.FC<{
                         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                             {serie.title}
                         </h3>
-                        {serie.is_premium && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-black flex-shrink-0">
-                                <CrownIcon />
-                                <span>PREMIUM</span>
-                            </span>
-                        )}
                     </div>
                     {(serie.author || serie.theme) && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-2">
@@ -140,22 +119,7 @@ const SeriesCard: React.FC<{
     // Variant poster
     return (
         <div onClick={handleSelect} className="flex-shrink-0 w-24 sm:w-32 md:w-40 lg:w-44 xl:w-48 space-y-1.5 sm:space-y-2 cursor-pointer group">
-            <div
-                className={`relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2 ${
-                    serie.is_premium ? 'ring-2 ring-amber-400/60 shadow-amber-400/30' : ''
-                }`}
-            >
-                {serie.is_premium && (
-                    <>
-                        <div className="absolute inset-0 rounded-lg md:rounded-xl border-2 border-transparent bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 opacity-60 pointer-events-none" style={{ padding: '2px' }}>
-                            <div className="w-full h-full bg-gray-900 dark:bg-black rounded-lg md:rounded-xl"></div>
-                        </div>
-                        <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 z-10 flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/90 backdrop-blur-sm border border-amber-400/50 shadow-lg">
-                            <CrownIcon />
-                            <span className="text-[9px] sm:text-xs font-semibold text-amber-300">Premium</span>
-                        </div>
-                    </>
-                )}
+            <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2">
                 <img
                     src={serie.imageUrl}
                     alt={serie.title}
@@ -205,8 +169,6 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [sortOption, setSortOption] = useState<SortOption>('title');
-    const [filterOption, setFilterOption] = useState<FilterOption>('all');
-    const [showFilters, setShowFilters] = useState(false);
     const [categories, setCategories] = useState<SerieCategory[]>([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const selectedCategoryId = searchParams.get('category') || null;
@@ -269,8 +231,6 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
             description: serie.overview_serie || '',
             languages: serie.lang ? [serie.lang] : [],
             progress: undefined,
-            is_premium: serie.premium_text !== undefined && serie.premium_text !== '',
-            premium_text: serie.premium_text || '',
             seasonsCount,
             episodesCount,
             totalDuration: serie.totalDuration ? formatDuration(serie.totalDuration) : undefined
@@ -346,13 +306,6 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
             );
         }
 
-        // Filtre Premium/Free
-        if (filterOption === 'premiumContent') {
-            filtered = filtered.filter(serie => serie.is_premium);
-        } else if (filterOption === 'free') {
-            filtered = filtered.filter(serie => !serie.is_premium);
-        }
-
         // Tri
         filtered.sort((a, b) => {
             switch (sortOption) {
@@ -370,7 +323,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
         });
 
         return filtered;
-    }, [series, searchTerm, filterOption, sortOption]);
+    }, [series, searchTerm, sortOption]);
 
     const handleBack = () => {
         navigate('/home');
@@ -379,7 +332,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
     return (
         <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
             {/* Header avec recherche et contrôles */}
-            <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-black shadow-sm">
+            <div className="sticky top-16 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-black backdrop-blur-md shadow-sm">
                 <div className="px-4 md:px-6 lg:px-8 py-4 space-y-4">
                     {/* Barre de navigation supérieure */}
                     <div className="flex items-center justify-between">
@@ -414,32 +367,12 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
 
                     {/* Contrôles: Filtres, Tri, Vue */}
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Bouton Filtres */}
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                                showFilters || filterOption !== 'all'
-                                    ? 'bg-amber-500 text-gray-900'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                            }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
-                            <span className="text-sm">{t('filters') || 'Filtres'}</span>
-                            {filterOption !== 'all' && (
-                                <span className="ml-1 px-1.5 py-0.5 bg-gray-900 text-white text-xs rounded-full">
-                                    {filterOption === 'premiumContent' ? 'Premium' : 'Gratuit'}
-                                </span>
-                            )}
-                        </button>
-
                         {/* Menu de tri */}
                         <div className="relative">
                             <select
                                 value={sortOption}
                                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                                className="appearance-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 pr-8 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer transition-all duration-200"
+                                className="appearance-none bg-white dark:bg-black border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 pr-8 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer transition-all duration-200"
                             >
                                 <option value="title">{t('sortByTitle') || 'Trier par titre'}</option>
                                 <option value="newest">{t('sortByNewest') || 'Plus récentes'}</option>
@@ -454,12 +387,12 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
 
                         {/* Toggle vue Grille/Liste */}
-                        <div className="ml-auto flex items-center gap-2 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                        <div className="ml-auto flex items-center gap-2 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded transition-all duration-200 ${
                                     viewMode === 'grid'
-                                        ? 'bg-white dark:bg-gray-600 text-amber-600 dark:text-amber-400 shadow-md'
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 aria-label="Vue grille"
@@ -472,7 +405,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                 onClick={() => setViewMode('list')}
                                 className={`p-2 rounded transition-all duration-200 ${
                                     viewMode === 'list'
-                                        ? 'bg-white dark:bg-gray-600 text-amber-600 dark:text-amber-400 shadow-md'
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 aria-label="Vue liste"
@@ -483,49 +416,6 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             </button>
                         </div>
                     </div>
-
-                    {/* Panneau de filtres déroulant */}
-                    {showFilters && (
-                        <div className="pt-2 pb-2 border-t border-gray-200 dark:border-gray-700 animate-fadeIn">
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => setFilterOption('all')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'all'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    {t('all') || 'Toutes'}
-                                </button>
-                                <button
-                                    onClick={() => setFilterOption('premiumContent')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'premiumContent'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-1.5">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                                        </svg>
-                                        {t('premiumContent') || 'Premium'}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setFilterOption('free')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                        filterOption === 'free'
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                >
-                                    {t('free') || 'Gratuites'}
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Filtre par catégorie */}
                     {categories.length > 0 && (

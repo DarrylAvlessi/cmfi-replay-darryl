@@ -236,7 +236,6 @@ router.patch('/seasons/:id', async (req, res) => {
             'backdrop_path',
             'season_number',
             'year_season',
-            'premium_text',
             'nb_episodes'
         ];
 
@@ -296,8 +295,7 @@ router.post('/seasons', async (req, res) => {
             poster_path,
             backdrop_path,
             season_number,
-            year_season,
-            premium_text
+            year_season
         } = req.body;
 
         if (!uid_serie || !title_season || !season_number) {
@@ -318,7 +316,6 @@ router.post('/seasons', async (req, res) => {
             season_number: parseInt(season_number),
             nb_episodes: 0,
             year_season: year_season ? parseInt(year_season) : new Date().getFullYear(),
-            premium_text: premium_text || '',
             createdAt: new Date(),
             updatedAt: new Date()
         };
@@ -395,7 +392,6 @@ router.post('/import/vimeo-to-app', async (req, res) => {
                 season_number: parseInt(newSeasonData.season_number || 1),
                 nb_episodes: 0,
                 year_season: parseInt(newSeasonData.year_season || new Date().getFullYear()),
-                premium_text: newSeasonData.premium_text || '',
                 createdAt: new Date(),
                 updatedAt: new Date()
             };

@@ -78,8 +78,6 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                 languages: [movie.original_language],
                                 cast: [],
                                 director: '',
-                                is_premium: movie.is_premium,
-                                premium_text: movie.premium_text
                             };
                         }
                         
