@@ -18,6 +18,7 @@ import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
+import { useDraggable } from '../hooks/useDraggable';
 
 // --- Main Screen Component ---
 interface EpisodePlayerScreenProps {
@@ -45,6 +46,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const [showAd, setShowAd] = useState(!wasAdShown);
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
     const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd });
+    const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
@@ -463,21 +465,24 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                         <div>
                              <div ref={sentinelRef} className="h-px" aria-hidden="true" />
                              {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
-                             <div
-                                 className={
-                                     isMini
-                                         ? 'fixed bottom-4 right-4 z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black'
-                                         : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
-                                 }
-                                 style={isMini ? { position: 'fixed', bottom: 16, right: 16, zIndex: 50 } : undefined}
-                             >
-                                 {isMini && (
-                                     <>
-                                         <div
-                                             onClick={closeMiniPlayer}
-                                             className="absolute inset-0 z-40 cursor-pointer"
-                                             aria-label="Tap to restore video to full view"
-                                         />
+                              <div
+                                  onPointerDown={handlePointerDown}
+                                  onPointerMove={isMini ? handlePointerMove : undefined}
+                                  onPointerUp={handlePointerUp}
+                                  className={
+                                      isMini
+                                          ? `fixed z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
+                                          : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                  }
+                                  style={isMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
+                              >
+                                  {isMini && (
+                                      <>
+                                          <div
+                                              onClick={() => { if (!hasDraggedRef.current) closeMiniPlayer(); }}
+                                              className="absolute inset-0 z-40 cursor-default"
+                                              aria-label="Tap to restore video to full view"
+                                          />
                                          <button
                                              onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
                                              className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
