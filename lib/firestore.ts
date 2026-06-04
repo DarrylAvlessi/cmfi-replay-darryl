@@ -235,6 +235,22 @@ export interface Notification {
     link?: string; // Lien optionnel vers une page
 }
 
+// Interface pour les signalements utilisateurs (help/feedback)
+export interface Report {
+    uid?: string;
+    userId: string;
+    userEmail: string;
+    displayName: string;
+    type: 'bug' | 'suggestion' | 'question';
+    message: string;
+    status: 'pending' | 'read' | 'resolved';
+    adminResponse?: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    respondedAt?: Timestamp;
+    respondedBy?: string;
+}
+
 // Constantes pour les collections
 const USERS_COLLECTION = 'users';
 const MOVIES_COLLECTION = 'movies';
@@ -253,6 +269,7 @@ const APP_SETTINGS_COLLECTION = 'appSettings';
 const ADS_COLLECTION = 'ads';
 const NOTIFICATIONS_COLLECTION = 'notifications';
 const USER_NAVIGATION_COLLECTION = 'user_navigation';
+const USERS_REPORTS_COLLECTION = 'users_reports';
 
 // Fonction utilitaire pour générer un avatar par défaut
 export const generateDefaultAvatar = (name?: string): string => {
@@ -299,7 +316,7 @@ export const userService = {
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
-            await setDoc(doc(db, USERS_COLLECTION, userData.uid), userProfile);
+            await setDoc(doc(db, USERS_COLLECTION, userData.uid), userProfile, { merge: true });
         } catch (error) {
             console.error('Error creating user profile:', error);
             throw error;
@@ -4850,5 +4867,127 @@ export const navigationTrackingService = {
             console.error('Error getting user navigation history:', error);
             return [];
         }
+    }
+};
+
+// Service pour les signalements utilisateurs (help/feedback)
+export const reportService = {
+    async createReport(data: Omit<Report, 'uid' | 'status' | 'createdAt' | 'updatedAt'>): Promise<string> {
+        try {
+            const reportRef = doc(collection(db, USERS_REPORTS_COLLECTION));
+            const now = Timestamp.now();
+            await setDoc(reportRef, {
+                ...data,
+                status: 'pending',
+                createdAt: now,
+                updatedAt: now,
+            });
+            return reportRef.id;
+        } catch (error) {
+            console.error('Error creating report:', error);
+            throw error;
+        }
+    },
+
+    async getUserReports(userId: string): Promise<Report[]> {
+        try {
+            const q = query(
+                collection(db, USERS_REPORTS_COLLECTION),
+                where('userId', '==', userId)
+            );
+            const snapshot = await getDocs(q);
+            const reports = snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as Report[];
+            return reports.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            });
+        } catch (error) {
+            console.error('Error getting user reports:', error);
+            return [];
+        }
+    },
+
+    subscribeToUserReports(userId: string, callback: (reports: Report[]) => void): () => void {
+        const q = query(
+            collection(db, USERS_REPORTS_COLLECTION),
+            where('userId', '==', userId)
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const reports = snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as Report[];
+            callback(reports.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            }));
+        });
+        return unsubscribe;
+    },
+
+    async getAllReports(): Promise<Report[]> {
+        try {
+            const q = query(
+                collection(db, USERS_REPORTS_COLLECTION),
+                orderBy('createdAt', 'desc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as Report[];
+        } catch (error) {
+            console.error('Error getting all reports:', error);
+            return [];
+        }
+    },
+
+    async respondToReport(reportId: string, adminResponse: string, respondedBy: string): Promise<void> {
+        try {
+            const reportRef = doc(db, USERS_REPORTS_COLLECTION, reportId);
+            await updateDoc(reportRef, {
+                adminResponse,
+                respondedBy,
+                status: 'resolved',
+                respondedAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+        } catch (error) {
+            console.error('Error responding to report:', error);
+            throw error;
+        }
+    },
+
+    async updateReportStatus(reportId: string, status: 'pending' | 'read' | 'resolved'): Promise<void> {
+        try {
+            const reportRef = doc(db, USERS_REPORTS_COLLECTION, reportId);
+            await updateDoc(reportRef, {
+                status,
+                updatedAt: Timestamp.now(),
+            });
+        } catch (error) {
+            console.error('Error updating report status:', error);
+            throw error;
+        }
+    },
+
+    subscribeToAllReports(callback: (reports: Report[]) => void): () => void {
+        const q = query(
+            collection(db, USERS_REPORTS_COLLECTION),
+            orderBy('createdAt', 'desc')
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const reports = snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as Report[];
+            callback(reports);
+        });
+        return unsubscribe;
     }
 };

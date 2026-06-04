@@ -33,6 +33,8 @@ import PaymentSuccessScreen from './screens/PaymentSuccessScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ManageNotificationsScreen from './screens/ManageNotificationsScreen';
 import AdminBackupVideosScreen from './screens/AdminBackupVideosScreen';
+import HelpScreen from './screens/HelpScreen';
+import ManageReportsScreen from './screens/ManageReportsScreen';
 
 // Category Screens
 import MoviesScreen from './screens/MoviesScreen';
@@ -68,6 +70,7 @@ const getTitleFromPath = (path: string, t: (key: string) => string): string => {
     if (path === '/change-password') return t('changePassword');
     if (path === '/history') return t('history');
     if (path === '/bookmarks' || path === '/favorites') return t('favorites');
+    if (path === '/help') return t('help');
     return '';
 };
 
@@ -122,6 +125,8 @@ const AppContent: React.FC = () => {
             if (path === '/change-password') return 'Changer Mot de Passe';
             if (path === '/history') return 'Historique';
             if (path === '/bookmarks' || path === '/favorites') return 'Favoris';
+            if (path === '/help') return 'Aide';
+            if (path === '/manage-reports') return 'Gestion Signalements';
             if (path === '/manage-users') return 'Gestion Utilisateurs';
             if (path === '/admin') return 'Administration';
             if (path === '/notifications') return 'Notifications';
@@ -470,6 +475,10 @@ const AppContent: React.FC = () => {
                                 <ManageSubscriptionScreen />
                             } />
 
+                            <Route path="/help" element={
+                                <HelpScreen />
+                            } />
+
                             <Route path="/manage-info-bar" element={
                                 <ManageInfoBarScreen />
                             } />
@@ -486,6 +495,9 @@ const AppContent: React.FC = () => {
                             } />
                             <Route path="/manage-notifications" element={
                                 <ManageNotificationsScreen />
+                            } />
+                            <Route path="/manage-reports" element={
+                                <ManageReportsScreen />
                             } />
                             <Route path="/admin" element={
                                 <AdminBackupVideosScreen />

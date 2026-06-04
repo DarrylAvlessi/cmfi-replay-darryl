@@ -16,10 +16,12 @@ import {
     TicketIcon,
     LogoutIcon,
     SettingsIcon,
-    TrashIcon
+    TrashIcon,
+    CommentIcon,
+    HelpIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
-import { UserProfile, userService } from '../lib/firestore';
+import { UserProfile, userService, reportService, Report } from '../lib/firestore';
 
 
 import { authService } from '../lib/authService';
@@ -36,7 +38,9 @@ interface ProfileScreenProps {
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user } = useAppContext();
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'help'>('overview');
+    const [userReports, setUserReports] = useState<Report[]>([]);
+    const [loadingReports, setLoadingReports] = useState(true);
 
     // Centralisation de la détection Admin
     const isAdminValue = useMemo(() => {
@@ -71,6 +75,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         };
 
         fetchHistory();
+    }, [user]);
+
+    // Charger les signalements de l'utilisateur en temps réel
+    useEffect(() => {
+        if (!user) {
+            setLoadingReports(false);
+            return;
+        }
+
+        setLoadingReports(true);
+        const unsubscribe = reportService.subscribeToUserReports(user.uid, (reports) => {
+            setUserReports(reports);
+            setLoadingReports(false);
+        });
+
+        return () => unsubscribe();
     }, [user]);
 
     const handleHistoryItemClick = useCallback(async (item: ContinueWatchingItem) => {
@@ -155,6 +175,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 action: () => navigateRouter('/manage-notifications')
             },
             {
+                icon: CommentIcon,
+                label: 'Gérer les signalements',
+                action: () => navigateRouter('/manage-reports')
+            },
+            {
                 icon: SettingsIcon,
                 label: 'Admin - Gestion des vidéos',
                 action: () => navigateRouter('/admin')
@@ -178,6 +203,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             { id: 'overview' as const, label: t('overview') || 'Vue d\'ensemble', icon: 'User' },
             { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
             { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
+            { id: 'help' as const, label: t('help') || 'Aide', icon: 'Help' },
         ];
         
         if (isAdminValue) {
@@ -286,6 +312,68 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </div>
                 );
             
+            case 'help':
+                return (
+                    <div className="space-y-6">
+                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-serif font-bold">{t('help')}</h3>
+                                <button
+                                    onClick={() => navigateRouter('/help')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    <HelpIcon className="w-4 h-4" />
+                                    {t('contactUs')}
+                                </button>
+                            </div>
+
+                            {loadingReports ? (
+                                <div className="text-center py-8 text-gray-500">{t('loading')}</div>
+                            ) : userReports.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">{t('noReports')}</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {userReports.map((report) => (
+                                        <div
+                                            key={report.uid}
+                                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                                        >
+                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                                                    {report.type}
+                                                </span>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                                    report.status === 'resolved'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : report.status === 'read'
+                                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                }`}>
+                                                    {t('reportStatus')}: {report.status}
+                                                </span>
+                                                <span className="text-xs text-gray-400 ml-auto">
+                                                    {report.createdAt?.toDate?.()?.toLocaleDateString() || ''}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                                {report.message}
+                                            </p>
+                                            {report.adminResponse && (
+                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                    <p className="text-xs font-medium text-gray-500 mb-1">{t('adminResponse')}:</p>
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                                                        {report.adminResponse}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+
             case 'editProfile':
                 return (
                     <div className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -358,6 +446,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                     )}
+                    <div className="mt-4">
+                        <h3 className="text-xl font-serif font-bold mb-3">{t('help')}</h3>
+                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
+                            <SettingsItem
+                                Icon={HelpIcon}
+                                label={t('contactUs')}
+                                onClick={() => navigateRouter('/help')}
+                            />
+                        </div>
+                    </div>
+
                     <div className="mt-4 border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
                         <SettingsItem 
                             Icon={LogoutIcon} 

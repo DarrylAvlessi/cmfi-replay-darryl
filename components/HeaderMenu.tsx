@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { UserIcon, LogoutIcon, GlobeIcon } from './icons';
+import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Language } from '../lib/i18n';
 import { auth } from '../lib/firebase';
@@ -88,6 +88,15 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
                     >
                         <UserIcon className="w-5 h-5 mr-3" />
                         {t('profile')}
+                    </Link>
+
+                    <Link
+                        to="/help"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <HelpIcon className="w-5 h-5 mr-3" />
+                        {t('help')}
                     </Link>
 
                     <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
