@@ -4,6 +4,7 @@ import { auth, db } from '../lib/firebase';
 import { userService, UserProfile, bookDocService, bookSeriesService } from '../lib/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { ActiveTab } from '../types';
 
 type Theme = 'light' | 'dark';
@@ -33,6 +34,10 @@ interface AppContextType {
     setActiveTab: (tab: ActiveTab) => void;
     homeViewMode: HomeViewMode;
     setHomeViewMode: (mode: HomeViewMode) => void;
+    swUpdateAvailable: boolean;
+    swUpdateDismissed: boolean;
+    applyUpdate: () => void;
+    dismissUpdate: () => void;
 }
 
 export type { HomeViewMode };
@@ -174,6 +179,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
         }
     };
+
+    // Service Worker update state
+    const [swUpdateDismissed, setSwUpdateDismissed] = useState(false);
+
+    const {
+        needRefresh: [needRefresh, setNeedRefresh],
+        updateServiceWorker,
+    } = useRegisterSW({
+        onNeedRefresh() {
+            setSwUpdateDismissed(false);
+        },
+    });
+
+    const swUpdateAvailable = needRefresh;
+
+    const applyUpdate = useCallback(() => {
+        updateServiceWorker();
+    }, [updateServiceWorker]);
+
+    const dismissUpdate = useCallback(() => {
+        setSwUpdateDismissed(true);
+    }, []);
 
     // Mettre à jour le statut de présence de l'utilisateur avec lastSeen
     const updateUserPresence = async (uid: string, status: 'online' | 'offline' | 'idle' | 'away') => {
@@ -500,6 +527,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab,
         homeViewMode,
         setHomeViewMode,
+        swUpdateAvailable,
+        swUpdateDismissed,
+        applyUpdate,
+        dismissUpdate,
     }), [
         theme,
         language,
@@ -513,6 +544,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isSidebarCollapsed,
         activeTab,
         homeViewMode,
+        swUpdateAvailable,
+        swUpdateDismissed,
+        applyUpdate,
+        dismissUpdate,
         // Fonctions
         setTheme,
         setLanguage,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon } from './icons';
+import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon, UpdateIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Language } from '../lib/i18n';
 import { auth } from '../lib/firebase';
@@ -15,7 +15,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const closeTimeoutRef = useRef<number | null>(null);
-    const { t, setIsAuthenticated, language, setLanguage, user, userProfile } = useAppContext();
+    const { t, setIsAuthenticated, language, setLanguage, user, userProfile, swUpdateAvailable, applyUpdate } = useAppContext();
 
     const iconColor = variant === 'light' ? 'text-white' : 'text-gray-600 dark:text-gray-400';
     const hoverBg = variant === 'light' ? 'hover:bg-white/20' : 'hover:bg-gray-200 dark:hover:bg-gray-700';
@@ -70,7 +70,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
 
     return (
         <div className="relative" ref={menuRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <button className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} overflow-hidden`}>
+            <button className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} relative`}>
                 {photoUrl ? (
                     <img src={photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
                 ) : (
@@ -78,9 +78,24 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
                         <UserIcon className="w-5 h-5 text-white" />
                     </div>
                 )}
+                {swUpdateAvailable && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-black animate-pulse" />
+                )}
             </button>
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
+                    {swUpdateAvailable && (
+                        <>
+                            <button
+                                onClick={() => { applyUpdate(); setIsOpen(false); }}
+                                className="w-full text-left flex items-center px-4 py-2 text-sm text-amber-600 dark:text-amber-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <UpdateIcon className="w-5 h-5 mr-3" />
+                                {t('updateNow')}
+                            </button>
+                            <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
+                        </>
+                    )}
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}

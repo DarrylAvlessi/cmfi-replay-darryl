@@ -1,19 +1,9 @@
-/// <reference types="vite-plugin-pwa/react" />
-import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAppContext } from '../context/AppContext'
 
 const UpdatePrompt = () => {
-  const { t } = useAppContext()
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW()
+  const { t, swUpdateAvailable, swUpdateDismissed, applyUpdate, dismissUpdate } = useAppContext()
 
-  const close = () => {
-    setNeedRefresh(false)
-  }
-
-  if (!needRefresh) return null
+  if (!swUpdateAvailable || swUpdateDismissed) return null
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
@@ -31,13 +21,13 @@ const UpdatePrompt = () => {
         </div>
         <div className="p-6 space-y-3">
           <button
-            onClick={() => updateServiceWorker()}
+            onClick={applyUpdate}
             className="w-full py-3 text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-[0.98]"
           >
             {t('updateNow')}
           </button>
           <button
-            onClick={close}
+            onClick={dismissUpdate}
             className="w-full py-3 text-sm font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             {t('updateLater')}

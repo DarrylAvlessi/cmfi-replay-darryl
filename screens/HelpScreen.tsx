@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { reportService } from '../lib/firestore';
+import { reportService, Report } from '../lib/firestore';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
@@ -11,12 +11,36 @@ const reportTypes: { value: 'bug' | 'suggestion' | 'question'; labelKey: string;
     { value: 'question', labelKey: 'question', descKey: 'questionDesc' },
 ];
 
+const statusColors: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    read: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    resolved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+};
+
 const HelpScreen: React.FC = () => {
     const navigate = useNavigate();
     const { t, user, userProfile } = useAppContext();
     const [type, setType] = useState<'bug' | 'suggestion' | 'question'>('bug');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [reports, setReports] = useState<Report[]>([]);
+    const [activeTab, setActiveTab] = useState<'submit' | 'myReports'>('submit');
+    const [loadingReports, setLoadingReports] = useState(true);
+
+    useEffect(() => {
+        if (!user) {
+            setLoadingReports(false);
+            return;
+        }
+
+        setLoadingReports(true);
+        const unsubscribe = reportService.subscribeToUserReports(user.uid, (data) => {
+            setReports(data);
+            setLoadingReports(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,7 +65,6 @@ const HelpScreen: React.FC = () => {
             toast.success(t('reportSubmitted'));
             setMessage('');
             setType('bug');
-            navigate('/profile');
         } catch (error) {
             console.error('Error submitting report:', error);
             toast.error(t('errorOccurred'));
@@ -64,50 +87,117 @@ const HelpScreen: React.FC = () => {
                 <h1 className="text-2xl font-serif font-bold mb-2">{t('help')}</h1>
                 <p className="text-gray-500 dark:text-gray-400 mb-8">{t('contactUs')}</p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium mb-3">{t('reportType')}</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {reportTypes.map((rt) => (
-                                <button
-                                    key={rt.value}
-                                    type="button"
-                                    onClick={() => setType(rt.value)}
-                                    className={`p-4 rounded-lg border-2 text-left transition-all ${
-                                        type === rt.value
-                                            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                    }`}
-                                >
-                                    <div className="font-medium text-sm">{t(rt.labelKey)}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t(rt.descKey)}</div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="message" className="block text-sm font-medium mb-2">
-                            {t('reportMessage')}
-                        </label>
-                        <textarea
-                            id="message"
-                            rows={6}
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder={t('reportPlaceholder')}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
-                        />
-                    </div>
-
+                <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
                     <button
-                        type="submit"
-                        disabled={loading || !message.trim()}
-                        className="w-full sm:w-auto px-8 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-semibold rounded-lg transition-colors"
+                        onClick={() => setActiveTab('submit')}
+                        className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                            activeTab === 'submit'
+                                ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
                     >
-                        {loading ? t('processing') : t('submitReport')}
+                        {t('submitReport')}
                     </button>
-                </form>
+                    <button
+                        onClick={() => setActiveTab('myReports')}
+                        className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                            activeTab === 'myReports'
+                                ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                    >
+                        {t('myReports')} ({reports.length})
+                    </button>
+                </div>
+
+                {activeTab === 'submit' && (
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium mb-3">{t('reportType')}</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {reportTypes.map((rt) => (
+                                    <button
+                                        key={rt.value}
+                                        type="button"
+                                        onClick={() => setType(rt.value)}
+                                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                            type === rt.value
+                                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                        }`}
+                                    >
+                                        <div className="font-medium text-sm">{t(rt.labelKey)}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t(rt.descKey)}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="message" className="block text-sm font-medium mb-2">
+                                {t('reportMessage')}
+                            </label>
+                            <textarea
+                                id="message"
+                                rows={6}
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder={t('reportPlaceholder')}
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading || !message.trim()}
+                            className="w-full sm:w-auto px-8 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-semibold rounded-lg transition-colors"
+                        >
+                            {loading ? t('processing') : t('submitReport')}
+                        </button>
+                    </form>
+                )}
+
+                {activeTab === 'myReports' && (
+                    <div>
+                        {loadingReports ? (
+                            <div className="text-center py-8 text-gray-500">{t('loading')}</div>
+                        ) : reports.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">{t('noReports')}</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {reports.map((report) => (
+                                    <div
+                                        key={report.uid}
+                                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-black"
+                                    >
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                                                {report.type}
+                                            </span>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[report.status] || ''}`}>
+                                                {t('reportStatus')}: {report.status}
+                                            </span>
+                                            <span className="text-xs text-gray-400 ml-auto">
+                                                {report.createdAt?.toDate?.()?.toLocaleDateString() || ''}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                            {report.message}
+                                        </p>
+                                        {report.adminResponse && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('adminResponse')}:</p>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                                                    {report.adminResponse}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
