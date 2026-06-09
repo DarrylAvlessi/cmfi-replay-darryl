@@ -94,22 +94,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       ),
     },
     {
-      id: 'bookmarks',
-      label: t('myFavorites'),
-      path: '/bookmarks',
+      id: 'donate',
+      label: t('donate') || 'Donate',
+      path: '/donate',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
-      ),
-    },
-    {
-      id: 'history',
-      label: t('history'),
-      path: '/history',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       ),
     },
@@ -260,6 +250,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       </ul>
                     )}
                   </div>
+                ) : item.id === 'donate' ? (
+                  <Link
+                    to={item.path}
+                    onClick={(e) => {
+                      onClose();
+                      if (item.onClick) {
+                        item.onClick(e);
+                      }
+                    }}
+                    className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
+                      isActive(item.path)
+                        ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/40'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02]'
+                    }`}
+                    aria-current={isActive(item.path) ? 'page' : undefined}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className="ml-3">{item.label}</span>
+                  </Link>
                 ) : (
                   <Link
                     to={item.path}

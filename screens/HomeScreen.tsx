@@ -1,19 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Hero from '../components/Hero';
 import HeroPrimeVideo from '../components/HeroPrimeVideo';
-import HeroNetflix from '../components/HeroNetflix';
-import MediaCard from '../components/MediaCard';
-import RankedMediaCard from '../components/RankedMediaCard';
-import UserAvatar from '../components/UserAvatar';
-import CategoryTiles from '../components/CategoryTiles';
-import { MediaCardSkeleton, UserAvatarSkeleton, ContinueWatchingSkeleton, CategoryTilesSkeleton, MostLikedSkeleton } from '../components/Skeleton';
 import { featuredContent } from '../data/mockData';
-import { PlayIcon } from '../components/icons';
-
-import { MediaContent, User, MediaType } from '../types';
-import { useAppContext, HomeViewMode } from '../context/AppContext';
-import { userService, generateDefaultAvatar, likeService, movieService, episodeSerieService, statsVuesService, ContinueWatchingItem, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile } from '../lib/firestore';
-import ContinueWatchingSection from '../components/ContinueWatchingSection';
+import { MediaContent, MediaType } from '../types';
+import MediaCard from '../components/MediaCard';
+import { useAppContext } from '../context/AppContext';
+import { likeService, movieService, episodeSerieService, statsVuesService, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile, ContinueWatchingItem } from '../lib/firestore';
 import InfoBar from '../components/InfoBar';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import MoviesSection from '../components/sections/MoviesSection';
@@ -24,133 +15,30 @@ import MostLikedSection from '../components/sections/MostLikedSection';
 import CategorySections from '../components/sections/CategorySections';
 import ErrorBoundary from '../components/ErrorBoundary';
 
-const MediaRow: React.FC<{ title: string; items: MediaContent[]; onSelectMedia: (item: MediaContent) => void; onPlay: (item: MediaContent) => void; variant?: 'poster' | 'thumbnail' | 'list' }> = ({ title, items, onSelectMedia, onPlay, variant }) => {
-    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-    const [showLeftGradient, setShowLeftGradient] = React.useState(false);
-    const [showRightGradient, setShowRightGradient] = React.useState(true);
-
-    React.useEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-
-        let timeoutId: NodeJS.Timeout | null = null;
-        const checkScroll = () => {
-            if (timeoutId) return;
-            
-            timeoutId = setTimeout(() => {
-                const { scrollLeft, scrollWidth, clientWidth } = container;
-                setShowLeftGradient(scrollLeft > 10);
-                setShowRightGradient(scrollLeft < scrollWidth - clientWidth - 10);
-                timeoutId = null;
-            }, 100);
-        };
-
-        checkScroll();
-        container.addEventListener('scroll', checkScroll);
-        window.addEventListener('resize', checkScroll);
-        return () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            container.removeEventListener('scroll', checkScroll);
-            window.removeEventListener('resize', checkScroll);
-        };
-    }, [items]);
-
-    if (items.length === 0) return null;
-
-    return (
-        <section className="py-8 md:py-12 relative group">
-            {/* Titre avec meilleure hiérarchie */}
-            <div className="px-4 md:px-6 lg:px-8 mb-6">
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-gray-900 dark:text-white tracking-tight">
-                    {title}
-                </h3>
-            </div>
-
-            {/* Container avec gradients de fade dynamiques */}
-            <div className="relative">
-                {/* Gradient gauche */}
-                {showLeftGradient && (
-                    <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-r from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
-                )}
-
-                {/* Gradient droite */}
-                {showRightGradient && (
-                    <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 lg:w-40 bg-gradient-to-l from-white dark:from-black via-white/80 dark:via-black/80 to-transparent z-20 pointer-events-none transition-opacity duration-500" />
-                )}
-
-                {/* Carrousel avec scroll smooth et snap */}
-                <div
-                    ref={scrollContainerRef}
-                    className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6 scroll-smooth snap-x snap-mandatory"
-                    style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
-                >
-                    {items.map((item, index) => (
-                        <div key={item.id} className="snap-start flex-shrink-0">
-                            <MediaCard item={item} variant={variant} onSelect={onSelectMedia} onPlay={onPlay} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-};
-
-const RankedMediaRow: React.FC<{
-    title: string;
-    items: Array<{ content: MediaContent; likeCount: number; viewCount?: number }>;
-    onSelectMedia: (item: MediaContent) => void;
-    onPlay: (item: MediaContent) => void;
-}> = ({ title, items, onSelectMedia, onPlay }) => {
-    if (items.length === 0) return null;
-
-    return (
-        <section className="py-8 md:py-12">
-            {/* Titre */}
-            <div className="px-4 md:px-6 lg:px-8 mb-6">
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-                    {title}
-                </h3>
-            </div>
-
-            {/* Container simple sans effets de défilement */}
-            <div className="flex space-x-2 md:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-6">
-                {items.map((item, index) => (
-                    <div key={item.content.id} className="flex-shrink-0">
-                        <RankedMediaCard
-                            item={item.content}
-                            rank={index + 1}
-                            viewCount={item.viewCount}
-                            onSelect={onSelectMedia}
-                            onPlay={onPlay}
-                        />
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
-};
-
-const UserRow: React.FC<{ title: string; users: User[] }> = ({ title, users }) => (
-    <section className="py-4">
-        <h3 className="text-xl font-bold px-4 mb-3">{title}</h3>
-        <div className="flex space-x-4 overflow-x-auto px-4 scrollbar-hide pb-2">
-            {users.map((user: User) => (
-                <UserAvatar key={user.id} user={user} />
-            ))}
-        </div>
-    </section>
-);
-
 interface HomeScreenProps {
     onSelectMedia: (item: MediaContent) => void;
     onPlay: (item: MediaContent, episode?: any) => void;
     navigateToCategory: (type: MediaType) => void;
 }
 
+const SectionError: React.FC<{ message: string }> = ({ message }) => (
+    <div className="py-8 md:py-12">
+        <div className="px-4 md:px-6 lg:px-8">
+            <p className="text-sm text-red-500 dark:text-red-400">{message}</p>
+        </div>
+    </div>
+);
+
 const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigateToCategory }) => {
     const { t, user, userProfile, setUserProfile } = useAppContext();
     const [showProfileModal, setShowProfileModal] = useState(false);
-    const [mostLikedItems, setMostLikedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount?: number }>>([]);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setShowScrollTop(window.scrollY > 600);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     // Vérifier si le profil doit être complété
     useEffect(() => {
@@ -166,103 +54,73 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             }
         }
     }, [userProfile, user]);
+
+    // State: Most Liked
+    const [mostLikedItems, setMostLikedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount?: number }>>([]);
     const [loadingMostLiked, setLoadingMostLiked] = useState(true);
-    const [mostWatchedItems, setMostWatchedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount: number }>>([]);
-    const [loadingMostWatched, setLoadingMostWatched] = useState(true);
-    const [continueWatchingItems, setContinueWatchingItems] = useState<ContinueWatchingItem[]>([]);
-    const [loadingContinueWatching, setLoadingContinueWatching] = useState(true);
-    const [movies, setMovies] = useState<Movie[]>([]);
-    const [loadingMovies, setLoadingMovies] = useState(true);
-    const [series, setSeries] = useState<Serie[]>([]);
-    const [loadingSeries, setLoadingSeries] = useState(true);
-    const [podcasts, setPodcasts] = useState<Serie[]>([]);
-    const [loadingPodcasts, setLoadingPodcasts] = useState(true);
-    const [serieCategories, setSerieCategories] = useState<SerieCategory[]>([]);
-    const [seriesByCategory, setSeriesByCategory] = useState<Record<string, Serie[]>>({});
-    const [loadingSeriesByCategory, setLoadingSeriesByCategory] = useState(true);
-
-    // Combined data fetching for independent data sources
+    const [mostLikedError, setMostLikedError] = useState<string | null>(null);
     useEffect(() => {
-        const fetchAllData = async () => {
+        let cancelled = false;
+        const fetchData = async () => {
             try {
-                // Fetch all independent data sources in parallel
-                const [
-                    likedItems,
-                    watchedItems,
-                    moviesData,
-                    seriesData,
-                    podcastsData,
-                    categories
-                ] = await Promise.all([
-                    likeService.getMostLikedItems(10),
-                    viewService.getMostWatchedItems(10),
-                    movieService.getTenHomeMovies(),
-                    serieService.getTenHomeSeries(),
-                    serieService.getTenHomePodcasts(),
-                    serieCategoryService.getAllCategories()
-                ]);
-
-                // Process most liked items
+                setLoadingMostLiked(true);
+                setMostLikedError(null);
+                const likedItems = await likeService.getMostLikedItems(10);
                 const itemsWithDetails = await Promise.all(
                     likedItems.map(async (item) => {
                         let movie = await movieService.getMovieByUid(item.uid);
                         if (movie && !movie.hidden) {
                             const mediaContent: MediaContent = {
-                                id: movie.uid,
-                                type: MediaType.Movie,
-                                title: movie.title,
-                                author: undefined,
-                                theme: '',
+                                id: movie.uid, type: MediaType.Movie, title: movie.title, author: undefined, theme: '',
                                 imageUrl: movie.picture_path || movie.backdrop_path || movie.poster_path,
-                                duration: movie.runtime_h_m,
-                                description: movie.overview,
-                                languages: [movie.original_language],
-                                video_path_hd: movie.video_path_hd
+                                duration: movie.runtime_h_m, description: movie.overview, languages: [movie.original_language], video_path_hd: movie.video_path_hd
                             };
                             return { content: mediaContent, likeCount: item.likeCount };
                         }
-
                         let episode = await episodeSerieService.getEpisodeByUid(item.uid);
                         if (episode && !episode.hidden) {
                             const mediaContent: MediaContent = {
-                                id: episode.uid_episode,
-                                type: MediaType.Series,
-                                title: episode.title,
-                                author: episode.title_serie,
-                                theme: '',
-                                imageUrl: episode.backdrop_path || episode.picture_path,
-                                duration: episode.runtime_h_m,
-                                description: episode.overviewFr || episode.overview,
-                                languages: [],
-                                video_path_hd: episode.video_path_hd
+                                id: episode.uid_episode, type: MediaType.Series, title: episode.title, author: episode.title_serie, theme: '',
+                                imageUrl: episode.backdrop_path || episode.picture_path, duration: episode.runtime_h_m,
+                                description: episode.overviewFr || episode.overview, languages: [], video_path_hd: episode.video_path_hd
                             };
                             return { content: mediaContent, likeCount: item.likeCount };
                         }
-
                         return null;
                     })
                 );
-                const validLikedItems = itemsWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount?: number } => item !== null);
-                setMostLikedItems(validLikedItems);
-                setLoadingMostLiked(false);
+                const valid = itemsWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount?: number } => item !== null);
+                if (!cancelled) setMostLikedItems(valid);
+            } catch (err) {
+                if (!cancelled) setMostLikedError('Failed to load most liked');
+            } finally {
+                if (!cancelled) setLoadingMostLiked(false);
+            }
+        };
+        fetchData();
+        return () => { cancelled = true; };
+    }, []);
 
-                // Process most watched items
+    // State: Most Watched
+    const [mostWatchedItems, setMostWatchedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount: number }>>([]);
+    const [loadingMostWatched, setLoadingMostWatched] = useState(true);
+    const [mostWatchedError, setMostWatchedError] = useState<string | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        const fetchData = async () => {
+            try {
+                setLoadingMostWatched(true);
+                setMostWatchedError(null);
+                const watchedItems = await viewService.getMostWatchedItems(10);
                 const watchedWithDetails = await Promise.all(
                     watchedItems.map(async (item) => {
                         if (item.type === 'movie') {
                             let movie = await movieService.getMovieByUid(item.uid);
                             if (movie && !movie.hidden) {
                                 const mediaContent: MediaContent = {
-                                    id: movie.uid,
-                                    type: MediaType.Movie,
-                                    title: movie.title,
-                                    author: undefined,
-                                    theme: '',
+                                    id: movie.uid, type: MediaType.Movie, title: movie.title, author: undefined, theme: '',
                                     imageUrl: movie.picture_path || movie.backdrop_path || movie.poster_path,
-                                    duration: movie.runtime_h_m,
-                                    description: movie.overview,
-                                    languages: [movie.original_language],
-                                    video_path_hd: movie.video_path_hd
+                                    duration: movie.runtime_h_m, description: movie.overview, languages: [movie.original_language], video_path_hd: movie.video_path_hd
                                 };
                                 return { content: mediaContent, likeCount: item.viewCount, viewCount: item.viewCount };
                             }
@@ -270,16 +128,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                             let episode = await episodeSerieService.getEpisodeByUid(item.uid);
                             if (episode && !episode.hidden) {
                                 const mediaContent: MediaContent = {
-                                    id: episode.uid_episode,
-                                    type: MediaType.Series,
-                                    title: episode.title,
-                                    author: episode.title_serie,
-                                    theme: '',
-                                    imageUrl: episode.backdrop_path || episode.picture_path,
-                                    duration: episode.runtime_h_m,
-                                    description: episode.overviewFr || episode.overview,
-                                    languages: [],
-                                    video_path_hd: episode.video_path_hd
+                                    id: episode.uid_episode, type: MediaType.Series, title: episode.title, author: episode.title_serie, theme: '',
+                                    imageUrl: episode.backdrop_path || episode.picture_path, duration: episode.runtime_h_m,
+                                    description: episode.overviewFr || episode.overview, languages: [], video_path_hd: episode.video_path_hd
                                 };
                                 return { content: mediaContent, likeCount: item.viewCount, viewCount: item.viewCount };
                             }
@@ -287,67 +138,158 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         return null;
                     })
                 );
-                const validWatchedItems = watchedWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount: number } => item !== null);
-                setMostWatchedItems(validWatchedItems);
-                setLoadingMostWatched(false);
-
-                // Set basic data
-                setMovies(moviesData);
-                setLoadingMovies(false);
-
-                setSeries(seriesData);
-                setLoadingSeries(false);
-
-                setPodcasts(podcastsData);
-                setLoadingPodcasts(false);
-
-                // Process categories and series by category
-                setSerieCategories(categories);
-                const seriesByCat: Record<string, Serie[]> = {};
-                for (const category of categories) {
-                    const categorySeries = await serieCategoryService.getSeriesByCategory(category.id);
-                    if (categorySeries.length > 0) {
-                        seriesByCat[category.id] = categorySeries;
-                    }
-                }
-                setSeriesByCategory(seriesByCat);
-                setLoadingSeriesByCategory(false);
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                // Set loading states to false even on error
-                setLoadingMostLiked(false);
-                setLoadingMostWatched(false);
-                setLoadingMovies(false);
-                setLoadingSeries(false);
-                setLoadingPodcasts(false);
-                setLoadingSeriesByCategory(false);
+                const valid = watchedWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount: number } => item !== null);
+                if (!cancelled) setMostWatchedItems(valid);
+            } catch (err) {
+                if (!cancelled) setMostWatchedError('Failed to load most watched');
+            } finally {
+                if (!cancelled) setLoadingMostWatched(false);
             }
         };
-
-        fetchAllData();
+        fetchData();
+        return () => { cancelled = true; };
     }, []);
 
-    // Récupérer les éléments "Continuer la lecture" (depends on user state)
+    // State: Movies
+    const [movies, setMovies] = useState<Movie[]>([]);
+    const [loadingMovies, setLoadingMovies] = useState(true);
+    const [moviesError, setMoviesError] = useState<string | null>(null);
     useEffect(() => {
-        const fetchContinueWatching = async () => {
-            if (!user) {
-                setLoadingContinueWatching(false);
-                return;
-            }
-
+        let cancelled = false;
+        const fetchData = async () => {
             try {
-                const items = await statsVuesService.getContinueWatching(user.uid, 10);
-                setContinueWatchingItems(items);
-            } catch (error) {
-                console.error('Error fetching continue watching items:', error);
+                setLoadingMovies(true);
+                setMoviesError(null);
+                const data = await movieService.getTenHomeMovies();
+                if (!cancelled) setMovies(data);
+            } catch (err) {
+                if (!cancelled) setMoviesError('Failed to load movies');
             } finally {
-                setLoadingContinueWatching(false);
+                if (!cancelled) setLoadingMovies(false);
             }
         };
+        fetchData();
+        return () => { cancelled = true; };
+    }, []);
 
-        fetchContinueWatching();
+    // State: Series
+    const [series, setSeries] = useState<Serie[]>([]);
+    const [loadingSeries, setLoadingSeries] = useState(true);
+    const [seriesError, setSeriesError] = useState<string | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        const fetchData = async () => {
+            try {
+                setLoadingSeries(true);
+                setSeriesError(null);
+                const data = await serieService.getTenHomeSeries();
+                if (!cancelled) setSeries(data);
+            } catch (err) {
+                if (!cancelled) setSeriesError('Failed to load series');
+            } finally {
+                if (!cancelled) setLoadingSeries(false);
+            }
+        };
+        fetchData();
+        return () => { cancelled = true; };
+    }, []);
+
+    // State: Podcasts
+    const [podcasts, setPodcasts] = useState<Serie[]>([]);
+    const [loadingPodcasts, setLoadingPodcasts] = useState(true);
+    const [podcastsError, setPodcastsError] = useState<string | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        const fetchData = async () => {
+            try {
+                setLoadingPodcasts(true);
+                setPodcastsError(null);
+                const data = await serieService.getTenHomePodcasts();
+                if (!cancelled) setPodcasts(data);
+            } catch (err) {
+                if (!cancelled) setPodcastsError('Failed to load podcasts');
+            } finally {
+                if (!cancelled) setLoadingPodcasts(false);
+            }
+        };
+        fetchData();
+        return () => { cancelled = true; };
+    }, []);
+
+    // State: Categories
+    const [serieCategories, setSerieCategories] = useState<SerieCategory[]>([]);
+    const [seriesByCategory, setSeriesByCategory] = useState<Record<string, Serie[]>>({});
+    const [loadingSeriesByCategory, setLoadingSeriesByCategory] = useState(true);
+    const [categoriesError, setCategoriesError] = useState<string | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        const fetchData = async () => {
+            try {
+                setLoadingSeriesByCategory(true);
+                setCategoriesError(null);
+                const categories = await serieCategoryService.getAllCategories();
+                if (cancelled) return;
+                setSerieCategories(categories);
+                const seriesByCat: Record<string, Serie[]> = {};
+                for (const cat of categories) {
+                    const catSeries = await serieCategoryService.getSeriesByCategory(cat.id);
+                    if (catSeries.length > 0) seriesByCat[cat.id] = catSeries;
+                }
+                if (!cancelled) setSeriesByCategory(seriesByCat);
+            } catch (err) {
+                if (!cancelled) setCategoriesError('Failed to load categories');
+            } finally {
+                if (!cancelled) setLoadingSeriesByCategory(false);
+            }
+        };
+        fetchData();
+        return () => { cancelled = true; };
+    }, []);
+
+    // State: Continue Watching
+    const [continueWatchingItems, setContinueWatchingItems] = useState<ContinueWatchingItem[]>([]);
+    const [loadingContinueWatching, setLoadingContinueWatching] = useState(true);
+    useEffect(() => {
+        let cancelled = false;
+        const fetchData = async () => {
+            if (!user) {
+                if (!cancelled) setLoadingContinueWatching(false);
+                return;
+            }
+            try {
+                const items = await statsVuesService.getContinueWatching(user.uid, 10);
+                if (!cancelled) setContinueWatchingItems(items);
+            } catch (err) {
+                console.error('Error fetching continue watching items:', err);
+            } finally {
+                if (!cancelled) setLoadingContinueWatching(false);
+            }
+        };
+        fetchData();
+        return () => { cancelled = true; };
     }, [user]);
+
+    const cwToMediaContent = (item: ContinueWatchingItem): MediaContent => ({
+        id: item.id,
+        type: item.type === 'movie' ? MediaType.Movie : MediaType.Series,
+        title: item.episodeTitle || item.title,
+        author: item.serieTitle,
+        theme: '',
+        imageUrl: item.imageUrl,
+        duration: item.runtime ? formatSeconds(item.runtime) : undefined,
+        progress: item.progress,
+        description: '',
+        languages: [],
+    });
+
+    function formatSeconds(seconds: number): string {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        if (h > 0) return `${h}h ${m}m`;
+        return `${m} min`;
+    }
+
+    const continueWatchingMedia = continueWatchingItems.map(cwToMediaContent);
 
     const handleContinueWatchingClick = useCallback(async (item: ContinueWatchingItem) => {
         if (item.type === 'movie') {
@@ -408,6 +350,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
         }
     }, [onPlay]);
 
+    const handleContinueSelect = useCallback(async (content: MediaContent) => {
+        const cwItem = continueWatchingItems.find(cw => cw.id === content.id);
+        if (cwItem) {
+            await handleContinueWatchingClick(cwItem);
+        }
+    }, [continueWatchingItems, handleContinueWatchingClick]);
+
     return (
         <div className="min-h-screen bg-white dark:bg-black">
 
@@ -437,109 +386,106 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         </div>
                     </div>
                 )}
-                {continueWatchingItems.length > 0 && (
+                {continueWatchingMedia.length > 0 && (
                     <div className="py-8 md:py-12">
                         <div className="px-4 md:px-6 lg:px-8 mb-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                                    {t('continueWatching') || 'Continuer la lecture'}
+                                    {t('continueWatching') || 'Continuer à regarder'}
                                 </h3>
                             </div>
                         </div>
                         <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
-                            {continueWatchingItems.slice(0, 10).map((item) => (
-                                 <div key={item.id} className="flex-shrink-0 w-28 md:w-48 lg:w-56 group cursor-pointer" onClick={() => handleContinueWatchingClick(item)}>
-                                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 border-2 border-gray-200/80 dark:border-gray-700/80 transition-colors duration-300 group-hover:border-amber-500 dark:group-hover:border-amber-400">
-                                        {/* Fond qui prolonge l'image avec effet de flou */}
-                                        <div className="absolute inset-0 w-full h-full">
-                                            <img
-                                                src={item.imageUrl}
-                                                alt={item.title}
-                                                className="w-full h-full object-cover blur-xl scale-110 opacity-30 dark:opacity-20"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-gray-900/20 to-gray-900/30 dark:from-black/60 dark:via-black/30 dark:to-black/40"></div>
-                                        </div>
-                                        <img
-                                            src={item.imageUrl}
-                                            alt={item.title}
-                                            className="w-full h-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105"
-                                        />
-                                        {/* Progress bar */}
-                                        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
-                                            <div
-                                                className="h-full bg-amber-500 transition-all duration-300"
-                                                style={{ width: `${item.progress}%` }}
-                                            />
-                                        </div>
-                                        {/* Overlay au hover */}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                            <div className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-2xl">
-                                                <PlayIcon className="w-7 h-7 text-gray-900 ml-1" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <h4 className="text-gray-900 dark:text-white text-sm md:text-base font-semibold break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                                        {item.title}
-                                    </h4>
-                                </div>
+                            {continueWatchingMedia.slice(0, 10).map((content) => (
+                                <MediaCard
+                                    key={content.id}
+                                    item={content}
+                                    variant="poster"
+                                    onSelect={handleContinueSelect}
+                                    onPlay={handleContinueSelect}
+                                />
                             ))}
                         </div>
                     </div>
                 )}
 
                 {/* Section Séries */}
-                <SeriesSection
-                    series={series}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    navigateToCategory={navigateToCategory}
-                    t={t}
-                />
+                {seriesError ? (
+                    <SectionError message={seriesError} />
+                ) : (
+                    <SeriesSection
+                        series={series}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                        navigateToCategory={navigateToCategory}
+                        t={t}
+                    />
+                )}
 
                 {/* Sections par catégorie */}
-                <CategorySections
-                    serieCategories={serieCategories}
-                    seriesByCategory={seriesByCategory}
-                    loading={loadingSeriesByCategory}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                />
+                {categoriesError ? (
+                    <SectionError message={categoriesError} />
+                ) : (
+                    <CategorySections
+                        serieCategories={serieCategories}
+                        seriesByCategory={seriesByCategory}
+                        loading={loadingSeriesByCategory}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                    />
+                )}
 
                 {/* Section Films */}
-                <MoviesSection
-                    movies={movies}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    navigateToCategory={navigateToCategory}
-                    t={t}
-                />
+                {moviesError ? (
+                    <SectionError message={moviesError} />
+                ) : (
+                    <MoviesSection
+                        movies={movies}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                        navigateToCategory={navigateToCategory}
+                        t={t}
+                    />
+                )}
 
                 {/* Section Podcasts */}
-                <PodcastsSection
-                    podcasts={podcasts}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    navigateToCategory={navigateToCategory}
-                    t={t}
-                />
+                {podcastsError ? (
+                    <SectionError message={podcastsError} />
+                ) : (
+                    <PodcastsSection
+                        podcasts={podcasts}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                        navigateToCategory={navigateToCategory}
+                        t={t}
+                    />
+                )}
 
                 {/* Section Most Watched */}
-                <MostWatchedSection
-                    items={mostWatchedItems}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    loading={loadingMostWatched}
-                    t={t}
-                />
+                {mostWatchedError ? (
+                    <SectionError message={mostWatchedError} />
+                ) : (
+                    <MostWatchedSection
+                        items={mostWatchedItems}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                        loading={loadingMostWatched}
+                        t={t}
+                    />
+                )}
 
                 {/* Section Most Liked */}
-                <MostLikedSection
-                    items={mostLikedItems}
-                    onSelectMedia={onSelectMedia}
-                    onPlay={onPlay}
-                    loading={loadingMostLiked}
-                    t={t}
-                />
+                {mostLikedError ? (
+                    <SectionError message={mostLikedError} />
+                ) : (
+                    <MostLikedSection
+                        items={mostLikedItems}
+                        onSelectMedia={onSelectMedia}
+                        onPlay={onPlay}
+                        loading={loadingMostLiked}
+                        t={t}
+                    />
+                )}
             </div>
 
             {/* Modal de complétion du profil */}
@@ -551,6 +497,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                         setShowProfileModal(false);
                     }}
                 />
+            )}
+
+            {/* Scroll to top */}
+            {showScrollTop && (
+                <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all duration-200 hover:scale-110"
+                    aria-label="Scroll to top"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                </button>
             )}
         </div>
     );

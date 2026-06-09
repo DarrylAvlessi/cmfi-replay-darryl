@@ -18,10 +18,12 @@ import {
     SettingsIcon,
     TrashIcon,
     CommentIcon,
-    HelpIcon
+    HelpIcon,
+    UpdateIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
 import { UserProfile, userService, reportService, Report } from '../lib/firestore';
+import WhatsNewScreen from './WhatsNewScreen';
 
 
 import { authService } from '../lib/authService';
@@ -37,8 +39,8 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
-    const { t, setIsAuthenticated, userProfile, user } = useAppContext();
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'help'>('overview');
+    const { t, setIsAuthenticated, userProfile, user, newReleaseNotes } = useAppContext();
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'help' | 'whatsnew'>('overview');
     const [userReports, setUserReports] = useState<Report[]>([]);
     const [loadingReports, setLoadingReports] = useState(true);
 
@@ -203,6 +205,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             { id: 'overview' as const, label: t('overview') || 'Vue d\'ensemble', icon: 'User' },
             { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
             { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
+            { id: 'whatsnew' as const, label: t('whatsNew'), icon: 'Update' },
             { id: 'help' as const, label: t('help') || 'Aide', icon: 'Help' },
         ];
         
@@ -312,6 +315,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </div>
                 );
             
+            case 'whatsnew':
+                return <WhatsNewScreen onBack={() => setActiveTab('overview')} />;
+
             case 'help':
                 return (
                     <div className="space-y-6">
@@ -446,6 +452,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                     )}
+                    <div className="mt-4">
+                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
+                            <SettingsItem
+                                Icon={UpdateIcon}
+                                label={t('whatsNew')}
+                                onClick={() => navigateRouter('/whats-new')}
+                                adornment={newReleaseNotes.length > 0 ? (
+                                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                                ) : undefined}
+                            />
+                        </div>
+                    </div>
                     <div className="mt-4">
                         <h3 className="text-xl font-serif font-bold mb-3">{t('help')}</h3>
                         <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">

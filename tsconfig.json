@@ -11,6 +11,7 @@
     ],
     "skipLibCheck": true,
     "types": [
+      "vite/client",
       "node",
       "react"
     ],
@@ -25,6 +26,7 @@
         "./*"
       ]
     },
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "noEmit": true
   }

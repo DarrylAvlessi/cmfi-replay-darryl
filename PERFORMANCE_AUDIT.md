@@ -8,13 +8,12 @@
 
 | Sévérité | Problème | Fichier | Impact |
 |---|---|---|---|
-| 🔴 | `stripe` côté client (~350 KB inutiles) | `package.json:23` | Bundle gonflé |
 | 🔴 | Firebase SDK complet, `getAnalytics()` chargé systématiquement | `lib/firebase.ts:3,24` | +200 KB |
 | 🟡 | `@heroicons/react` barrel imports | `package.json:14` | Icônes inutilisées |
 | 🟡 | `react-toastify` CSS statique | `App.tsx:6` | CSS inutile quand pas de toast |
 | 🟢 | `@types/react-router-dom` en prod deps | `package.json:17` | Mauvaise pratique |
 
-**Actions** : Retirer `stripe`, lazy-loader `getAnalytics()`, imports individuels heroicons.
+**Actions** : Retirer lazy-loader `getAnalytics()`, imports individuels heroicons.
 
 ---
 
@@ -95,7 +94,7 @@
 
 **Actions** :
 - **SUPPRIMER** le CDN Tailwind de `index.html` (Tailwind est déjà compilé par Vite/PostCSS)
-- Configurer `manualChunks` (firebase, react-vendor, stripe)
+- Configurer `manualChunks` (firebase, react-vendor)
 - Corriger `content: ["./**/*.{js,ts,jsx,tsx}"]`
 - Ajouter `vite-plugin-compression`
 
@@ -122,5 +121,4 @@
 | 2 | `React.lazy()` sur les 20 écrans | **-30-40% bundle initial** |
 | 3 | Remplacer "fetch all + shuffle" par query ciblée | **-80% données Firestore** |
 | 4 | Résoudre N+1 queries (batch `in`, Promise.all) | **-70% requêtes Firestore** |
-| 5 | Retirer `stripe` du bundle client | **-350 KB** |
-| 6 | `loading="lazy"` sur toutes les images carrousel | **-60% images initiales** |
+| 5 | `loading="lazy"` sur toutes les images carrousel | **-60% images initiales** |

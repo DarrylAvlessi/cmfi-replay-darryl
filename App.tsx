@@ -34,6 +34,8 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import ManageNotificationsScreen from './screens/ManageNotificationsScreen';
 import AdminBackupVideosScreen from './screens/AdminBackupVideosScreen';
 import HelpScreen from './screens/HelpScreen';
+import WhatsNewScreen from './screens/WhatsNewScreen';
+import DonateScreen from './screens/DonateScreen';
 import ManageReportsScreen from './screens/ManageReportsScreen';
 
 // Category Screens
@@ -51,6 +53,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
 import UpdatePrompt from './components/UpdatePrompt';
+import WhatsNewModal from './components/WhatsNewModal';
 import { ActiveTab, MediaContent, MediaType } from './types';
 import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/firestore';
 import { usePageTitle } from './lib/pageTitle';
@@ -478,6 +481,9 @@ const AppContent: React.FC = () => {
                             <Route path="/help" element={
                                 <HelpScreen />
                             } />
+                            <Route path="/whats-new" element={
+                                <WhatsNewScreen />
+                            } />
 
                             <Route path="/manage-info-bar" element={
                                 <ManageInfoBarScreen />
@@ -504,6 +510,9 @@ const AppContent: React.FC = () => {
                             } />
                             <Route path="/payment-success" element={
                                 <PaymentSuccessScreen />
+                            } />
+                            <Route path="/donate" element={
+                                <DonateScreen />
                             } />
                         </>
                     )}
@@ -540,6 +549,7 @@ const AppContent: React.FC = () => {
             )}
 
             <UpdatePrompt />
+            <WhatsNewModal />
         </div>
     );
 };

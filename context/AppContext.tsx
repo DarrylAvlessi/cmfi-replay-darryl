@@ -6,6 +6,8 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { ActiveTab } from '../types';
+import { APP_VERSION } from '../lib/version';
+import { RELEASE_NOTES, ReleaseNoteItem, isVersionNewerThan } from '../lib/releaseNotes';
 
 type Theme = 'light' | 'dark';
 type HomeViewMode = 'default' | 'prime' | 'netflix';
@@ -38,6 +40,10 @@ interface AppContextType {
     swUpdateDismissed: boolean;
     applyUpdate: () => void;
     dismissUpdate: () => void;
+    showWhatsNew: boolean;
+    markWhatsNewSeen: () => void;
+    newReleaseNotes: ReleaseNoteItem[];
+    lastSeenVersion: string | null;
 }
 
 export type { HomeViewMode };
@@ -80,7 +86,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
     }, []);
 
-    const [language, setLanguage] = useState<Language>('en');
+    const [language, setLanguageState] = useState<Language>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = window.localStorage.getItem('language');
+            if (saved === 'en' || saved === 'fr') return saved;
+        }
+        return 'en';
+    });
+    const setLanguage = useCallback((lang: Language) => {
+        setLanguageState(lang);
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('language', lang);
+        }
+    }, []);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -183,12 +201,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Service Worker update state
     const [swUpdateDismissed, setSwUpdateDismissed] = useState(false);
 
+    // What's New after update
+    const [showWhatsNew, setShowWhatsNew] = useState(false);
+    const [newReleaseNotes, setNewReleaseNotes] = useState<ReleaseNoteItem[]>([]);
+    const [lastSeenVersion, setLastSeenVersion] = useState<string | null>(null);
+
+    useEffect(() => {
+      const ls = localStorage.getItem('lastSeenVersion');
+      setLastSeenVersion(ls);
+      if (ls && ls !== APP_VERSION) {
+        const filtered = RELEASE_NOTES.filter((note) => isVersionNewerThan(note.version, ls));
+        if (filtered.length > 0) {
+          setShowWhatsNew(true);
+          setNewReleaseNotes(filtered);
+        }
+      }
+      if (!ls) {
+        localStorage.setItem('lastSeenVersion', APP_VERSION);
+        setLastSeenVersion(APP_VERSION);
+      }
+    }, []);
+
+    const markWhatsNewSeen = useCallback(() => {
+      localStorage.setItem('lastSeenVersion', APP_VERSION);
+      setLastSeenVersion(APP_VERSION);
+      setShowWhatsNew(false);
+    }, []);
+
     const {
         needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
     } = useRegisterSW({
         onNeedRefresh() {
-            setSwUpdateDismissed(false);
+            const desktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+            if (desktop) {
+                updateServiceWorker();
+            } else {
+                setSwUpdateDismissed(false);
+            }
         },
     });
 
@@ -531,6 +581,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         swUpdateDismissed,
         applyUpdate,
         dismissUpdate,
+        showWhatsNew,
+        markWhatsNewSeen,
+        newReleaseNotes,
+        lastSeenVersion,
     }), [
         theme,
         language,
@@ -548,6 +602,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         swUpdateDismissed,
         applyUpdate,
         dismissUpdate,
+        showWhatsNew,
+        markWhatsNewSeen,
+        newReleaseNotes,
+        lastSeenVersion,
         // Fonctions
         setTheme,
         setLanguage,

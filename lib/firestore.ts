@@ -2575,13 +2575,7 @@ export const statsVuesService = {
                 } else if (data.uid) {
                     const movie = moviesMap.get(data.uid);
                     if (movie) {
-                        const runtimeMatch = movie.runtime?.match(/(\d+)h?\s*(\d+)?/);
-                        let runtime = 0;
-                        if (runtimeMatch) {
-                            const hours = parseInt(runtimeMatch[1] || '0');
-                            const minutes = parseInt(runtimeMatch[2] || '0');
-                            runtime = (hours * 3600) + (minutes * 60);
-                        }
+                        const runtime = typeof movie.runtime === 'number' ? movie.runtime : (parseInt(movie.runtime || '0') || 0);
 
                         const progress = runtime > 0 ? Math.min((data.tempsRegarde / runtime) * 100, 100) : 0;
 
@@ -2791,13 +2785,7 @@ export const statsVuesService = {
                 } else if (data.uid) {
                     const movie = moviesMap.get(data.uid);
                     if (movie) {
-                        const runtimeMatch = movie.runtime?.match(/(\d+)h?\s*(\d+)?/);
-                        let runtime = 0;
-                        if (runtimeMatch) {
-                            const hours = parseInt(runtimeMatch[1] || '0');
-                            const minutes = parseInt(runtimeMatch[2] || '0');
-                            runtime = (hours * 3600) + (minutes * 60);
-                        }
+                        const runtime = typeof movie.runtime === 'number' ? movie.runtime : (parseInt(movie.runtime || '0') || 0);
 
                         const progress = runtime > 0 ? Math.min((data.tempsRegarde / runtime) * 100, 100) : 0;
 

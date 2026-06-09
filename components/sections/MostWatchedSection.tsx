@@ -54,6 +54,7 @@ const MostWatchedSection: React.FC<MostWatchedSectionProps> = React.memo(({
                             variant="poster"
                             onSelect={onSelectMedia}
                             onPlay={onPlay}
+                            rank={index + 1}
                         />
                     </div>
                 ))}

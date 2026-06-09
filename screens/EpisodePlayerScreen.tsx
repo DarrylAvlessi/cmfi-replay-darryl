@@ -17,6 +17,7 @@ import PromotionPlayer from '../components/PromotionPlayer';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { usePlayer } from '../context/PlayerContext';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
 

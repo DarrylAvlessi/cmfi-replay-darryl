@@ -268,8 +268,17 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   if (loading || !items || items.length === 0 || !currentItem) {
     return (
-      <div className="relative w-full h-[60vh] md:h-[80vh] bg-black flex items-center justify-center">
-        <div className="text-white text-lg">{t('loading') || 'Chargement...'}</div>
+      <div className="relative w-full h-[60vh] md:h-[80vh] bg-black overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
+        <div className="relative z-10 h-full flex flex-col justify-end pb-16 px-4 md:px-8 lg:px-12 gap-4">
+          <div className="w-3/4 h-8 md:h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
+          <div className="w-1/4 h-5 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
+          <div className="flex gap-4 mt-2">
+            <div className="w-36 h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
+            <div className="w-12 h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-full animate-shimmer" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -374,7 +383,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
       {/* Contenu principal - Layout Prime Video */}
       <div className="relative z-10 h-full flex items-center w-full max-w-[100vw] overflow-hidden">
         {/* Dégradé sombre pour améliorer le contraste du texte */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent lg:from-black/80 lg:via-black/60 lg:to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent lg:from-black/50 lg:via-black/30 lg:to-transparent"></div>
         
         <div className="w-full max-w-[100%] px-4 md:px-8 lg:px-12 mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -394,7 +403,6 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                     overflow: 'hidden',
                     wordBreak: 'break-word',
                     letterSpacing: '-0.005em',
-                    textTransform: 'uppercase',
                     hyphens: 'auto'
                   }}
                 >
@@ -427,7 +435,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                 <button
                   onClick={handleBookmark}
                   className="p-3 md:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-                  aria-label={isBookmarked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  aria-label={isBookmarked ? t('removeFromFavorites') : t('addToFavorites')}
                 >
                   {isBookmarked ? (
                     <CheckIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
@@ -439,7 +447,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                 <button
                   onClick={() => onSelectMedia(currentItem)}
                   className="p-3 md:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-                  aria-label="Plus d'infos"
+                  aria-label={t('moreInfo')}
                 >
                   <InfoIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 </button>
@@ -456,8 +464,8 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
       {showVideo && (
         <button
           onClick={toggleMute}
-          className="absolute bottom-20 md:bottom-24 right-4 md:right-8 lg:right-12 z-20 p-3 md:p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300 hover:scale-110 shadow-lg group"
-          aria-label={isMuted ? 'Activer le son' : 'Couper le son'}
+          className="absolute top-6 md:top-8 right-4 md:right-8 lg:right-12 z-20 p-3 md:p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300 hover:scale-110 shadow-lg group"
+          aria-label={isMuted ? t('enableSound') : t('disableSound')}
         >
           {isMuted ? (
             <VolumeMuteIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
@@ -474,7 +482,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
           <button
             onClick={handlePrev}
             className="absolute left-4 md:left-8 bottom-6 md:bottom-8 z-20 p-3 md:p-4 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-            aria-label="Précédent"
+            aria-label={t('previousSlide')}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -484,7 +492,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
           <button
             onClick={handleNext}
             className="absolute right-4 md:right-8 bottom-6 md:bottom-8 z-20 p-3 md:p-4 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-            aria-label="Suivant"
+            aria-label={t('nextSlide')}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -511,7 +519,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                     ? 'w-8 h-2 bg-white rounded-full'
                     : 'w-2 h-2 bg-white/40 hover:bg-white/60 rounded-full'
                 }`}
-                aria-label={`Aller à la slide ${index + 1}`}
+                aria-label={`${t('goToSlide')} ${index + 1}`}
               />
             ))}
           </div>

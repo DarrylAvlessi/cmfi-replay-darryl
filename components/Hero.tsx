@@ -383,7 +383,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
                             </div>
                             <span>{playText}</span>
                           </button>
-                        )}
+                        
 
                         <button
                           onClick={(e) => {

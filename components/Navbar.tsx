@@ -40,17 +40,13 @@ const Navbar: React.FC = () => {
       label: t('categoryPodcasts'),
       path: '/podcasts',
     },
-    {
-      id: 'bookmarks',
-      label: t('myFavorites'),
-      path: '/bookmarks',
-    },
-    {
-      id: 'history',
-      label: t('history'),
-      path: '/history',
-    },
   ];
+
+  const donateItem = {
+    id: 'donate',
+    label: t('donate') || 'Donate',
+    path: '/donate',
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -62,11 +58,10 @@ const Navbar: React.FC = () => {
         <Link
           key={item.id}
           to={item.path}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-            isActive(item.path)
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive(item.path)
               ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
               : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50'
-          }`}
+            }`}
           aria-current={isActive(item.path) ? 'page' : undefined}
         >
           {item.label}
@@ -76,11 +71,10 @@ const Navbar: React.FC = () => {
       <div className="relative group">
         <Link
           to="/productions"
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
-            isActive('/productions')
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${isActive('/productions')
               ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
               : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50'
-          }`}
+            }`}
           aria-current={isActive('/productions') ? 'page' : undefined}
         >
           {t('categorySeries')}
@@ -89,7 +83,7 @@ const Navbar: React.FC = () => {
           </svg>
         </Link>
 
-        <div className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+        <div className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-black rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
           {categoriesLoading ? (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
               {t('loading') || 'Chargement...'}
@@ -137,6 +131,20 @@ const Navbar: React.FC = () => {
           )}
         </div>
       </div>
+
+      <Link
+        to={donateItem.path}
+        className={`ml-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-1.5 ${isActive(donateItem.path)
+            ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/40'
+            : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:scale-105'
+          }`}
+        aria-current={isActive(donateItem.path) ? 'page' : undefined}
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        {donateItem.label}
+      </Link>
     </nav>
   );
 };

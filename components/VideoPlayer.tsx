@@ -111,13 +111,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, []);
 
     // Gérer la visibilité de l'onglet pour préserver l'état de pause/play
+    // et activer automatiquement le PiP quand l'utilisateur quitte l'onglet
     useEffect(() => {
-        const handleVisibilityChange = () => {
+        const handleVisibilityChange = async () => {
             const video = videoRef.current;
             if (!video) return;
 
             if (document.hidden) {
                 wasPausedBeforeTabSwitch.current = video.paused;
+                // Activer automatiquement le PiP si la vidéo est en cours de lecture
+                if (!video.paused && document.pictureInPictureEnabled && !document.pictureInPictureElement) {
+                    try {
+                        await video.requestPictureInPicture();
+                    } catch (err) {
+                        console.error('Erreur lors de l\'activation automatique du PiP :', err);
+                    }
+                }
             } else {
                 if (wasPausedBeforeTabSwitch.current && !video.paused) {
                     video.pause();

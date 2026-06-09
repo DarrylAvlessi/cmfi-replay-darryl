@@ -8,7 +8,7 @@ import { userService } from '../lib/firestore';
 import { toast } from 'react-toastify';
 
 interface HeaderMenuProps {
-    variant?: 'light' | 'dark'; // 'light' for light icons on dark bg, 'dark' for dark icons on light bg
+    variant?: 'light' | 'dark';
 }
 
 const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
@@ -36,24 +36,20 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
 
     const handleLogout = async () => {
         try {
-            // Mettre à jour le statut hors ligne avant la déconnexion
             if (user?.uid) {
                 try {
-                    // Mettre à jour le statut à offline ET lastSeen pour éviter qu'il soit remis à online
-                    await userService.updateUserProfile(user.uid, { 
+                    await userService.updateUserProfile(user.uid, {
                         presence: 'offline',
-                        lastSeen: new Date() // Mettre à jour lastSeen pour éviter qu'il soit remis à online
+                        lastSeen: new Date()
                     });
                 } catch (updateError) {
                     console.error('Erreur lors de la mise à jour du statut hors ligne:', updateError);
                 }
             }
-            
-            // Déconnexion de Firebase Auth
+
             await auth.signOut();
             setIsAuthenticated(false);
-            
-            // Rediriger vers l'écran d'accueil après la déconnexion
+
             window.location.href = '/';
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
@@ -83,58 +79,104 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
                 )}
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-black rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
+                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-black rounded-xl shadow-xl py-1.5 ring-1 ring-black ring-opacity-5 z-20 overflow-hidden">
                     {swUpdateAvailable && (
                         <>
                             <button
                                 onClick={() => { applyUpdate(); setIsOpen(false); }}
-                                className="w-full text-left flex items-center px-4 py-2 text-sm text-amber-600 dark:text-amber-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="w-full text-left flex items-center px-4 py-2.5 text-sm text-amber-600 dark:text-amber-400 font-bold hover:bg-amber-50 dark:hover:bg-amber-900/20"
                             >
                                 <UpdateIcon className="w-5 h-5 mr-3" />
                                 {t('updateNow')}
                             </button>
-                            <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
+                            <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
                         </>
                     )}
+
+                    {/* Account group */}
                     <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
-                        className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                         <UserIcon className="w-5 h-5 mr-3" />
                         {t('profile')}
                     </Link>
+                    <Link
+                        to="/bookmarks"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                        <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        {t('myFavorites')}
+                    </Link>
+                    <Link
+                        to="/history"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                        <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {t('history')}
+                    </Link>
 
+                    <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
+
+                    {/* Support group */}
+                    <Link
+                        to="/donate"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    >
+                        <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {t('donate') || 'Donate'}
+                    </Link>
                     <Link
                         to="/help"
                         onClick={() => setIsOpen(false)}
-                        className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                         <HelpIcon className="w-5 h-5 mr-3" />
                         {t('help')}
                     </Link>
 
-                    <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
+                    <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
 
-                    <div className="flex items-center px-4 pt-2 pb-1 text-sm text-gray-700 dark:text-gray-200">
-                        <GlobeIcon className="w-5 h-5 mr-3 text-gray-400" />
-                        <span>{t('language')}</span>
+                    {/* Settings group */}
+                    <div className="flex items-center gap-1 px-4 py-2.5">
+                        <GlobeIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <button
+                            onClick={() => handleLanguageChange('en')}
+                            className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-lg transition-colors ${
+                                language === 'en'
+                                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        >
+                            EN
+                        </button>
+                        <button
+                            onClick={() => handleLanguageChange('fr')}
+                            className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-lg transition-colors ${
+                                language === 'fr'
+                                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        >
+                            FR
+                        </button>
                     </div>
-                    <button
-                        onClick={() => handleLanguageChange('en')}
-                        className={`w-full text-left flex items-center pl-12 pr-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${language === 'en' ? 'text-amber-500' : 'text-gray-700 dark:text-gray-200'}`}
-                    >
-                        {t('english')}
-                    </button>
-                    <button
-                        onClick={() => handleLanguageChange('fr')}
-                        className={`w-full text-left flex items-center pl-12 pr-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${language === 'fr' ? 'text-amber-500' : 'text-gray-700 dark:text-gray-200'}`}
-                    >
-                        {t('french')}
-                    </button>
 
-                    <div className="my-1 h-px bg-gray-200 dark:bg-gray-700" />
-                    <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
+                    <button
+                        onClick={handleLogout}
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
                         <LogoutIcon className="w-5 h-5 mr-3" />
                         {t('logout')}
                     </button>
