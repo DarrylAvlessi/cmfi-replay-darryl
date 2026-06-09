@@ -50,3 +50,48 @@
 [debug] [2026-06-09T14:42:30.800Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/configs [none]
 [debug] [2026-06-09T14:42:32.141Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/configs 200
 [debug] [2026-06-09T14:42:32.142Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/configs {}
+[debug] [2026-06-09T14:43:08.299Z] ----------------------------------------------------------------------
+[debug] [2026-06-09T14:43:08.304Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-06-09T14:43:08.305Z] CLI Version:   15.19.1
+[debug] [2026-06-09T14:43:08.305Z] Platform:      win32
+[debug] [2026-06-09T14:43:08.305Z] Node Version:  v26.2.0
+[debug] [2026-06-09T14:43:08.306Z] Time:          Tue Jun 09 2026 15:43:08 GMT+0100 (heure d’Afrique de l’Ouest)
+[debug] [2026-06-09T14:43:08.306Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-09T14:43:10.284Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-09T14:43:10.284Z] > authorizing via signed-in user (rtvc.multimedia.france@gmail.com)
+[debug] [2026-06-09T14:43:10.284Z] [iam] checking project c-m-f-i-replay-f-63xui3 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-06-09T14:43:10.286Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:10.286Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:10.287Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3:testIamPermissions [none]
+[debug] [2026-06-09T14:43:10.288Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3:testIamPermissions  x-goog-user-project=c-m-f-i-replay-f-63xui3
+[debug] [2026-06-09T14:43:10.288Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-06-09T14:43:11.837Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3:testIamPermissions 200
+[debug] [2026-06-09T14:43:11.837Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-06-09T14:43:11.838Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:11.838Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:11.838Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3/serviceAccounts/c-m-f-i-replay-f-63xui3@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-06-09T14:43:11.838Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3/serviceAccounts/c-m-f-i-replay-f-63xui3@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-06-09T14:43:12.794Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3/serviceAccounts/c-m-f-i-replay-f-63xui3@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-06-09T14:43:12.794Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3/serviceAccounts/c-m-f-i-replay-f-63xui3@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'c-m-f-i-replay-f-63xui3'...
+[info] 
+[info] i  deploying functions 
+[debug] [2026-06-09T14:43:12.804Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:12.804Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:12.804Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3 [none]
+[debug] [2026-06-09T14:43:13.609Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3 200
+[debug] [2026-06-09T14:43:13.609Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/c-m-f-i-replay-f-63xui3 {"projectNumber":"743892986646","projectId":"c-m-f-i-replay-f-63xui3","lifecycleState":"ACTIVE","name":"CMFI Replay F","labels":{"firebase":"enabled"},"createTime":"2023-12-06T22:29:18.269692Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-06-09T14:43:13.612Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:13.612Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:13.612Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/adminSdkConfig [none]
+[debug] [2026-06-09T14:43:14.862Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/adminSdkConfig 200
+[debug] [2026-06-09T14:43:14.863Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/adminSdkConfig {"projectId":"c-m-f-i-replay-f-63xui3","storageBucket":"c-m-f-i-replay-f-63xui3.appspot.com","locationId":"us-central"}
+[debug] [2026-06-09T14:43:14.864Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:14.865Z] Checked if tokens are valid: true, expires at: 1781019746496
+[debug] [2026-06-09T14:43:14.865Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/c-m-f-i-replay-f-63xui3/configs [none]
