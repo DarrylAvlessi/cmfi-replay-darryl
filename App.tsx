@@ -37,6 +37,7 @@ import HelpScreen from './screens/HelpScreen';
 import WhatsNewScreen from './screens/WhatsNewScreen';
 import DonateScreen from './screens/DonateScreen';
 import ManageReportsScreen from './screens/ManageReportsScreen';
+import ManageTitleSuggestionsScreen from './screens/ManageTitleSuggestionsScreen';
 
 // Category Screens
 import MoviesScreen from './screens/MoviesScreen';
@@ -54,6 +55,8 @@ import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
 import UpdatePrompt from './components/UpdatePrompt';
 import WhatsNewModal from './components/WhatsNewModal';
+import { MiniPlayerProvider } from './context/MiniPlayerContext';
+import PlayerScreenHost from './components/PlayerScreenHost';
 import { ActiveTab, MediaContent, MediaType } from './types';
 import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/firestore';
 import { usePageTitle } from './lib/pageTitle';
@@ -341,7 +344,7 @@ const AppContent: React.FC = () => {
                 />
             )}
 
-            <div className={`page-transition fadeIn min-h-screen ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out`}>
+            <div className={`page-transition fadeIn ${!location.pathname.startsWith('/watch/') ? 'min-h-screen' : ''} ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out`}>
                 <Routes>
                     {/* Routes publiques - Accessibles sans authentification */}
                     <Route path="/privacy" element={<PrivacyScreen />} />
@@ -505,6 +508,9 @@ const AppContent: React.FC = () => {
                             <Route path="/manage-reports" element={
                                 <ManageReportsScreen />
                             } />
+                            <Route path="/manage-title-suggestions" element={
+                                <ManageTitleSuggestionsScreen />
+                            } />
                             <Route path="/admin" element={
                                 <AdminBackupVideosScreen />
                             } />
@@ -550,6 +556,7 @@ const AppContent: React.FC = () => {
 
             <UpdatePrompt />
             <WhatsNewModal />
+            <PlayerScreenHost />
         </div>
     );
 };
@@ -559,7 +566,9 @@ const App: React.FC = () => {
         <BrowserRouter>
             <AppProvider>
                 <ThemeProvider>
-                    <AppContent />
+                    <MiniPlayerProvider>
+                        <AppContent />
+                    </MiniPlayerProvider>
                 </ThemeProvider>
             </AppProvider>
         </BrowserRouter>

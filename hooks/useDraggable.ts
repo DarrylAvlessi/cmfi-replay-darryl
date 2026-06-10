@@ -11,6 +11,7 @@ export function useDraggable() {
     originY: number;
     elWidth: number;
     elHeight: number;
+    captured: boolean;
   } | null>(null);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -29,12 +30,11 @@ export function useDraggable() {
       originY: currentTop,
       elWidth: rect.width,
       elHeight: rect.height,
+      captured: false,
     };
     hasDraggedRef.current = false;
     setPosition({ x: currentLeft, y: currentTop });
     setIsDragging(true);
-
-    e.currentTarget.setPointerCapture(e.pointerId);
   }, [position]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -44,6 +44,10 @@ export function useDraggable() {
 
     if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
       hasDraggedRef.current = true;
+      if (dragRef.current && !dragRef.current.captured) {
+        dragRef.current.captured = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
     }
 
     const newX = dragRef.current.originX + deltaX;

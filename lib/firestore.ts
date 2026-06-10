@@ -251,6 +251,25 @@ export interface Report {
     respondedBy?: string;
 }
 
+// Interface pour les suggestions de titre
+export interface TitleSuggestion {
+    uid?: string;
+    userId: string;
+    userEmail: string;
+    displayName: string;
+    mediaId: string;
+    mediaType: 'movie' | 'serie';
+    currentTitle: string;
+    suggestedTitle: string;
+    reason?: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    respondedAt?: Timestamp;
+    respondedBy?: string;
+    adminNote?: string;
+}
+
 // Constantes pour les collections
 const USERS_COLLECTION = 'users';
 const MOVIES_COLLECTION = 'movies';
@@ -270,6 +289,7 @@ const ADS_COLLECTION = 'ads';
 const NOTIFICATIONS_COLLECTION = 'notifications';
 const USER_NAVIGATION_COLLECTION = 'user_navigation';
 const USERS_REPORTS_COLLECTION = 'users_reports';
+const TITLE_SUGGESTIONS_COLLECTION = 'title_suggestions';
 
 // Fonction utilitaire pour générer un avatar par défaut
 export const generateDefaultAvatar = (name?: string): string => {
@@ -741,6 +761,146 @@ export const userService = {
         });
 
         return unsubscribe;
+    }
+};
+
+// Service pour les suggestions de titre
+export const titleSuggestionService = {
+    async createSuggestion(data: Omit<TitleSuggestion, 'uid' | 'status' | 'createdAt' | 'updatedAt'>): Promise<string> {
+        try {
+            const ref = doc(collection(db, TITLE_SUGGESTIONS_COLLECTION));
+            const now = Timestamp.now();
+            await setDoc(ref, {
+                ...data,
+                status: 'pending',
+                createdAt: now,
+                updatedAt: now,
+            });
+            return ref.id;
+        } catch (error) {
+            console.error('Error creating title suggestion:', error);
+            throw error;
+        }
+    },
+
+    async getUserSuggestions(userId: string): Promise<TitleSuggestion[]> {
+        try {
+            const q = query(
+                collection(db, TITLE_SUGGESTIONS_COLLECTION),
+                where('userId', '==', userId)
+            );
+            const snapshot = await getDocs(q);
+            const suggestions = snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as TitleSuggestion[];
+            return suggestions.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            });
+        } catch (error) {
+            console.error('Error getting user suggestions:', error);
+            return [];
+        }
+    },
+
+    subscribeToUserSuggestions(userId: string, callback: (suggestions: TitleSuggestion[]) => void): () => void {
+        const q = query(
+            collection(db, TITLE_SUGGESTIONS_COLLECTION),
+            where('userId', '==', userId)
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const suggestions = snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as TitleSuggestion[];
+            callback(suggestions.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            }));
+        });
+        return unsubscribe;
+    },
+
+    async getAllSuggestions(): Promise<TitleSuggestion[]> {
+        try {
+            const q = query(
+                collection(db, TITLE_SUGGESTIONS_COLLECTION),
+                orderBy('createdAt', 'desc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            })) as TitleSuggestion[];
+        } catch (error) {
+            console.error('Error getting all suggestions:', error);
+            return [];
+        }
+    },
+
+    async applySuggestion(suggestionId: string, respondedBy: string): Promise<void> {
+        try {
+            const ref = doc(db, TITLE_SUGGESTIONS_COLLECTION, suggestionId);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) throw new Error('Suggestion not found');
+
+            const suggestion = { uid: snap.id, ...snap.data() } as TitleSuggestion;
+
+            if (suggestion.mediaType === 'movie') {
+                const q = query(
+                    collection(db, MOVIES_COLLECTION),
+                    where('uid', '==', suggestion.mediaId),
+                    limit(1)
+                );
+                const movieSnap = await getDocs(q);
+                if (!movieSnap.empty) {
+                    const movieRef = doc(db, MOVIES_COLLECTION, movieSnap.docs[0].id);
+                    await updateDoc(movieRef, { title: suggestion.suggestedTitle });
+                }
+            } else if (suggestion.mediaType === 'serie') {
+                const q = query(
+                    collection(db, SERIES_COLLECTION),
+                    where('uid_serie', '==', suggestion.mediaId),
+                    limit(1)
+                );
+                const serieSnap = await getDocs(q);
+                if (!serieSnap.empty) {
+                    const serieRef = doc(db, SERIES_COLLECTION, serieSnap.docs[0].id);
+                    await updateDoc(serieRef, { title_serie: suggestion.suggestedTitle });
+                }
+            }
+
+            const now = Timestamp.now();
+            await updateDoc(ref, {
+                status: 'accepted',
+                respondedBy,
+                respondedAt: now,
+                updatedAt: now,
+            });
+        } catch (error) {
+            console.error('Error applying suggestion:', error);
+            throw error;
+        }
+    },
+
+    async rejectSuggestion(suggestionId: string, respondedBy: string, adminNote?: string): Promise<void> {
+        try {
+            const ref = doc(db, TITLE_SUGGESTIONS_COLLECTION, suggestionId);
+            const now = Timestamp.now();
+            await updateDoc(ref, {
+                status: 'rejected',
+                respondedBy,
+                adminNote: adminNote || '',
+                respondedAt: now,
+                updatedAt: now,
+            });
+        } catch (error) {
+            console.error('Error rejecting suggestion:', error);
+            throw error;
+        }
     }
 };
 

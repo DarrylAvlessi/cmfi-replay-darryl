@@ -6,21 +6,11 @@ interface UseMiniPlayerOptions {
 
 export function useMiniPlayer({ enabled = true }: UseMiniPlayerOptions = {}) {
   const [isMini, setIsMini] = useState(false);
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
-  );
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const handler = (e: MediaQueryListEvent) => setIsMobileOrTablet(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !isMobileOrTablet || !enabled) {
+    if (!sentinel || !enabled) {
       setIsMini(false);
       return;
     }
@@ -34,12 +24,16 @@ export function useMiniPlayer({ enabled = true }: UseMiniPlayerOptions = {}) {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [isMobileOrTablet, enabled]);
+  }, [enabled]);
+
+  const openMiniPlayer = useCallback(() => {
+    setIsMini(true);
+  }, []);
 
   const closeMiniPlayer = useCallback(() => {
     setIsMini(false);
     sentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  return { isMini, sentinelRef, closeMiniPlayer };
+  return { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer };
 }

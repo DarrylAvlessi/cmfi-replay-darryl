@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import { movieService, serieService, episodeSerieService, seasonSerieService, EpisodeSerie } from '../lib/firestore';
-import MoviePlayerScreen from './MoviePlayerScreen';
-import EpisodePlayerScreen from './EpisodePlayerScreen';
 import { useAppContext } from '../context/AppContext';
+import { useMiniPlayerContext } from '../context/MiniPlayerContext';
 
 interface WatchScreenProps {
     onReturnHome: () => void;
@@ -14,12 +13,21 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
     const { t } = useAppContext();
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
+    const { playerData, setPlayerData } = useMiniPlayerContext();
     const [media, setMedia] = useState<MediaContent | null>(null);
     const [episode, setEpisode] = useState<EpisodeSerie | null>(null);
     const [loading, setLoading] = useState(true);
-    const [episodesCache, setEpisodesCache] = useState<EpisodeSerie[]>([]);
 
     useEffect(() => {
+        // If player already exists for this uid, no fetch needed
+        if (playerData && (
+            (playerData.type === 'movie' && playerData.item.id === uid) ||
+            (playerData.type === 'episode' && playerData.episode?.uid_episode === uid)
+        )) {
+            setLoading(false);
+            return;
+        }
+
         const fetchMedia = async () => {
             if (!uid) {
                 navigate('/home');
@@ -28,7 +36,6 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
 
             setLoading(true);
             try {
-                // Essayer de récupérer comme film
                 const movie = await movieService.getMovieByUid(uid);
                 if (movie) {
                     setMedia({
@@ -46,19 +53,15 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                     return;
                 }
 
-                // Essayer de récupérer comme épisode
                 let episodeData = await episodeSerieService.getEpisodeByUid(uid);
 
-                // Fallback : si pas trouvé par UID, essayer par ID de document (pour les anciens liens)
                 if (!episodeData) {
                     episodeData = await episodeSerieService.getEpisodeById(uid);
                 }
 
                 if (episodeData) {
-                    // Récupérer la saison pour obtenir uid_serie
                     const season = await seasonSerieService.getSeasonByUid(episodeData.uid_season);
                     if (season) {
-                        // Récupérer la série associée
                         const serie = await serieService.getSerieByUid(season.uid_serie);
                         if (serie) {
                             setMedia({
@@ -78,7 +81,6 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                     }
                 }
 
-                // Si aucun média n'est trouvé
                 navigate('/home');
             } catch (error) {
                 console.error('Erreur lors de la récupération du média:', error);
@@ -89,86 +91,54 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
         fetchMedia();
     }, [uid, navigate]);
 
-    const handleBack = () => {
-        if (media) {
-            // Convertir le type de média en route appropriée
-            const route = media.type === MediaType.Series ? 'production' :
-                media.type === MediaType.Movie ? 'documentary' :
-                    'podcast';
-            navigate(`/${route}/${media.id}`);
+    // Set player data when media is loaded
+    useEffect(() => {
+        if (!media) return;
+
+        const data: any = {
+            item: media,
+            onBack: () => {
+                const route = media.type === MediaType.Series ? 'production' :
+                    media.type === MediaType.Movie ? 'documentary' : 'podcast';
+                navigate(`/${route}/${media.id}`);
+            },
+            onReturnHome: () => navigate('/home'),
+        };
+
+        if (episode) {
+            data.type = 'episode';
+            data.episode = episode;
+            data.onNavigateEpisode = async (directionOrEpisode: any) => {
+                if (!episode) return;
+                if (typeof directionOrEpisode !== 'string' && directionOrEpisode?.uid_episode) {
+                    navigate(`/watch/${directionOrEpisode.uid_episode}`);
+                    return;
+                }
+
+                const episodes = await (async () => {
+                    const serie = await serieService.getSerieByUid(media.id);
+                    if (!serie) return [];
+                    const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie);
+                    const bySeason = await Promise.all(
+                        seasons.map((s: any) => episodeSerieService.getEpisodesBySeason(s.uid_season))
+                    );
+                    return bySeason.flat();
+                })();
+
+                const idx = episodes.findIndex((e: any) => e.uid_episode === episode.uid_episode);
+                if (idx === -1) return;
+                const dir = directionOrEpisode as 'next' | 'prev';
+                const newIdx = dir === 'next' ? idx + 1 : idx - 1;
+                if (newIdx < 0 || newIdx >= episodes.length) return;
+                const newEp = episodes[newIdx];
+                if (newEp?.uid_episode) navigate(`/watch/${newEp.uid_episode}`);
+            };
         } else {
-            navigate(-1);
+            data.type = 'movie';
         }
-    };
 
-    const handleNavigateEpisode = async (directionOrEpisode: 'next' | 'prev' | EpisodeSerie) => {
-        if (!episode || !media) return;
-
-        try {
-            // Si on passe directement un épisode, naviguer vers lui
-            if (typeof directionOrEpisode !== 'string') {
-                const targetEpisode = directionOrEpisode as EpisodeSerie;
-                if (targetEpisode.uid_episode) {
-                    navigate(`/watch/${targetEpisode.uid_episode}`);
-                    return;
-                }
-                console.error('Épisode invalide: pas de uid_episode', targetEpisode);
-                return;
-            }
-
-            // Sinon, c'est une direction ('next' ou 'prev')
-            const direction = directionOrEpisode as 'next' | 'prev';
-            let allEpisodes = episodesCache;
-
-            // Si le cache est vide, charger tous les épisodes
-            if (allEpisodes.length === 0) {
-                const serie = await serieService.getSerieByUid(media.id);
-                if (!serie) {
-                    console.error('Série non trouvée pour media.id:', media.id);
-                    return;
-                }
-
-                const seasons = await import('../lib/firestore').then(m => m.seasonSerieService.getSeasonsBySerie(serie.uid_serie));
-                if (seasons.length === 0) {
-                    console.error('Aucune saison trouvée pour la série:', serie.uid_serie);
-                    return;
-                }
-
-                const episodesBySeason = await Promise.all(
-                    seasons.map(async (s) => await episodeSerieService.getEpisodesBySeason(s.uid_season))
-                );
-                allEpisodes = episodesBySeason.flat();
-                setEpisodesCache(allEpisodes);
-            }
-
-            if (allEpisodes.length === 0) {
-                console.error('Aucun épisode trouvé');
-                return;
-            }
-
-            const currentIndex = allEpisodes.findIndex(e => e.uid_episode === episode.uid_episode);
-            if (currentIndex === -1) {
-                console.error('Épisode actuel non trouvé dans la liste:', episode.uid_episode);
-                return;
-            }
-
-            const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-            if (newIndex < 0 || newIndex >= allEpisodes.length) {
-                console.error('Index invalide:', newIndex, 'pour', allEpisodes.length, 'épisodes');
-                return;
-            }
-
-            const newEpisode = allEpisodes[newIndex];
-            if (!newEpisode.uid_episode) {
-                console.error('Nouvel épisode sans uid_episode:', newEpisode);
-                return;
-            }
-            
-            navigate(`/watch/${newEpisode.uid_episode}`);
-        } catch (error) {
-            console.error('Erreur lors de la navigation entre épisodes:', error);
-        }
-    };
+        setPlayerData(data);
+    }, [media, episode]);
 
     if (loading) {
         return (
@@ -178,28 +148,7 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
         );
     }
 
-    if (!media) {
-        return null;
-    }
-
-    if (episode) {
-        return (
-            <EpisodePlayerScreen
-                item={media}
-                episode={episode}
-                onBack={handleBack}
-                onNavigateEpisode={handleNavigateEpisode}
-                onReturnHome={onReturnHome}
-            />
-        );
-    }
-
-    return (
-        <MoviePlayerScreen
-            item={media}
-            onBack={handleBack}
-        />
-    );
+    return null;
 };
 
 export default WatchScreen;

@@ -8,11 +8,12 @@ import {
     PlayIcon, PauseIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
     LikeIcon, ShareIcon, PlusIcon,
     VolumeHighIcon, VolumeMuteIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon,
-    BackwardIcon, ForwardPlaybackIcon, CheckIcon
+    BackwardIcon, ForwardPlaybackIcon, CheckIcon, PencilIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 import AuthPrompt from '../components/AuthPrompt';
+import SuggestTitleModal from '../components/SuggestTitleModal';
 import PromotionPlayer from '../components/PromotionPlayer';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import { formatNumber, CommentSection } from '../components/CommentSection';
@@ -20,6 +21,7 @@ import { VideoPlayer } from '../components/VideoPlayer';
 import { usePlayer } from '../context/PlayerContext';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
+import { useMiniPlayerContext } from '../context/MiniPlayerContext';
 
 // --- Main Screen Component ---
 interface EpisodePlayerScreenProps {
@@ -28,9 +30,11 @@ interface EpisodePlayerScreenProps {
     onBack: () => void;
     onNavigateEpisode: (direction: 'next' | 'prev' | EpisodeSerie) => void;
     onReturnHome: () => void;
+    forceMini?: boolean;
+    onClose?: () => void;
 }
 
-const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode, onBack, onNavigateEpisode, onReturnHome }) => {
+const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode, onBack, onNavigateEpisode, onReturnHome, forceMini = false, onClose }) => {
     const navigate = useNavigate();
     const { t, bookmarkedIds, toggleSeriesBookmark, userProfile, autoplay } = useAppContext();
     const [episodesInSeason, setEpisodesInSeason] = useState<EpisodeSerie[]>([]);
@@ -40,14 +44,21 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const [hasLiked, setHasLiked] = useState(false);
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
     const [authAction, setAuthAction] = useState('');
+    const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
     // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
     const getAdStateKey = () => `ad_shown_${episode.uid_episode}`;
     const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
     const [showAd, setShowAd] = useState(!wasAdShown);
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
-    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd });
+    const { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
     const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
+
+    const effectiveMini = isMini || forceMini;
+
+    const handlePipTrigger = useCallback(() => {
+      openMiniPlayer();
+    }, [openMiniPlayer]);
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
@@ -387,6 +398,19 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     );
 
     // Créer des callbacks mémorisés pour la publicité
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const videoTimeRef = useRef(0);
+    const videoIsPlayingRef = useRef(false);
+
+    const handleTimeUpdate = useCallback((time: number) => {
+        videoTimeRef.current = time;
+    }, []);
+
+    const handlePlayingStateChange = useCallback((playing: boolean) => {
+        setVideoIsPlaying(playing);
+        videoIsPlayingRef.current = playing;
+    }, []);
+
     const handleAdEnd = useCallback(() => {
         setShowAd(false);
         sessionStorage.setItem(getAdStateKey(), 'true');
@@ -412,20 +436,23 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     poster={episode.picture_path || item.imageUrl}
                     onUnavailable={onReturnHome}
                     onEnded={handleVideoEnded}
-                    onPlayingStateChange={setVideoIsPlaying}
+                    onPlayingStateChange={handlePlayingStateChange}
                     initialPosition={initialPlaybackPosition}
                     videoUid={episode.uid_episode}
                     isEpisode={true}
                     showAutoplayToggle={true}
-                    hideControls={isMini}
+                    hideControls={effectiveMini}
+                    onTimeUpdate={handleTimeUpdate}
+                    onPipTrigger={handlePipTrigger}
+                    videoRef={videoRef}
                 />
             )}
         </>
     );
 
     return (
-        <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
-            {/* Bouton de retour amélioré avec gradient */}
+        <div className={forceMini ? '' : 'bg-white dark:bg-black min-h-screen animate-fadeIn'}>
+            {!forceMini && (
             <header className="absolute top-4 left-4 z-30">
                 <button
                     onClick={onBack}
@@ -435,6 +462,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
                 </button>
             </header>
+            )}
 
             <div className="container mx-auto px-4 md:px-6 lg:px-8 py-1 md:py-4 lg:py-8 pt-16 md:pt-20">
 
@@ -443,7 +471,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     {/* Colonne de gauche - Lecteur vidéo et métadonnées */}
                     <div className="lg:col-span-2 space-y-2 md:space-y-4">
                         {/* Titre de la saison avec lien vers la série */}
-                        {currentSeason && serieUid && (
+                        {!forceMini && currentSeason && serieUid && (
                             <div className="flex items-center gap-2 text-sm md:text-base">
                                 <button
                                     onClick={() => navigate(`/serie/${serieUid}`)}
@@ -464,40 +492,56 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                         )}
                         
                         <div>
-                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
-                             {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                             <div ref={!forceMini ? sentinelRef : undefined} className="h-px" aria-hidden="true" />
+                             {effectiveMini && <div className="w-full aspect-video" aria-hidden="true" />}
                               <div
                                   onPointerDown={handlePointerDown}
-                                  onPointerMove={isMini ? handlePointerMove : undefined}
+                                  onPointerMove={effectiveMini ? handlePointerMove : undefined}
                                   onPointerUp={handlePointerUp}
                                   className={
-                                      isMini
-                                          ? `fixed z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
-                                          : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                      effectiveMini
+                                       ? `fixed z-50 pointer-events-auto w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
+                                            : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
                                   }
-                                  style={isMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
+                                  style={effectiveMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
                               >
-                                  {isMini && (
+                                  {effectiveMini && (
                                       <>
-                                          <div
-                                              onClick={() => { if (!hasDraggedRef.current) closeMiniPlayer(); }}
-                                              className="absolute inset-0 z-40 cursor-default"
-                                              aria-label="Tap to restore video to full view"
-                                          />
-                                         <button
-                                             onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
-                                             className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                             aria-label="Restore video to full view"
-                                         >
-                                             ✕
-                                         </button>
-                                     </>
-                                 )}
+                                          <button
+                                              onClick={(e) => { e.stopPropagation(); const v = videoRef.current; if (v) { if (v.paused) v.play(); else v.pause(); } }}
+                                              className="absolute bottom-2 left-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                              aria-label={videoIsPlaying ? 'Pause' : 'Play'}
+                                          >
+                                              {videoIsPlaying ? (
+                                                  <PauseIcon className="w-4 h-4" />
+                                              ) : (
+                                                  <PlayIcon className="w-4 h-4 ml-0.5" />
+                                              )}
+                                          </button>
+                                          <button
+                                              onClick={(e) => { e.stopPropagation(); if (forceMini) navigate(`/watch/${episode.uid_episode}`); else closeMiniPlayer(); }}
+                                              className="absolute bottom-2 right-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                              aria-label="Expand"
+                                          >
+                                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                              </svg>
+                                          </button>
+                                          <button
+                                              onClick={(e) => { e.stopPropagation(); if (forceMini) { onClose?.(); } else { closeMiniPlayer(); } }}
+                                              className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                              aria-label="Close"
+                                          >
+                                              ✕
+                                          </button>
+                                      </>
+                                  )}
                                  {playerContent}
                              </div>
                          </div>
 
-                        <div className="space-y-2 md:space-y-4">
+                         {!forceMini && (
+                         <div className="space-y-2 md:space-y-4">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
                                     {displayEpisode.title}
@@ -531,6 +575,11 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                     label={t('share')}
                                     onClick={handleShare}
                                 />
+                                <ActionButton
+                                    Icon={PencilIcon}
+                                    label="Suggérer"
+                                    onClick={() => setShowSuggestModal(true)}
+                                />
                             </div>
 
                             <div className="flex items-center justify-between gap-2 md:gap-4">
@@ -552,9 +601,11 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 </button>
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {/* Colonne de droite - Section des commentaires améliorée */}
+                    {!forceMini && (
                     <div className="lg:col-span-1">
                         <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-hidden flex flex-col">
                             <div className="lg:flex-1 lg:overflow-y-auto lg:pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-black">
@@ -567,10 +618,11 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
 
                 {/* Section des autres épisodes de la saison */}
-                {episodesInSeason.length > 0 && (
+                {!forceMini && episodesInSeason.length > 0 && (
                     <div className="mt-6 md:mt-4 lg:mt-6 pt-6 md:pt-0 border-t border-gray-200 dark:border-gray-700 md:border-t-0 space-y-2 md:space-y-4">
                         <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                             {t('otherEpisodes') || 'Autres épisodes de la saison'}
@@ -631,10 +683,20 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     </div>
                 )}
 
-                {showAuthPrompt && (
+                {!forceMini && showAuthPrompt && (
                     <AuthPrompt
                         action={authAction}
                         onClose={() => setShowAuthPrompt(false)}
+                    />
+                )}
+
+                {!forceMini && (
+                    <SuggestTitleModal
+                        isOpen={showSuggestModal}
+                        onClose={() => setShowSuggestModal(false)}
+                        mediaId={item.id}
+                        mediaType="serie"
+                        currentTitle={item.title}
                     />
                 )}
             </div>

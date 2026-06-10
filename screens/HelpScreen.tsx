@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { reportService, Report } from '../lib/firestore';
+import { reportService, Report, titleSuggestionService, TitleSuggestion } from '../lib/firestore';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
@@ -24,8 +24,10 @@ const HelpScreen: React.FC = () => {
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [reports, setReports] = useState<Report[]>([]);
-    const [activeTab, setActiveTab] = useState<'submit' | 'myReports'>('submit');
+    const [activeTab, setActiveTab] = useState<'submit' | 'myReports' | 'mySuggestions'>('submit');
     const [loadingReports, setLoadingReports] = useState(true);
+    const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(true);
 
     useEffect(() => {
         if (!user) {
@@ -37,6 +39,21 @@ const HelpScreen: React.FC = () => {
         const unsubscribe = reportService.subscribeToUserReports(user.uid, (data) => {
             setReports(data);
             setLoadingReports(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) {
+            setLoadingSuggestions(false);
+            return;
+        }
+
+        setLoadingSuggestions(true);
+        const unsubscribe = titleSuggestionService.subscribeToUserSuggestions(user.uid, (data) => {
+            setSuggestions(data);
+            setLoadingSuggestions(false);
         });
 
         return () => unsubscribe();
@@ -107,6 +124,16 @@ const HelpScreen: React.FC = () => {
                         }`}
                     >
                         {t('myReports')} ({reports.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('mySuggestions')}
+                        className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                            activeTab === 'mySuggestions'
+                                ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                    >
+                        Suggestions de titres ({suggestions.length})
                     </button>
                 </div>
 
@@ -189,6 +216,61 @@ const HelpScreen: React.FC = () => {
                                                 <p className="text-xs font-medium text-gray-500 mb-1">{t('adminResponse')}:</p>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                                                     {report.adminResponse}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'mySuggestions' && (
+                    <div>
+                        {loadingSuggestions ? (
+                            <div className="text-center py-8 text-gray-500">{t('loading')}</div>
+                        ) : suggestions.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">Aucune suggestion de titre</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {suggestions.map((s) => (
+                                    <div
+                                        key={s.uid}
+                                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-black"
+                                    >
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                                s.status === 'pending'
+                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                    : s.status === 'accepted'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                            }`}>
+                                                {s.status}
+                                            </span>
+                                            <span className="text-xs text-gray-400 ml-auto">
+                                                {s.createdAt?.toDate?.()?.toLocaleDateString() || ''}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            <p>
+                                                <span className="text-gray-500">Titre actuel :</span>{' '}
+                                                <span className="text-gray-900 dark:text-white line-through">{s.currentTitle}</span>
+                                            </p>
+                                            <p>
+                                                <span className="text-gray-500">Suggestion :</span>{' '}
+                                                <span className="text-amber-600 dark:text-amber-400 font-semibold">{s.suggestedTitle}</span>
+                                            </p>
+                                            {s.reason && (
+                                                <p className="text-gray-500 dark:text-gray-400 mt-1 italic">"{s.reason}"</p>
+                                            )}
+                                        </div>
+                                        {s.adminNote && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                <p className="text-xs font-medium text-gray-500 mb-1">Note de l'administrateur :</p>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                                                    {s.adminNote}
                                                 </p>
                                             </div>
                                         )}

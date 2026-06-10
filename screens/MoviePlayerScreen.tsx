@@ -1,6 +1,7 @@
 // screens/MoviePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MediaType } from '../types';
 import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie } from '../lib/firestore';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
@@ -8,16 +9,18 @@ import {
     PlayIcon, PauseIcon, ArrowLeftIcon,
     LikeIcon, ShareIcon, PlusIcon,
     VolumeHighIcon, VolumeMuteIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon,
-    BackwardIcon, ForwardPlaybackIcon, CheckIcon
+    BackwardIcon, ForwardPlaybackIcon, CheckIcon, PencilIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 import AuthPrompt from '../components/AuthPrompt';
+import SuggestTitleModal from '../components/SuggestTitleModal';
 import PromotionPlayer from '../components/PromotionPlayer';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
+import { useMiniPlayerContext } from '../context/MiniPlayerContext';
 
 // --- Main Screen Component ---
 interface PlayableItem {
@@ -33,15 +36,20 @@ interface PlayableItem {
 interface MoviePlayerScreenProps {
     item: PlayableItem;
     onBack: () => void;
+    onReturnHome?: () => void;
+    forceMini?: boolean;
+    onClose?: () => void;
 }
 
-const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) => {
+const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onReturnHome, forceMini = false, onClose }) => {
     const { t, bookmarkedIds, toggleBookmark, userProfile, autoplay } = useAppContext();
+    const navigate = useNavigate();
     const [movieData, setMovieData] = useState<Movie | null>(null);
     const [likeCount, setLikeCount] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
     const [authAction, setAuthAction] = useState('');
+    const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
     // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
     const getAdStateKey = () => `ad_shown_movie_${item.id}`;
@@ -387,12 +395,31 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
     }, [userProfile?.uid, item?.id]);
 
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
-    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd });
+    const { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
     const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
 
+    const effectiveMini = isMini || forceMini;
+
+    const handlePipTrigger = useCallback(() => {
+      openMiniPlayer();
+    }, [openMiniPlayer]);
+
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const videoTimeRef = useRef(0);
+    const videoIsPlayingRef = useRef(false);
+
+    const handleTimeUpdate = useCallback((time: number) => {
+      videoTimeRef.current = time;
+    }, []);
+
+    const handlePlayingStateChange = useCallback((playing: boolean) => {
+      setVideoIsPlaying(playing);
+      videoIsPlayingRef.current = playing;
+    }, []);
+
     return (
-        <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
-            {/* Bouton de retour amélioré avec gradient */}
+        <div className={forceMini ? '' : 'bg-white dark:bg-black min-h-screen animate-fadeIn'}>
+            {!forceMini && (
             <header className="absolute top-4 left-4 z-30">
                 <button
                     onClick={onBack}
@@ -402,6 +429,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                     <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
                 </button>
             </header>
+            )}
 
             <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4 lg:py-8 pt-20">
 
@@ -411,56 +439,75 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                     <div className="lg:col-span-2 space-y-6">
                         <div>
                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
-                             {isMini && <div className="w-full aspect-video" aria-hidden="true" />}
-                               <div
-                                   onPointerDown={handlePointerDown}
-                                   onPointerMove={isMini ? handlePointerMove : undefined}
-                                    onPointerUp={handlePointerUp}
-                                   className={
-                                       isMini
-                                           ? `fixed z-50 w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
-                                           : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
-                                   }
-                                   style={isMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
-                               >
-                                   {isMini && (
-                                       <>
-                                           <div
-                                               onClick={() => { if (!hasDraggedRef.current) closeMiniPlayer(); }}
-                                               className="absolute inset-0 z-40 cursor-default"
-                                               aria-label="Tap to restore video to full view"
-                                           />
-                                          <button
-                                             onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}
-                                             className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                             aria-label="Restore video to full view"
-                                         >
-                                             ✕
-                                         </button>
-                                     </>
-                                 )}
-                                 {showAd && (
-                                     <PromotionPlayer
-                                         onPromotionEnd={handleAdEnd}
-                                         onSkip={handleAdSkip}
-                                     />
-                                 )}
-                                 {!showAd && (
-                                     <VideoPlayer
-                                         key={item.id}
-                                         src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
-                                         poster={item.imageUrl || ''}
-                                         onEnded={handleVideoEnded}
-                                         onPlayingStateChange={setVideoIsPlaying}
-                                         initialPosition={initialPlaybackPosition}
-                                         videoUid={item.id}
-                                         isEpisode={false}
-                                         hideControls={isMini}
-                                     />
-                                 )}
-                             </div>
+                             {effectiveMini && <div className="w-full aspect-video" aria-hidden="true" />}
+                                <div
+                                    onPointerDown={handlePointerDown}
+                                    onPointerMove={effectiveMini ? handlePointerMove : undefined}
+                                     onPointerUp={handlePointerUp}
+                                    className={
+                                        effectiveMini
+                                            ? `fixed z-50 pointer-events-auto w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
+                                            : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                    }
+                                    style={effectiveMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
+                                >
+                                    {effectiveMini && (
+                                        <>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); const v = videoRef.current; if (v) { if (v.paused) v.play(); else v.pause(); } }}
+                                                className="absolute bottom-2 left-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                                aria-label={videoIsPlaying ? 'Pause' : 'Play'}
+                                            >
+                                                {videoIsPlaying ? (
+                                                    <PauseIcon className="w-4 h-4" />
+                                                ) : (
+                                                    <PlayIcon className="w-4 h-4 ml-0.5" />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); if (forceMini) navigate(`/watch/${item.id}`); else closeMiniPlayer(); }}
+                                                className="absolute bottom-2 right-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                                aria-label="Expand"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); if (forceMini) { onClose?.(); } else { closeMiniPlayer(); } }}
+                                                className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                                aria-label="Close"
+                                            >
+                                                ✕
+                                            </button>
+                                        </>
+                                    )}
+                                  {showAd && (
+                                      <PromotionPlayer
+                                          onPromotionEnd={handleAdEnd}
+                                          onSkip={handleAdSkip}
+                                      />
+                                  )}
+                                   {!showAd && (
+                                       <VideoPlayer
+                                           key={item.id}
+                                           src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
+                                           poster={item.imageUrl || ''}
+                                           onEnded={handleVideoEnded}
+                                           onPlayingStateChange={handlePlayingStateChange}
+                                           initialPosition={initialPlaybackPosition}
+                                           videoUid={item.id}
+                                           isEpisode={false}
+                                            hideControls={effectiveMini}
+                                            onTimeUpdate={handleTimeUpdate}
+                                            onPipTrigger={handlePipTrigger}
+                                            videoRef={videoRef}
+                                        />
+                                   )}
+                              </div>
                         </div>
 
+                        {!forceMini && (
                         <div className="space-y-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-3 leading-tight">
@@ -495,11 +542,18 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                                     label={t('share')}
                                     onClick={handleShare}
                                 />
+                                <ActionButton
+                                    Icon={PencilIcon}
+                                    label="Suggérer"
+                                    onClick={() => setShowSuggestModal(true)}
+                                />
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {/* Colonne de droite - Section des commentaires améliorée */}
+                    {!forceMini && (
                     <div className="lg:col-span-1">
                         <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
                             <div className="flex-1 overflow-y-auto pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-black">
@@ -512,12 +566,23 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack }) =
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
 
-                {showAuthPrompt && (
+                {!forceMini && showAuthPrompt && (
                     <AuthPrompt
                         action={authAction}
                         onClose={() => setShowAuthPrompt(false)}
+                    />
+                )}
+
+                {!forceMini && (
+                    <SuggestTitleModal
+                        isOpen={showSuggestModal}
+                        onClose={() => setShowSuggestModal(false)}
+                        mediaId={item.id}
+                        mediaType="movie"
+                        currentTitle={item.title}
                     />
                 )}
             </div>

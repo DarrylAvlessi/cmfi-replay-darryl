@@ -33,6 +33,9 @@ interface VideoPlayerProps {
     autoplayEnabled?: boolean;
     showAutoplayToggle?: boolean;
     hideControls?: boolean;
+    onTimeUpdate?: (time: number) => void;
+    onPipTrigger?: () => void;
+    videoRef?: React.RefObject<HTMLVideoElement>;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -48,6 +51,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     autoplayEnabled: externalAutoplayEnabled,
     showAutoplayToggle = false,
     hideControls = false,
+    onTimeUpdate,
+    onPipTrigger,
+    videoRef: externalVideoRef,
 }) => {
     const { t } = useAppContext();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -109,6 +115,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
         closePiP();
     }, []);
+
+    // Sync internal videoRef to external ref
+    useEffect(() => {
+        if (externalVideoRef) {
+            (externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = videoRef.current;
+        }
+    });
 
     // Gérer la visibilité de l'onglet pour préserver l'état de pause/play
     // et activer automatiquement le PiP quand l'utilisateur quitte l'onglet
@@ -284,6 +297,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         const handleTimeUpdate = () => {
             if (video.duration) {
                 setCurrentTime(video.currentTime);
+                if (onTimeUpdate) onTimeUpdate(video.currentTime);
                 if (!isScrubbing) {
                     setProgress((video.currentTime / video.duration) * 100);
                 }
@@ -329,7 +343,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             video.removeEventListener('seeking', handleSeeking);
             video.removeEventListener('seeked', handleSeeked);
         };
-    }, [onEnded, isScrubbing, autoplayEnabled]);
+    }, [onEnded, isScrubbing, autoplayEnabled, onTimeUpdate]);
 
     useEffect(() => {
         if (!src || !src.trim()) {
@@ -650,6 +664,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (document.pictureInPictureElement) {
             await document.exitPictureInPicture();
         } else if (document.pictureInPictureEnabled) {
+            if (!document.hidden && onPipTrigger) {
+                onPipTrigger();
+                return;
+            }
             await videoRef.current.requestPictureInPicture();
         }
     };
