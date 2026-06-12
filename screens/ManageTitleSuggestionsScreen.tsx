@@ -13,7 +13,7 @@ const suggestionStatusColors: Record<string, string> = {
 
 const ManageTitleSuggestionsScreen: React.FC = () => {
     const navigate = useNavigate();
-    const { userProfile } = useAppContext();
+    const { t, userProfile } = useAppContext();
     const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -31,7 +31,7 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                 setSuggestions(all);
             } catch (error) {
                 console.error('Error loading suggestions:', error);
-                toast.error('Erreur lors du chargement des suggestions');
+                toast.error(t('loadSuggestionsError'));
             } finally {
                 setLoading(false);
             }
@@ -44,12 +44,12 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
         return (
             <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-500 dark:text-gray-400">Accès refusé. Administrateur requis.</p>
+                    <p className="text-gray-500 dark:text-gray-400">{t('adminAccessDenied')}</p>
                     <button
                         onClick={() => navigate('/home')}
                         className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg"
                     >
-                        Retour
+                        {t('back')}
                     </button>
                 </div>
             </div>
@@ -70,28 +70,28 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
     const handleApply = async (id: string) => {
         try {
             await titleSuggestionService.applySuggestion(id, userProfile?.uid || '');
-            toast.success('Titre mis à jour avec succès');
+            toast.success(t('titleUpdatedSuccess'));
             setExpandedId(null);
             setAdminNote('');
             const all = await titleSuggestionService.getAllSuggestions();
             setSuggestions(all);
         } catch (error) {
             console.error('Error applying suggestion:', error);
-            toast.error('Erreur lors de l\'application de la suggestion');
+            toast.error(t('applySuggestionError'));
         }
     };
 
     const handleReject = async (id: string) => {
         try {
             await titleSuggestionService.rejectSuggestion(id, userProfile?.uid || '', adminNote);
-            toast.success('Suggestion rejetée');
+            toast.success(t('suggestionRejected'));
             setExpandedId(null);
             setAdminNote('');
             const all = await titleSuggestionService.getAllSuggestions();
             setSuggestions(all);
         } catch (error) {
             console.error('Error rejecting suggestion:', error);
-            toast.error('Erreur lors du rejet de la suggestion');
+            toast.error(t('rejectSuggestionError'));
         }
     };
 
@@ -103,15 +103,15 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                     className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
                 >
                     <ArrowLeftIcon className="w-5 h-5" />
-                    <span>Retour</span>
+                    <span>{t('back')}</span>
                 </button>
 
-                <h1 className="text-2xl font-serif font-bold mb-6">Gérer les suggestions de titre</h1>
+                <h1 className="text-2xl font-serif font-bold mb-6">{t('manageTitleSuggestions')}</h1>
 
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Chargement...</div>
+                    <div className="text-center py-12 text-gray-500">{t('loading')}</div>
                 ) : suggestions.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">Aucune suggestion</div>
+                    <div className="text-center py-12 text-gray-500">{t('noSuggestions')}</div>
                 ) : (
                     <div className="space-y-4">
                         {suggestions.map((s) => (
@@ -128,7 +128,7 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-sm font-medium">{s.displayName}</span>
                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${suggestionStatusColors[s.status] || ''}`}>
-                                                    {s.status}
+                                                    {t(s.status)}
                                                 </span>
                                                 <span className="text-xs text-gray-400">{s.mediaType}</span>
                                             </div>
@@ -148,18 +148,18 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                                     <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Titre actuel</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('currentTitle')}</p>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 line-through">{s.currentTitle}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Titre suggéré</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('suggestedTitle')}</p>
                                                 <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold">{s.suggestedTitle}</p>
                                             </div>
                                         </div>
 
                                         {s.reason && (
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Raison :</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('reason')} :</p>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                                                     {s.reason}
                                                 </p>
@@ -167,24 +167,24 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                                         )}
 
                                         <div>
-                                            <p className="text-xs font-medium text-gray-500 mb-1">Contact :</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('contact')} :</p>
                                             <p className="text-sm text-gray-500">{s.userEmail}</p>
                                         </div>
 
                                         <div>
-                                            <p className="text-xs font-medium text-gray-500 mb-1">Média :</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('media')} :</p>
                                             <p className="text-sm text-gray-500">ID: {s.mediaId} ({s.mediaType})</p>
                                         </div>
 
                                         {s.status === 'pending' && (
                                             <>
                                                 <div>
-                                                    <label className="block text-sm font-medium mb-1">Note (optionnelle)</label>
+                                                    <label className="block text-sm font-medium mb-1">{t('noteOptional')}</label>
                                                     <textarea
                                                         rows={2}
                                                         value={adminNote}
                                                         onChange={(e) => setAdminNote(e.target.value)}
-                                                        placeholder="Ajouter une note..."
+                                                        placeholder={t('addNotePlaceholder')}
                                                         className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none text-sm"
                                                     />
                                                 </div>
@@ -195,14 +195,14 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
                                                         className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
                                                     >
                                                         <CheckIcon className="w-4 h-4" />
-                                                        Appliquer
+                                                        {t('apply')}
                                                     </button>
                                                     <button
                                                         onClick={() => handleReject(s.uid || '')}
                                                         className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
-                                                        Rejeter
+                                                        {t('reject')}
                                                     </button>
                                                 </div>
                                             </>
@@ -210,7 +210,7 @@ const ManageTitleSuggestionsScreen: React.FC = () => {
 
                                         {s.adminNote && s.status !== 'pending' && (
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Note de l'admin :</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('adminNote')} :</p>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                                                     {s.adminNote}
                                                 </p>

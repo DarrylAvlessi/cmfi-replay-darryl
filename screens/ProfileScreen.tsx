@@ -182,12 +182,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 action: () => navigateRouter('/manage-reports')
             },
             {
+                icon: CommentIcon,
+                label: t('manageTitleSuggestions'),
+                action: () => navigateRouter('/manage-title-suggestions')
+            },
+            {
                 icon: SettingsIcon,
                 label: 'Admin - Gestion des vidéos',
                 action: () => navigateRouter('/admin')
             },
         ];
-    }, [isAdminValue, navigateRouter]);
+    }, [isAdminValue, navigateRouter, t]);
 
     const handleLogout = useCallback(async () => {
         try {

@@ -8,7 +8,7 @@ interface SuggestTitleModalProps {
     isOpen: boolean;
     onClose: () => void;
     mediaId: string;
-    mediaType: 'movie' | 'serie';
+    mediaType: 'movie' | 'serie' | 'episode';
     currentTitle: string;
 }
 

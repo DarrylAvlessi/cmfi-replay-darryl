@@ -694,9 +694,9 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     <SuggestTitleModal
                         isOpen={showSuggestModal}
                         onClose={() => setShowSuggestModal(false)}
-                        mediaId={item.id}
-                        mediaType="serie"
-                        currentTitle={item.title}
+                        mediaId={episode.uid_episode}
+                        mediaType="episode"
+                        currentTitle={episode.title}
                     />
                 )}
             </div>

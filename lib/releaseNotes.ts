@@ -28,10 +28,10 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
     version: '1.2.0',
     date: '2026-06-10',
     changes: [
-      { type: 'Added', en: 'Suggest a better title for any video directly from the player controls via a new pencil icon.', fr: 'Suggérez un meilleur titre pour n\'importe quelle vidéo directement depuis les commandes du lecteur via une nouvelle icône crayon.' },
+      { type: 'Added', en: 'Suggest a better title for any video from the player controls or the detail screen via a pencil icon.', fr: 'Suggérez un meilleur titre pour n\'importe quelle vidéo depuis les commandes du lecteur ou l\'écran de détail via une icône crayon.' },
       { type: 'Added', en: 'Title suggestion modal with optional reason textarea for explaining your proposal.', fr: 'Modal de suggestion de titre avec champ raison optionnel pour expliquer votre proposition.' },
       { type: 'Added', en: 'My Title Suggestions tab on the Help screen to track your submitted suggestions and their status.', fr: 'Onglet "Mes suggestions de titre" sur l\'écran d\'Aide pour suivre vos suggestions soumises et leur statut.' },
-      { type: 'Added', en: 'Admin "Manage Title Suggestions" screen to review, accept (auto-updates the media title), or reject suggestions.', fr: 'Écran admin "Gérer les suggestions de titre" pour examiner, accepter (met à jour automatiquement le titre du média) ou rejeter les suggestions.' },
+      { type: 'Added', en: 'Episode title suggestions: suggest a better title for individual episodes from the episode player.', fr: 'Suggestions de titre pour les épisodes : proposez un meilleur titre pour un épisode depuis le lecteur.' },
     ],
   },
   {

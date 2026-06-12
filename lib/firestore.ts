@@ -258,7 +258,7 @@ export interface TitleSuggestion {
     userEmail: string;
     displayName: string;
     mediaId: string;
-    mediaType: 'movie' | 'serie';
+    mediaType: 'movie' | 'serie' | 'episode';
     currentTitle: string;
     suggestedTitle: string;
     reason?: string;
@@ -870,6 +870,17 @@ export const titleSuggestionService = {
                 if (!serieSnap.empty) {
                     const serieRef = doc(db, SERIES_COLLECTION, serieSnap.docs[0].id);
                     await updateDoc(serieRef, { title_serie: suggestion.suggestedTitle });
+                }
+            } else if (suggestion.mediaType === 'episode') {
+                const q = query(
+                    collection(db, EPISODES_SERIES_COLLECTION),
+                    where('uid_episode', '==', suggestion.mediaId),
+                    limit(1)
+                );
+                const episodeSnap = await getDocs(q);
+                if (!episodeSnap.empty) {
+                    const episodeRef = doc(db, EPISODES_SERIES_COLLECTION, episodeSnap.docs[0].id);
+                    await updateDoc(episodeRef, { title: suggestion.suggestedTitle });
                 }
             }
 

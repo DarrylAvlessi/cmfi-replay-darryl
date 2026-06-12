@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType, Episode } from '../types';
 
-import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, VolumeHighIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon } from '../components/icons';
+import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, VolumeHighIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon, PencilIcon } from '../components/icons';
 
 import { useAppContext } from '../context/AppContext';
 
@@ -17,6 +17,8 @@ import { Movie, movieService, likeService, commentService, Comment as FirestoreC
 import { toast } from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
+
+import SuggestTitleModal from '../components/SuggestTitleModal';
 
 
 
@@ -170,6 +172,8 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     const [isSharing, setIsSharing] = useState(false);
 
     const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+
+    const [showSuggestModal, setShowSuggestModal] = useState(false);
 
     const descriptionThreshold = 150;
 
@@ -808,6 +812,15 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                     </button>
                                 )}
                             </div>
+                            <button
+                                onClick={() => setShowSuggestModal(true)}
+                                className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
+                                title={t('suggest')}
+                            >
+                                <PencilIcon className="w-5 h-5" />
+                                <span className="hidden sm:inline">{t('suggest')}</span>
+                                <span className="sm:hidden">{t('suggest')}</span>
+                            </button>
                         </div>
                     </div>
 
@@ -1079,6 +1092,14 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                     </div>
 
                 </div>
+
+                <SuggestTitleModal
+                    isOpen={showSuggestModal}
+                    onClose={() => setShowSuggestModal(false)}
+                    mediaId={item.id}
+                    mediaType={type === MediaType.Movie ? 'movie' : 'serie'}
+                    currentTitle={title}
+                />
 
             </div>
 

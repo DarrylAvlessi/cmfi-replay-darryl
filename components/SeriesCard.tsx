@@ -1,5 +1,6 @@
 import React from 'react';
 import { MediaContent } from '../types';
+import { useAppContext } from '../context/AppContext';
 
 export interface SerieWithStats extends MediaContent {
     seasonsCount?: number;
@@ -17,6 +18,7 @@ interface SeriesCardProps {
 }
 
 const SeriesCard: React.FC<SeriesCardProps> = ({ serie, variant = 'poster', onSelect, onPlay }) => {
+    const { t } = useAppContext();
     const handleSelect = () => onSelect(serie);
     const handlePlay = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -45,7 +47,7 @@ const SeriesCard: React.FC<SeriesCardProps> = ({ serie, variant = 'poster', onSe
                             <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="text-gray-900 text-sm font-bold">Détails</span>
+                            <span className="text-gray-900 text-sm font-bold">{t('details')}</span>
                         </div>
                     </div>
                 </div>
@@ -87,7 +89,7 @@ const SeriesCard: React.FC<SeriesCardProps> = ({ serie, variant = 'poster', onSe
                         e.stopPropagation();
                         handleSelect();
                     }}
-                    title="Voir les détails"
+                    title={t('seeDetails')}
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -113,7 +115,7 @@ const SeriesCard: React.FC<SeriesCardProps> = ({ serie, variant = 'poster', onSe
                         <svg className="w-3.5 sm:w-5 sm:h-5 h-3.5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span className="text-white text-[10px] sm:text-xs md:text-sm font-medium">Voir détails</span>
+                        <span className="text-white text-[10px] sm:text-xs md:text-sm font-medium">{t('seeDetails')}</span>
                     </div>
                 </div>
             </div>
