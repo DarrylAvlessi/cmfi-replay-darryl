@@ -440,23 +440,28 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                         <div>
                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
                              {effectiveMini && <div className="w-full aspect-video" aria-hidden="true" />}
-                                <div
-                                    onPointerDown={handlePointerDown}
-                                    onPointerMove={effectiveMini ? handlePointerMove : undefined}
-                                     onPointerUp={handlePointerUp}
-                                    className={
+                                 <div
+                                     className={
                                         effectiveMini
                                             ? `fixed z-50 pointer-events-auto w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
                                             : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
                                     }
                                     style={effectiveMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
                                 >
-                                    {effectiveMini && (
-                                        <>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); const v = videoRef.current; if (v) { if (v.paused) v.play(); else v.pause(); } }}
-                                                className="absolute bottom-2 left-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                                aria-label={videoIsPlaying ? 'Pause' : 'Play'}
+                                     {effectiveMini && (
+                                         <>
+                                             <div
+                                                 onPointerDown={handlePointerDown}
+                                                 onPointerMove={handlePointerMove}
+                                                 onPointerUp={handlePointerUp}
+                                                 className="absolute inset-0 z-40"
+                                                 style={{ touchAction: 'none' }}
+                                                 onClick={(e) => { if (hasDraggedRef.current) return; if (forceMini) navigate(`/watch/${item.id}`); else closeMiniPlayer(); }}
+                                             />
+                                             <button
+                                                 onClick={(e) => { e.stopPropagation(); const v = videoRef.current; if (v) { if (v.paused) v.play(); else v.pause(); } }}
+                                                 className="absolute bottom-2 left-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
+                                                 aria-label={videoIsPlaying ? 'Pause' : 'Play'}
                                             >
                                                 {videoIsPlaying ? (
                                                     <PauseIcon className="w-4 h-4" />
@@ -482,28 +487,30 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             </button>
                                         </>
                                     )}
-                                  {showAd && (
-                                      <PromotionPlayer
-                                          onPromotionEnd={handleAdEnd}
-                                          onSkip={handleAdSkip}
-                                      />
-                                  )}
-                                   {!showAd && (
-                                       <VideoPlayer
-                                           key={item.id}
-                                           src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
-                                           poster={item.imageUrl || ''}
-                                           onEnded={handleVideoEnded}
-                                           onPlayingStateChange={handlePlayingStateChange}
-                                           initialPosition={initialPlaybackPosition}
-                                           videoUid={item.id}
-                                           isEpisode={false}
-                                            hideControls={effectiveMini}
-                                            onTimeUpdate={handleTimeUpdate}
+                                  <div className={effectiveMini ? 'pointer-events-none' : ''}>
+                                   {showAd && (
+                                       <PromotionPlayer
+                                           onPromotionEnd={handleAdEnd}
+                                           onSkip={handleAdSkip}
+                                       />
+                                   )}
+                                    {!showAd && (
+                                        <VideoPlayer
+                                            key={item.id}
+                                            src={item.video_path_hd?.trim() ? item.video_path_hd : ''}
+                                            poster={item.imageUrl || ''}
+                                            onEnded={handleVideoEnded}
+                                            onPlayingStateChange={handlePlayingStateChange}
+                                            initialPosition={initialPlaybackPosition}
+                                            videoUid={item.id}
+                                            isEpisode={false}
+                                             hideControls={effectiveMini}
+                                             onTimeUpdate={handleTimeUpdate}
                                             onPipTrigger={handlePipTrigger}
                                             videoRef={videoRef}
                                         />
                                    )}
+                                  </div>
                               </div>
                         </div>
 

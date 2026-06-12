@@ -63,9 +63,6 @@ const MiniPlayerOverlay: React.FC = () => {
 
   return (
     <div
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
       className="fixed z-[9999] w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black"
       style={{
         position: 'fixed',
@@ -73,16 +70,23 @@ const MiniPlayerOverlay: React.FC = () => {
         touchAction: 'none',
       }}
     >
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onClick={handleRestore}
+        className="absolute inset-0 z-10"
+        style={{ touchAction: 'none' }}
+      />
       <video
         ref={videoRef}
-        className="w-full h-full object-cover cursor-pointer"
+        className="w-full h-full object-cover pointer-events-none"
         poster={overlayData.poster}
-        onClick={handleRestore}
       />
 
       <button
         onClick={handleTogglePlay}
-        className="absolute bottom-2 left-2 z-10 w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors"
+        className="absolute bottom-2 left-2 z-20 w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors"
       >
         {isPaused ? (
           <PlayIcon className="w-3.5 h-3.5" />
@@ -93,7 +97,7 @@ const MiniPlayerOverlay: React.FC = () => {
 
       <button
         onClick={handleClose}
-        className="absolute top-1.5 right-1.5 z-10 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+        className="absolute top-1.5 right-1.5 z-20 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
       >
         ✕
       </button>
