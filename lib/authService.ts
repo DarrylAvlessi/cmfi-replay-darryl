@@ -1,6 +1,6 @@
 import { auth, googleProvider } from './firebase';
 import { signInWithPopup, UserCredential, signOut as firebaseSignOut } from 'firebase/auth';
-import { userService } from './firestore';
+import { userService } from './db';
 
 // Fonction utilitaire pour formater la date au format demandé
 const formatCreatedTime = (date: Date): string => {

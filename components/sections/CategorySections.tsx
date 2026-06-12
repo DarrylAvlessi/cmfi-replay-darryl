@@ -1,6 +1,6 @@
 import React from 'react';
 import { MediaContent, MediaType } from '../../types';
-import { Serie, SerieCategory, getCategoryName } from '../../lib/firestore';
+import { Serie, SerieCategory, getCategoryName } from '../../lib/db';
 import MediaCard from '../MediaCard';
 import { transformSerieToMediaContent } from '../../utils/mediaTransformers';
 import { useAppContext } from '../../context/AppContext';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adService, Ad, AdSettings } from '../lib/firestore';
+import { adService, Ad, AdSettings } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, CheckIcon, XMarkIcon } from '../components/icons';
 import { toast } from 'react-toastify';

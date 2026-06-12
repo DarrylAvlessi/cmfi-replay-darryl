@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { UserProfile, userService, userMetricsService, userGeographyService, seasonSerieService, serieService, SeasonSerie, Serie } from '../lib/firestore';
+import { UserProfile, userService, userMetricsService, userGeographyService, seasonSerieService, serieService, SeasonSerie, Serie } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, SearchIcon } from '../components/icons';
 import { Timestamp } from 'firebase/firestore';

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { MediaContent } from '../types';
-import { EpisodeSerie } from '../lib/firestore';
+import { EpisodeSerie } from '../lib/db';
 
 export interface OverlayVideoData {
   src: string;

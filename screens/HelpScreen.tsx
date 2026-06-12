@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { reportService, Report, titleSuggestionService, TitleSuggestion } from '../lib/firestore';
+import { reportService, Report, titleSuggestionService, TitleSuggestion } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
@@ -133,7 +133,7 @@ const HelpScreen: React.FC = () => {
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                     >
-                        Suggestions de titres ({suggestions.length})
+                        {t('myTitleSuggestions')} ({suggestions.length})
                     </button>
                 </div>
 
@@ -231,7 +231,7 @@ const HelpScreen: React.FC = () => {
                         {loadingSuggestions ? (
                             <div className="text-center py-8 text-gray-500">{t('loading')}</div>
                         ) : suggestions.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">Aucune suggestion de titre</div>
+                            <div className="text-center py-8 text-gray-500">{t('noTitleSuggestions')}</div>
                         ) : (
                             <div className="space-y-3">
                                 {suggestions.map((s) => (
@@ -247,7 +247,7 @@ const HelpScreen: React.FC = () => {
                                                     ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                     : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                             }`}>
-                                                {s.status}
+                                                {t(s.status)}
                                             </span>
                                             <span className="text-xs text-gray-400 ml-auto">
                                                 {s.createdAt?.toDate?.()?.toLocaleDateString() || ''}
@@ -255,11 +255,11 @@ const HelpScreen: React.FC = () => {
                                         </div>
                                         <div className="space-y-1 text-sm">
                                             <p>
-                                                <span className="text-gray-500">Titre actuel :</span>{' '}
+                                                <span className="text-gray-500">{t('currentTitle')} :</span>{' '}
                                                 <span className="text-gray-900 dark:text-white line-through">{s.currentTitle}</span>
                                             </p>
                                             <p>
-                                                <span className="text-gray-500">Suggestion :</span>{' '}
+                                                <span className="text-gray-500">{t('suggestedTitle')} :</span>{' '}
                                                 <span className="text-amber-600 dark:text-amber-400 font-semibold">{s.suggestedTitle}</span>
                                             </p>
                                             {s.reason && (
@@ -268,7 +268,7 @@ const HelpScreen: React.FC = () => {
                                         </div>
                                         {s.adminNote && (
                                             <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Note de l'administrateur :</p>
+                                                <p className="text-xs font-medium text-gray-500 mb-1">{t('adminResponse')} :</p>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                                                     {s.adminNote}
                                                 </p>

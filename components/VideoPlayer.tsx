@@ -175,7 +175,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             
             if (Math.abs(currentTime - lastSavedPosition.current) >= 5) {
                 try {
-                    const { statsVuesService } = await import('../lib/firestore');
+                    const { statsVuesService } = await import('../lib/db');
                     await statsVuesService.updateViewingProgress(
                         userProfile.uid,
                         videoUid,

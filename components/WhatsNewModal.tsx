@@ -1,5 +1,14 @@
 import { useAppContext } from '../context/AppContext'
 
+const typeColors: Record<string, string> = {
+  Added: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400',
+  Changed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400',
+  Deprecated: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400',
+  Removed: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400',
+  Fixed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-400',
+  Security: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400',
+}
+
 const WhatsNewModal = () => {
   const { t, language, showWhatsNew, markWhatsNewSeen, newReleaseNotes } = useAppContext()
 
@@ -34,10 +43,10 @@ const WhatsNewModal = () => {
               </div>
               <ul className="space-y-2">
                 {note.changes.map((change, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-200">
-                    <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${typeColors[change.type] || ''}`}>
+                      {change.type}
+                    </span>
                     <span>{language === 'fr' ? change.fr : change.en}</span>
                   </li>
                 ))}

@@ -4,7 +4,7 @@ import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon, UpdateIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Language } from '../lib/i18n';
 import { auth } from '../lib/firebase';
-import { userService } from '../lib/firestore';
+import { userService } from '../lib/db';
 import { toast } from 'react-toastify';
 
 interface HeaderMenuProps {

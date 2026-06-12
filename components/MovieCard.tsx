@@ -1,20 +1,19 @@
 import React from 'react';
 import { MediaContent } from '../types';
-import { PlayIcon } from './icons';
+import { InfoIcon } from './icons';
 
 interface MovieCardProps {
   movie: MediaContent;
   variant?: 'poster' | 'list';
   onSelect: (item: MediaContent) => void;
-  onPlay: (item: MediaContent) => void;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSelect, onPlay }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSelect }) => {
   const { title, imageUrl, author, progress } = movie;
   const handleSelect = () => onSelect(movie);
-  const handlePlay = (e: React.MouseEvent) => {
+  const handleInfo = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onPlay(movie);
+    onSelect(movie);
   };
 
   if (variant === 'list') {
@@ -35,11 +34,11 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
           />
           {/* Overlay au hover */}
           <div
-            onClick={handlePlay}
+            onClick={handleInfo}
             className="absolute inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
           >
             <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-              <PlayIcon className="w-6 h-6 text-gray-900 ml-0.5" />
+              <InfoIcon className="w-6 h-6 text-gray-900 ml-0.5" />
             </div>
           </div>
         </div>
@@ -71,10 +70,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
           className="p-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex-shrink-0" 
           onClick={(e) => {
             e.stopPropagation();
-            handlePlay(e);
+            handleInfo(e);
           }}
         >
-          <PlayIcon className="w-5 h-5" />
+          <InfoIcon className="w-5 h-5" />
         </button>
       </div>
     );
@@ -90,11 +89,11 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
           className="w-full h-full object-cover relative z-0 transition-transform duration-700 group-hover:scale-110"
         />
         <div
-          onClick={handlePlay}
+          onClick={handleInfo}
           className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-10 cursor-pointer"
         >
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/40 transition-transform duration-300 group-hover:scale-110">
-            <PlayIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white ml-1" />
+            <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white ml-1" />
           </div>
         </div>
         {/* Barre de progression si présente */}

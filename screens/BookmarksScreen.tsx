@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import MediaCard from '../components/MediaCard';
 import { MediaContent, MediaType } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { bookDocService, bookSeriesService, movieService, episodeSerieService, BookDoc, BookSeries, EpisodeSerie, Movie } from '../lib/firestore';
+import { bookDocService, bookSeriesService, movieService, episodeSerieService, BookDoc, BookSeries, EpisodeSerie, Movie } from '../lib/db';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { TrashIcon } from '../components/icons';

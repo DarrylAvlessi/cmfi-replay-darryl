@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
-import { movieService, serieService, episodeSerieService, seasonSerieService, EpisodeSerie } from '../lib/firestore';
+import { movieService, serieService, episodeSerieService, seasonSerieService, EpisodeSerie } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { useMiniPlayerContext } from '../context/MiniPlayerContext';
 

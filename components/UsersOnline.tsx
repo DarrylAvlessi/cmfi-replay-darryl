@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { UserProfile } from '../lib/firestore';
-import { userService } from '../lib/firestore';
+import { UserProfile } from '../lib/db';
+import { userService } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 
 export const UsersOnline: React.FC = () => {

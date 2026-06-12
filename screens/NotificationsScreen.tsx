@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notificationService, Notification } from '../lib/firestore';
+import { notificationService, Notification } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, CheckIcon, TrashIcon } from '../components/icons';
 import { Timestamp } from 'firebase/firestore';

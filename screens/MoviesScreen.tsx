@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import MovieCard from '../components/MovieCard';
-import { movieService, Movie } from '../lib/firestore';
+import { movieService, Movie } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
@@ -97,14 +97,14 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
     return (
         <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
             {/* Header avec recherche et contrôles */}
-            <div className="sticky top-16 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-black backdrop-blur-md shadow-sm">
+            <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-black">
                 <div className="px-4 md:px-6 lg:px-8 py-4 space-y-4">
                     {/* Barre de navigation supérieure */}
                     <div className="flex items-center justify-between">
                         <button
                             onClick={handleBack}
                             className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            aria-label="Retour"
+                            aria-label={t('back')}
                         >
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
@@ -160,7 +160,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
-                                aria-label="Vue grille"
+                                aria-label={t('gridView')}
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -173,7 +173,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         ? 'bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
-                                aria-label="Vue liste"
+                                aria-label={t('listView')}
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -236,7 +236,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         movie={movie}
                                         variant="poster"
                                         onSelect={onSelectMedia}
-                                        onPlay={onPlay}
                                     />
                                 ))}
                             </div>
@@ -248,7 +247,6 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         movie={movie}
                                         variant="list"
                                         onSelect={onSelectMedia}
-                                        onPlay={onPlay}
                                     />
                                 ))}
                             </div>

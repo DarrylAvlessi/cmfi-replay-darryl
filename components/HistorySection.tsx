@@ -1,7 +1,7 @@
 // components/HistorySection.tsx
 
 import React from 'react';
-import { ContinueWatchingItem } from '../lib/firestore';
+import { ContinueWatchingItem } from '../lib/db';
 import { PlayIcon } from './icons';
 
 interface HistoryCardProps {

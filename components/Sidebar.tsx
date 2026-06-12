@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { updateEpisodeViews, serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
+import { updateEpisodeViews, serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 import { toast } from 'react-toastify';
 import { ActiveTab } from '../types';
 

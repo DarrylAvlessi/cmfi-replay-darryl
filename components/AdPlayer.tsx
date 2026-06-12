@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Ad, adService } from '../lib/firestore';
+import { Ad, adService } from '../lib/db';
 import { ForwardIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 

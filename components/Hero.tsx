@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MediaContent, MediaType } from '../types';
 import { PlayIcon, PauseIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, PlusIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-import { movieService, Movie } from '../lib/firestore';
+import { movieService, Movie } from '../lib/db';
 
 interface HeroProps {
   items?: MediaContent[];

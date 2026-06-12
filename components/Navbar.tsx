@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
+import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 
 const Navbar: React.FC = () => {
   const { t, language } = useAppContext();

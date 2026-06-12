@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { infoBarService } from '../lib/firestore';
+import { infoBarService } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 
 interface InfoBarMessage {

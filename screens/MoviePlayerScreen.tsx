@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaType } from '../types';
-import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie } from '../lib/firestore';
+import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie } from '../lib/db';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon,
@@ -544,7 +544,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                 />
                                 <ActionButton
                                     Icon={PencilIcon}
-                                    label="Suggérer"
+                                    label={t('suggest')}
                                     onClick={() => setShowSuggestModal(true)}
                                 />
                             </div>

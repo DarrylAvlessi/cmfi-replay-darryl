@@ -3,7 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { auth } from '../lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { authService } from '../lib/authService';
-import { userService } from '../lib/firestore';
+import { userService } from '../lib/db';
 import AuthHeader from '../components/AuthHeader';
 import InputField from '../components/InputField';
 import AuthButton from '../components/AuthButton';

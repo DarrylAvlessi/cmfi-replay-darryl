@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationEntry, navigationTrackingService, movieService, episodeSerieService } from '../lib/firestore';
+import { NavigationEntry, navigationTrackingService, movieService, episodeSerieService } from '../lib/db';
 import { Timestamp } from 'firebase/firestore';
 
 interface UserNavigationTimelineProps {

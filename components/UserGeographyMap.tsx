@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { userGeographyService } from '../lib/firestore';
+import { userGeographyService } from '../lib/db';
 
 interface CountryStat {
     countryCode: string;

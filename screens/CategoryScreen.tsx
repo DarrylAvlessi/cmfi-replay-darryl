@@ -3,7 +3,7 @@ import MediaCard from '../components/MediaCard';
 import { continueWatching, allContent, mostWatched, mostLiked } from '../data/mockData';
 import { MediaContent, MediaType } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { serieService, Serie, movieService, Movie } from '../lib/firestore';
+import { serieService, Serie, movieService, Movie } from '../lib/db';
 
 interface CategoryScreenProps {
     mediaType: MediaType;

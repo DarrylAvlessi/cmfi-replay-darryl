@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { titleSuggestionService, TitleSuggestion } from '../lib/firestore';
+import { titleSuggestionService, TitleSuggestion } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, CheckIcon, XMarkIcon } from '../components/icons';
 import { toast } from 'react-toastify';

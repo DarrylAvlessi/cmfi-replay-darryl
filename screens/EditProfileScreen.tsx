@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import InputField from '../components/InputField';
 import { useAppContext } from '../context/AppContext';
-import { userService, UserProfile } from '../lib/firestore';
+import { userService, UserProfile } from '../lib/db';
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 

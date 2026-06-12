@@ -3,18 +3,16 @@
 
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType, Episode } from '../types';
 
-import HeaderMenu from '../components/HeaderMenu';
-
-import { PlayIcon, PlusIcon, ArrowLeftIcon, ChevronDownIcon, VolumeHighIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon } from '../components/icons';
+import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, VolumeHighIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon } from '../components/icons';
 
 import { useAppContext } from '../context/AppContext';
 
-import { serieService, Serie, seasonSerieService, SeasonSerie, episodeSerieService, EpisodeSerie } from '../lib/firestore';
+import { serieService, Serie, seasonSerieService, SeasonSerie, episodeSerieService, EpisodeSerie } from '../lib/db';
 
-import { Movie, movieService, likeService, commentService, Comment as FirestoreComment } from '../lib/firestore';
+import { Movie, movieService, likeService, commentService, Comment as FirestoreComment } from '../lib/db';
 
 import { toast } from 'react-toastify';
 
@@ -145,6 +143,7 @@ const formatStat = (num: number | undefined): string => {
 const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onPlay, playingItem, onSelectMedia, initialSeasonUid }) => {
 
     const { t, bookmarkedIds, toggleBookmark, userProfile } = useAppContext();
+    const navigate = useNavigate();
 
     const { title, imageUrl, author, description, theme, languages, seasons, type } = item;
 
@@ -584,11 +583,21 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         </button>
 
-                        <div className="p-1 rounded-full bg-black/40 backdrop-blur-sm">
 
-                            <HeaderMenu variant="light" />
 
-                        </div>
+                        <button
+
+                            onClick={() => navigate('/home')}
+
+                            className="p-2 rounded-full text-white bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
+
+                            aria-label={t('home')}
+
+                        >
+
+                            <HomeIcon className="w-6 h-6" />
+
+                        </button>
 
                     </div>
 

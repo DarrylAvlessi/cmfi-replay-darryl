@@ -1,6 +1,6 @@
 import React from 'react';
 import { MediaContent, MediaType } from '../../types';
-import { Serie } from '../../lib/firestore';
+import { Serie } from '../../lib/db';
 import MediaCard from '../MediaCard';
 import { transformSerieToMediaContent } from '../../utils/mediaTransformers';
 

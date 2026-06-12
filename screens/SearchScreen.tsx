@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { SearchIcon } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
-import { searchService, SearchResult } from '../lib/firestore';
-import { Movie, Serie, SeasonSerie, EpisodeSerie } from '../lib/firestore';
+import { searchService, SearchResult } from '../lib/db';
+import { Movie, Serie, SeasonSerie, EpisodeSerie } from '../lib/db';
 
 interface SearchScreenProps {
   onNavigate: (screen: string, data?: any) => void;

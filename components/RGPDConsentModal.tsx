@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { userService, UserProfile } from '../lib/firestore';
+import { userService, UserProfile } from '../lib/db';
 
 interface RGPDConsentModalProps {
     userProfile: UserProfile;

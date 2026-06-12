@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent } from '../types';
-import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/firestore';
+import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/db';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
     LikeIcon, ShareIcon, PlusIcon,
@@ -577,7 +577,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 />
                                 <ActionButton
                                     Icon={PencilIcon}
-                                    label="Suggérer"
+                                    label={t('suggest')}
                                     onClick={() => setShowSuggestModal(true)}
                                 />
                             </div>

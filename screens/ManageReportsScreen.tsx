@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { reportService, Report } from '../lib/firestore';
+import { reportService, Report } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, CommentIcon } from '../components/icons';
 import { toast } from 'react-toastify';

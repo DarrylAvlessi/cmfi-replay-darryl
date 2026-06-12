@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import { PlayIcon, PlusIcon, CheckIcon, InfoIcon, VolumeHighIcon, VolumeMuteIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
-import { movieService, Movie } from '../lib/firestore';
+import { movieService, Movie } from '../lib/db';
 
 interface HeroPrimeVideoProps {
   items?: MediaContent[];
@@ -362,7 +362,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
         {/* Indicateur de chargement vidéo */}
         {showVideo && !videoLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
             <div className="w-12 h-12 border-[3px] border-white/20 border-t-white/80 rounded-full animate-spin" />
           </div>
         )}

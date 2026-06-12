@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { adminApiService } from '../lib/adminApiService';
 import { adminAllowlistService } from '../lib/adminAllowlistService';
-import { serieService, seasonSerieService, episodeSerieService, serieCategoryService, userService, Serie, SeasonSerie, EpisodeSerie, SerieCategory, UserProfile, getCategoryName } from '../lib/firestore';
+import { serieService, seasonSerieService, episodeSerieService, serieCategoryService, userService, Serie, SeasonSerie, EpisodeSerie, SerieCategory, UserProfile, getCategoryName } from '../lib/db';
 import CategoriesTab from './CategoriesTab';
 import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';

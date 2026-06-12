@@ -4,7 +4,7 @@ import { featuredContent } from '../data/mockData';
 import { MediaContent, MediaType } from '../types';
 import MediaCard from '../components/MediaCard';
 import { useAppContext } from '../context/AppContext';
-import { likeService, movieService, episodeSerieService, statsVuesService, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile, ContinueWatchingItem } from '../lib/firestore';
+import { likeService, movieService, episodeSerieService, statsVuesService, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile, ContinueWatchingItem } from '../lib/db';
 import InfoBar from '../components/InfoBar';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import MoviesSection from '../components/sections/MoviesSection';

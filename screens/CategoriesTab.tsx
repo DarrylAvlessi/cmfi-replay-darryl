@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
+import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 
 const CategoriesTab: React.FC = () => {

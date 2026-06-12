@@ -12,7 +12,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc, Timestamp, limit } from 'firebase/firestore';
-import { serieService } from '../lib/firestore';
+import { serieService } from '../lib/db';
 
 // Configuration Firebase (utiliser les mêmes configs que l'app)
 const firebaseConfig = {

@@ -1,5 +1,5 @@
 import { MediaContent, MediaType } from '../types';
-import { Movie, Serie } from '../lib/firestore';
+import { Movie, Serie } from '../lib/db';
 
 export const transformMovieToMediaContent = (movie: Movie): MediaContent => ({
     id: movie.uid,

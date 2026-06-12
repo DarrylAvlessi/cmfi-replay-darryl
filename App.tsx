@@ -58,7 +58,7 @@ import WhatsNewModal from './components/WhatsNewModal';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
 import PlayerScreenHost from './components/PlayerScreenHost';
 import { ActiveTab, MediaContent, MediaType } from './types';
-import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/firestore';
+import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/db';
 import { usePageTitle } from './lib/pageTitle';
 
 const getTitleFromPath = (path: string, t: (key: string) => string): string => {

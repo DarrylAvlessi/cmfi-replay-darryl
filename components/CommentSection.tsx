@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
-import { Comment, generateDefaultAvatar, commentService } from '../lib/firestore';
+import { Comment, generateDefaultAvatar, commentService } from '../lib/db';
 import { PaperAirplaneIcon } from './icons';
 
 const formatNumber = (num: number) => {

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ContinueWatchingItem } from '../lib/firestore';
+import { ContinueWatchingItem } from '../lib/db';
 import { PlayIcon } from './icons';
 
 interface ContinueWatchingCardProps {

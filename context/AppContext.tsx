@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { i18n, Language, TranslationKey } from '../lib/i18n';
 import { auth, db } from '../lib/firebase';
-import { userService, UserProfile, bookDocService, bookSeriesService } from '../lib/firestore';
+import { userService, UserProfile, bookDocService, bookSeriesService } from '../lib/db';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -135,7 +135,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => {
         const loadViewMode = async () => {
             try {
-                const { appSettingsService } = await import('../lib/firestore');
+                const { appSettingsService } = await import('../lib/db');
                 const settings = await appSettingsService.getAppSettings();
                 if (settings) {
                     setHomeViewModeState(settings.homeViewMode);
@@ -181,7 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Sauvegarder dans Firestore si l'utilisateur est admin
         if (userProfile?.isAdmin && user) {
             try {
-                const { appSettingsService } = await import('../lib/firestore');
+                const { appSettingsService } = await import('../lib/db');
                 await appSettingsService.setHomeViewMode(mode, user.uid);
             } catch (error) {
                 console.error('Error saving view mode to Firestore:', error);

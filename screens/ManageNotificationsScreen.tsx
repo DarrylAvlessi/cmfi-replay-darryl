@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notificationService } from '../lib/firestore';
+import { notificationService } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, TrashIcon, EyeIcon } from '../components/icons';
 import { toast } from 'react-toastify';

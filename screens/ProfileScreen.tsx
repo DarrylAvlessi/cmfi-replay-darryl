@@ -6,7 +6,7 @@ import HistorySection from '../components/HistorySection';
 import ViewModeSelector from '../components/ViewModeSelector';
 import SettingsItem from '../components/SettingsItem';
 import ToggleSwitch from '../components/ToggleSwitch';
-import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/firestore';
+import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/db';
 import { MediaContent, MediaType, User, Screen } from '../types';
 import {
     BookmarkIcon,
@@ -22,7 +22,7 @@ import {
     UpdateIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
-import { UserProfile, userService, reportService, Report } from '../lib/firestore';
+import { UserProfile, userService, reportService, Report } from '../lib/db';
 import WhatsNewScreen from './WhatsNewScreen';
 
 

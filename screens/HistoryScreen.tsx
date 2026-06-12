@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/firestore';
+import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/db';
 import { MediaContent, MediaType } from '../types';
 import { ArrowLeftIcon } from '../components/icons';
 import { HistoryCard } from '../components/HistorySection';

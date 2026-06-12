@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
-import { serieService, Serie, seasonSerieService, episodeSerieService, serieCategoryService, SerieCategory, getCategoryName } from '../lib/firestore';
+import { serieService, Serie, seasonSerieService, episodeSerieService, serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 import SeriesCard, { SerieWithStats } from '../components/SeriesCard';
@@ -198,7 +198,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         <button
                             onClick={handleBack}
                             className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            aria-label="Retour"
+                            aria-label={t('back')}
                         >
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
@@ -255,7 +255,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm'
                                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
-                                aria-label="Vue grille"
+                                aria-label={t('gridView')}
                             >
                                 <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -268,7 +268,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm'
                                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
-                                aria-label="Vue liste"
+                                aria-label={t('listView')}
                             >
                                 <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -297,7 +297,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                     }`}
                                     aria-pressed={selectedCategoryId === null}
                                 >
-                                    Toutes ({series.length})
+                                    {t('all')} ({series.length})
                                 </button>
                                 {categories.map((category) => (
                                     <button

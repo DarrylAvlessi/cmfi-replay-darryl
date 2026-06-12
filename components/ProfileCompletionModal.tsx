@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { userService, UserProfile } from '../lib/firestore';
+import { userService, UserProfile } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { XMarkIcon } from './icons';
 
