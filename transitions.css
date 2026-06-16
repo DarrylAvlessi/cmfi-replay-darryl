@@ -212,6 +212,12 @@
     background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
     animation: routeLoading 1s ease-in-out infinite;
     z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.route-loading.visible {
+    opacity: 1;
 }
 
 @keyframes routeLoading {

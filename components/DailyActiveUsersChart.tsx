@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAppContext } from '../context/AppContext';
 
 interface DailyActiveUsersChartProps {
     data: Array<{ date: string; activeUsers: number }>;
@@ -8,31 +9,36 @@ interface DailyActiveUsersChartProps {
     onDaysChange: (days: number) => void;
 }
 
-const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr + 'T00:00:00');
-    const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    const day = days[date.getDay()];
-    const dayNum = date.getDate();
-    const month = date.getMonth() + 1;
-    return `${day} ${dayNum}/${month}`;
-};
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
-    const date = new Date(label + 'T00:00:00');
-    return (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
-            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                {date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-            <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                {payload[0].value} utilisateur{payload[0].value > 1 ? 's' : ''} actif{payload[0].value > 1 ? 's' : ''}
-            </p>
-        </div>
-    );
-};
-
 const DailyActiveUsersChart: React.FC<DailyActiveUsersChartProps> = ({ data, loading, days, onDaysChange }) => {
+    const { t, language } = useAppContext();
+
+    const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr + 'T00:00:00');
+        const daysArr = [t('daySun'), t('dayMon'), t('dayTue'), t('dayWed'), t('dayThu'), t('dayFri'), t('daySat')];
+        const day = daysArr[date.getDay()];
+        const dayNum = date.getDate();
+        const month = date.getMonth() + 1;
+        return `${day} ${dayNum}/${month}`;
+    };
+
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (!active || !payload?.length) return null;
+        const date = new Date(label + 'T00:00:00');
+        return (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
+                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                    {date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                    {payload[0].value === 1
+                        ? t('chartActiveUsers_one', { count: '1' })
+                        : t('chartActiveUsers_other', { count: String(payload[0].value) })
+                    }
+                </p>
+            </div>
+        );
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -50,10 +56,10 @@ const DailyActiveUsersChart: React.FC<DailyActiveUsersChartProps> = ({ data, loa
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Moy. <span className="font-semibold text-gray-900 dark:text-white">{avgActive}</span> / jour
+                        {t('chartAvg')} <span className="font-semibold text-gray-900 dark:text-white">{avgActive}</span> {t('chartPerDay')}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Pic <span className="font-semibold text-amber-600 dark:text-amber-400">{peakDay.activeUsers}</span>
+                        {t('chartPeak')} <span className="font-semibold text-amber-600 dark:text-amber-400">{peakDay.activeUsers}</span>
                         {peakDay.date && (
                             <span className="text-gray-400 dark:text-gray-500"> ({formatDate(peakDay.date)})</span>
                         )}
@@ -68,7 +74,7 @@ const DailyActiveUsersChart: React.FC<DailyActiveUsersChartProps> = ({ data, loa
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                     >
-                        14 jours
+                        {t('chartDays14')}
                     </button>
                     <button
                         onClick={() => onDaysChange(30)}
@@ -78,16 +84,15 @@ const DailyActiveUsersChart: React.FC<DailyActiveUsersChartProps> = ({ data, loa
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                     >
-                        30 jours
+                        {t('chartDays30')}
                     </button>
                 </div>
             </div>
 
             {data.every(d => d.activeUsers === 0) ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <p className="text-lg mb-2">📊</p>
-                    <p>Aucune donnée d'activité disponible</p>
-                    <p className="text-sm mt-1">Les données seront disponibles après activation du suivi</p>
+                    <p className="text-lg mb-2">{t('chartNoData')}</p>
+                    <p className="text-sm mt-1">{t('chartNoDataDesc')}</p>
                 </div>
             ) : (
                 <div className="w-full h-64">

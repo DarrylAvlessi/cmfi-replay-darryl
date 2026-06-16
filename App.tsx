@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -7,46 +7,46 @@ import 'react-toastify/dist/ReactToastify.css';
 import './transitions.css';
 
 // Auth Screens
-import GetStartedScreen from './screens/GetStartedScreen';
-import LoginScreen from './screens/LoginScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+const GetStartedScreen = React.lazy(() => import('./screens/GetStartedScreen'));
+const LoginScreen = React.lazy(() => import('./screens/LoginScreen'));
+const RegisterScreen = React.lazy(() => import('./screens/RegisterScreen'));
+const ForgotPasswordScreen = React.lazy(() => import('./screens/ForgotPasswordScreen'));
 
 // Public Screens
-import PrivacyScreen from './screens/PrivacyScreen';
+const PrivacyScreen = React.lazy(() => import('./screens/PrivacyScreen'));
 
 // Main Screens
-import HomeScreen from './screens/HomeScreen';
-import SearchScreen from './screens/SearchScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import BookmarksScreen from './screens/BookmarksScreen';
-import PreferencesScreen from './screens/PreferencesScreen';
-import EditProfileScreen from './screens/EditProfileScreen';
-import ChangePasswordScreen from './screens/ChangePasswordScreen';
-import HistoryScreen from './screens/HistoryScreen';
-import RedeemVoucherScreen from './screens/RedeemVoucherScreen';
-import ManageSubscriptionScreen from './screens/ManageSubscriptionScreen';
-import ManageInfoBarScreen from './screens/ManageInfoBarScreen';
-import ManageAdsScreen from './screens/ManageAdsScreen';
-import ManageUsersScreen from './screens/ManageUsersScreen';
-import PaymentSuccessScreen from './screens/PaymentSuccessScreen';
-import NotificationsScreen from './screens/NotificationsScreen';
-import ManageNotificationsScreen from './screens/ManageNotificationsScreen';
-import AdminBackupVideosScreen from './screens/AdminBackupVideosScreen';
-import HelpScreen from './screens/HelpScreen';
-import WhatsNewScreen from './screens/WhatsNewScreen';
-import DonateScreen from './screens/DonateScreen';
-import ManageReportsScreen from './screens/ManageReportsScreen';
-import ManageTitleSuggestionsScreen from './screens/ManageTitleSuggestionsScreen';
+const HomeScreen = React.lazy(() => import('./screens/HomeScreen'));
+const SearchScreen = React.lazy(() => import('./screens/SearchScreen'));
+const ProfileScreen = React.lazy(() => import('./screens/ProfileScreen'));
+const BookmarksScreen = React.lazy(() => import('./screens/BookmarksScreen'));
+const PreferencesScreen = React.lazy(() => import('./screens/PreferencesScreen'));
+const EditProfileScreen = React.lazy(() => import('./screens/EditProfileScreen'));
+const ChangePasswordScreen = React.lazy(() => import('./screens/ChangePasswordScreen'));
+const HistoryScreen = React.lazy(() => import('./screens/HistoryScreen'));
+const RedeemVoucherScreen = React.lazy(() => import('./screens/RedeemVoucherScreen'));
+const ManageSubscriptionScreen = React.lazy(() => import('./screens/ManageSubscriptionScreen'));
+const ManageInfoBarScreen = React.lazy(() => import('./screens/ManageInfoBarScreen'));
+const ManageAdsScreen = React.lazy(() => import('./screens/ManageAdsScreen'));
+const ManageUsersScreen = React.lazy(() => import('./screens/ManageUsersScreen'));
+const PaymentSuccessScreen = React.lazy(() => import('./screens/PaymentSuccessScreen'));
+const NotificationsScreen = React.lazy(() => import('./screens/NotificationsScreen'));
+const ManageNotificationsScreen = React.lazy(() => import('./screens/ManageNotificationsScreen'));
+const AdminBackupVideosScreen = React.lazy(() => import('./screens/AdminBackupVideosScreen'));
+const HelpScreen = React.lazy(() => import('./screens/HelpScreen'));
+const WhatsNewScreen = React.lazy(() => import('./screens/WhatsNewScreen'));
+const DonateScreen = React.lazy(() => import('./screens/DonateScreen'));
+const ManageReportsScreen = React.lazy(() => import('./screens/ManageReportsScreen'));
+const ManageTitleSuggestionsScreen = React.lazy(() => import('./screens/ManageTitleSuggestionsScreen'));
 
 // Category Screens
-import MoviesScreen from './screens/MoviesScreen';
-import SeriesScreen from './screens/SeriesScreen';
-import PodcastsScreen from './screens/PodcastsScreen';
+const MoviesScreen = React.lazy(() => import('./screens/MoviesScreen'));
+const SeriesScreen = React.lazy(() => import('./screens/SeriesScreen'));
+const PodcastsScreen = React.lazy(() => import('./screens/PodcastsScreen'));
 
 // Detail & Player Screens
-import MediaDetailWrapper from './screens/MediaDetailWrapper';
-import WatchScreen from './screens/WatchScreen';
+const MediaDetailWrapper = React.lazy(() => import('./screens/MediaDetailWrapper'));
+const WatchScreen = React.lazy(() => import('./screens/WatchScreen'));
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -55,6 +55,7 @@ import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
 import UpdatePrompt from './components/UpdatePrompt';
 import WhatsNewModal from './components/WhatsNewModal';
+import RouteLoadingBar from './components/RouteLoadingBar';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
 import PlayerScreenHost from './components/PlayerScreenHost';
 import { ActiveTab, MediaContent, MediaType } from './types';
@@ -93,6 +94,13 @@ const AppContent: React.FC = () => {
     const navigate = useNavigate();
     const { userProfile, setUserProfile } = useAppContext();
     const [showRGPDModal, setShowRGPDModal] = useState(false);
+    const [routeLoading, setRouteLoading] = useState(false);
+
+    useEffect(() => {
+        setRouteLoading(true);
+        const timer = setTimeout(() => setRouteLoading(false), 600);
+        return () => clearTimeout(timer);
+    }, [location.pathname]);
 
     // Vérifier si le consentement RGPD est nécessaire
     useEffect(() => {
@@ -288,13 +296,15 @@ const AppContent: React.FC = () => {
 
     if (!isAuthenticated) {
         return (
-            <Routes>
-                <Route path="/login" element={<LoginScreen />} />
-                <Route path="/register" element={<RegisterScreen />} />
-                <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-                <Route path="/privacy" element={<PrivacyScreen />} />
-                <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
+            <Suspense fallback={<RouteLoadingBar visible />}>
+                <Routes>
+                    <Route path="/login" element={<LoginScreen />} />
+                    <Route path="/register" element={<RegisterScreen />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+                    <Route path="/privacy" element={<PrivacyScreen />} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </Suspense>
         );
     }
 
@@ -347,15 +357,17 @@ const AppContent: React.FC = () => {
                 />
             )}
 
+            <RouteLoadingBar visible={routeLoading} />
             <div className={`page-transition fadeIn ${!location.pathname.startsWith('/watch/') ? 'min-h-screen' : ''} ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out`}>
-                <Routes>
-                    {/* Routes publiques - Accessibles sans authentification */}
-                    <Route path="/privacy" element={<PrivacyScreen />} />
+                <Suspense fallback={<RouteLoadingBar visible />}>
+                    <Routes>
+                        {/* Routes publiques - Accessibles sans authentification */}
+                        <Route path="/privacy" element={<PrivacyScreen />} />
 
-                    {/* Watch Route - Maintenant protégée par authentification */}
-                    <Route path="/watch/:uid" element={
-                        <WatchScreen onReturnHome={handleReturnHome} />
-                    } />
+                        {/* Watch Route - Maintenant protégée par authentification */}
+                        <Route path="/watch/:uid" element={
+                            <WatchScreen onReturnHome={handleReturnHome} />
+                        } />
 
                     {/* Routes protégées - Nécessitent une authentification */}
                     {isAuthenticated && (
@@ -536,7 +548,8 @@ const AppContent: React.FC = () => {
                     <Route path="/movies" element={<Navigate to="/documentaries" replace />} />
                     <Route path="/" element={<Navigate to="/home" replace />} />
                     <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
-                </Routes>
+                    </Routes>
+                </Suspense>
             </div>
 
             {showBottomNav && (
