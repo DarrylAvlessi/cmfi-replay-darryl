@@ -54,6 +54,7 @@ export {
   notificationService,
   navigationTrackingService,
   reportService,
+  dailyActivityService,
 } from './mockServices';
 
 export const getLastWatchedPosition = realGetLastWatchedPosition;

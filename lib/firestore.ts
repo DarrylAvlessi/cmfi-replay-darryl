@@ -19,7 +19,8 @@ import {
     writeBatch,
     DocumentReference,
     addDoc,
-    QueryDocumentSnapshot
+    QueryDocumentSnapshot,
+    serverTimestamp
 } from 'firebase/firestore';
 
 // Interfaces pour les collections
@@ -290,6 +291,7 @@ const NOTIFICATIONS_COLLECTION = 'notifications';
 const USER_NAVIGATION_COLLECTION = 'user_navigation';
 const USERS_REPORTS_COLLECTION = 'users_reports';
 const TITLE_SUGGESTIONS_COLLECTION = 'title_suggestions';
+const USER_DAILY_ACTIVITY_COLLECTION = 'user_daily_activity';
 
 // Fonction utilitaire pour générer un avatar par défaut
 export const generateDefaultAvatar = (name?: string): string => {
@@ -761,6 +763,82 @@ export const userService = {
         });
 
         return unsubscribe;
+    }
+};
+
+// Service pour le suivi de l'activité quotidienne des utilisateurs
+export const dailyActivityService = {
+    /**
+     * Enregistre que l'utilisateur a été actif aujourd'hui
+     * Idempotent : un seul document par user par jour (créé le 1er appel, mis à jour ensuite)
+     */
+    async recordActiveToday(userUid: string): Promise<void> {
+        try {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const docId = `${today}_${userUid}`;
+            const docRef = doc(db, USER_DAILY_ACTIVITY_COLLECTION, docId);
+
+            await setDoc(docRef, {
+                date: today,
+                user_uid: userUid,
+                last_active_at: serverTimestamp()
+            }, { merge: true });
+        } catch (error) {
+            console.error('Error recording daily activity:', error);
+        }
+    },
+
+    /**
+     * Récupère le nombre d'utilisateurs actifs par jour sur les N derniers jours
+     */
+    async getDailyActiveUsers(days: number = 14): Promise<Array<{ date: string; activeUsers: number }>> {
+        try {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            const startDateStr = startDate.toISOString().split('T')[0];
+
+            const q = query(
+                collection(db, USER_DAILY_ACTIVITY_COLLECTION),
+                where('date', '>=', startDateStr),
+                orderBy('date', 'asc')
+            );
+
+            const snapshot = await getDocs(q);
+
+            // Compter les utilisateurs uniques par date
+            const countByDate: Record<string, Set<string>> = {};
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const date = data.date;
+                const userUid = data.user_uid;
+
+                if (date && userUid) {
+                    if (!countByDate[date]) {
+                        countByDate[date] = new Set();
+                    }
+                    countByDate[date].add(userUid);
+                }
+            });
+
+            // Générer la liste complète des dates (même celles sans activité)
+            const result: Array<{ date: string; activeUsers: number }> = [];
+            const currentDate = new Date(startDateStr);
+
+            for (let i = 0; i <= days; i++) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                result.push({
+                    date: dateStr,
+                    activeUsers: countByDate[dateStr]?.size || 0
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Error getting daily active users:', error);
+            return [];
+        }
     }
 };
 

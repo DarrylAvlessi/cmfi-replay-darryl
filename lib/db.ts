@@ -58,6 +58,7 @@ export const {
   adService,
   notificationService,
   navigationTrackingService,
+  dailyActivityService,
   reportService,
   getCategoryName,
   generateDefaultAvatar,

@@ -22,6 +22,7 @@ import {
     notificationService as realNotificationService,
     navigationTrackingService as realNavigationTrackingService,
     reportService as realReportService,
+    dailyActivityService as realDailyActivityService,
 } from '../firestore';
 
 import type {
@@ -1582,3 +1583,8 @@ export const reportService = {
         return realReportService.subscribeToAllReports(callback);
     },
 };
+
+export const dailyActivityService = {
+    ...realDailyActivityService,
+};
+

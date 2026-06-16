@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { UserProfile, userService, userMetricsService, userGeographyService, seasonSerieService, serieService, SeasonSerie, Serie } from '../lib/db';
+import { UserProfile, userService, userMetricsService, userGeographyService, dailyActivityService, seasonSerieService, serieService, SeasonSerie, Serie } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, SearchIcon } from '../components/icons';
 import { Timestamp } from 'firebase/firestore';
 import UserNavigationTimeline from '../components/UserNavigationTimeline';
 import UserGeographyMap from '../components/UserGeographyMap';
+import DailyActiveUsersChart from '../components/DailyActiveUsersChart';
+import CollapsibleSection from '../components/CollapsibleSection';
 
 const ManageUsersScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -28,6 +30,11 @@ const ManageUsersScreen: React.FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<{ code: string; name: string } | null>(null);
     const [countryUsers, setCountryUsers] = useState<UserProfile[]>([]);
     const [loadingCountryUsers, setLoadingCountryUsers] = useState(false);
+
+    // État pour le graphique d'activité quotidienne
+    const [dailyActiveUsers, setDailyActiveUsers] = useState<Array<{ date: string; activeUsers: number }>>([]);
+    const [dailyActiveUsersLoading, setDailyActiveUsersLoading] = useState(false);
+    const [dailyActiveUsersDays, setDailyActiveUsersDays] = useState(14);
 
     useEffect(() => {
         // S'abonner aux mises à jour en temps réel des utilisateurs (incluant les inactifs)
@@ -80,6 +87,23 @@ const ManageUsersScreen: React.FC = () => {
         loadMetrics();
     }, []);
 
+    // Charger les données d'activité quotidienne
+    useEffect(() => {
+        const loadDailyActivity = async () => {
+            setDailyActiveUsersLoading(true);
+            try {
+                const data = await dailyActivityService.getDailyActiveUsers(dailyActiveUsersDays);
+                setDailyActiveUsers(data);
+            } catch (error) {
+                console.error('Error loading daily active users:', error);
+            } finally {
+                setDailyActiveUsersLoading(false);
+            }
+        };
+
+        loadDailyActivity();
+    }, [dailyActiveUsersDays]);
+
     const handleCountryClick = async (countryCode: string, countryName: string) => {
         setSelectedCountry({ code: countryCode, name: countryName });
         setLoadingCountryUsers(true);
@@ -95,25 +119,10 @@ const ManageUsersScreen: React.FC = () => {
     };
 
     const formatLastSeen = (lastSeen?: Date | Timestamp, updatedAt?: Date | Timestamp): string => {
-        // Utiliser updatedAt comme fallback si lastSeen n'existe pas
         const dateToUse = lastSeen || updatedAt;
         
-        // Debug: afficher la valeur brute
-        console.log('📅 formatLastSeen called with:', {
-            lastSeen,
-            updatedAt,
-            dateToUse,
-            type: dateToUse ? typeof dateToUse : 'undefined',
-            isDate: dateToUse instanceof Date,
-            isTimestamp: dateToUse instanceof Timestamp,
-            value: dateToUse instanceof Date ? dateToUse.toISOString() : 
-                   dateToUse instanceof Timestamp ? dateToUse.toDate().toISOString() :
-                   dateToUse ? String(dateToUse) : 'undefined'
-        });
-        
         if (!dateToUse) {
-            console.warn('⚠️ lastSeen and updatedAt are both undefined or null');
-            return 'Jamais';
+            return t('never');
         }
         
         let date: Date;
@@ -123,29 +132,25 @@ const ManageUsersScreen: React.FC = () => {
             } else if (dateToUse instanceof Date) {
                 date = dateToUse;
             } else {
-                console.warn('⚠️ dateToUse is not Date or Timestamp:', typeof dateToUse, dateToUse);
-                return 'Jamais';
+                return t('never');
             }
 
             const now = new Date();
             const diffMs = now.getTime() - date.getTime();
             
-            // Vérifier si la date est valide
             if (isNaN(date.getTime())) {
-                console.warn('⚠️ Invalid date:', date);
-                return 'Jamais';
+                return t('never');
             }
             
             const diffMins = Math.floor(diffMs / 60000);
             const diffHours = Math.floor(diffMins / 60);
             const diffDays = Math.floor(diffHours / 24);
 
-            if (diffMins < 1) return 'À l\'instant';
-            if (diffMins < 60) return `Il y a ${diffMins} min`;
-            if (diffHours < 24) return `Il y a ${diffHours}h`;
-            if (diffDays < 7) return `Il y a ${diffDays}j`;
+            if (diffMins < 1) return t('justNow');
+            if (diffMins < 60) return t('minutesAgo', { count: String(diffMins) });
+            if (diffHours < 24) return t('hoursAgo', { count: String(diffHours) });
+            if (diffDays < 7) return t('daysAgo', { count: String(diffDays) });
             
-            // Format complet pour les dates plus anciennes
             return date.toLocaleDateString('fr-FR', {
                 day: 'numeric',
                 month: 'short',
@@ -154,18 +159,18 @@ const ManageUsersScreen: React.FC = () => {
                 minute: '2-digit'
             });
         } catch (error) {
-            console.error('❌ Error formatting lastSeen:', error, dateToUse);
-            return 'Erreur';
+            console.error('Error formatting lastSeen:', error, dateToUse);
+            return t('error');
         }
     };
 
     const getStatusLabel = (presence: string): string => {
         switch (presence) {
-            case 'online': return 'En ligne';
-            case 'away': return 'Inactif';
-            case 'idle': return 'Inactif';
-            case 'offline': return 'Hors ligne';
-            default: return 'Inconnu';
+            case 'online': return t('statusOnline');
+            case 'away': return t('statusAway');
+            case 'idle': return t('statusIdle');
+            case 'offline': return t('statusOffline');
+            default: return t('statusUnknown');
         }
     };
 
@@ -240,7 +245,7 @@ const ManageUsersScreen: React.FC = () => {
                         <ArrowLeftIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Gestion des utilisateurs
+                        {t('manageUsers')}
                     </h1>
                 </div>
             </div>
@@ -253,7 +258,7 @@ const ManageUsersScreen: React.FC = () => {
                 ) : (
                     <div className="space-y-6">
                         {/* Barre de recherche */}
-                        <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <CollapsibleSection title={t('searchUsers')} defaultExpanded={true}>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -262,7 +267,7 @@ const ManageUsersScreen: React.FC = () => {
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Rechercher un utilisateur par nom..."
+                                    placeholder={t('searchUsers')}
                                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                                 />
                                 {searchQuery && (
@@ -276,38 +281,43 @@ const ManageUsersScreen: React.FC = () => {
                             </div>
                             {searchQuery && (
                                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
+                                    {filteredUsers.length === 1
+                                        ? t('usersFound_one', { count: String(filteredUsers.length) })
+                                        : t('usersFound_other', { count: String(filteredUsers.length) })
+                                    }
                                 </p>
                             )}
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Statistiques de base */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">En ligne</div>
-                                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{onlineUsers.length}</div>
-                            </div>
-                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Inactifs</div>
-                                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{awayUsers.length}</div>
-                            </div>
-                            <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Hors ligne</div>
-                                <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{offlineUsers.length}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <div className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center gap-2">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                    RGPD accepté
+                        <CollapsibleSection title={t('manageUsers')} defaultExpanded={true}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('statusOnline')}</div>
+                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{onlineUsers.length}</div>
                                 </div>
-                                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">{loadingMetrics ? '...' : totalUsersWithRGPD}</div>
-                                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                    {loadingMetrics ? '' : totalUsers > 0 ? `${Math.round((totalUsersWithRGPD / totalUsers) * 100)}% du total` : '0%'}
+                                <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('statusIdle')}</div>
+                                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{awayUsers.length}</div>
+                                </div>
+                                <div className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('statusOffline')}</div>
+                                    <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{offlineUsers.length}</div>
+                                </div>
+                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                        {t('rgpdAccepted')}
+                                    </div>
+                                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">{loadingMetrics ? '...' : totalUsersWithRGPD}</div>
+                                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        {loadingMetrics ? '' : totalUsers > 0 ? `${Math.round((totalUsersWithRGPD / totalUsers) * 100)}% ${t('ofTotal')}` : '0%'}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Modal des utilisateurs par pays */}
                         {selectedCountry && (
@@ -330,10 +340,7 @@ const ManageUsersScreen: React.FC = () => {
                         ) : (
                             <div className="space-y-6 mb-6">
                                 {/* Top 10 utilisateurs les plus connectés */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        🔝 Top 10 utilisateurs les plus connectés
-                                    </h2>
+                                <CollapsibleSection title={'🔝 ' + t('topConnected')} defaultExpanded={true}>
                                     {top10MostConnected.length > 0 ? (
                                         <div className="space-y-2">
                                             {top10MostConnected.map((item, index) => (
@@ -347,36 +354,33 @@ const ManageUsersScreen: React.FC = () => {
                                                         </span>
                                                     </div>
                                                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {item.connectionCount} connexion{item.connectionCount > 1 ? 's' : ''}
+                                                        {item.connectionCount === 1
+                                                            ? t('connections_one', { count: String(item.connectionCount) })
+                                                            : t('connections_other', { count: String(item.connectionCount) })
+                                                        }
                                                     </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 dark:text-gray-400">Aucune donnée disponible</p>
+                                        <p className="text-gray-500 dark:text-gray-400">{t('noData')}</p>
                                     )}
-                                </section>
+                                </CollapsibleSection>
 
                                 {/* Temps moyen de session */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        ⏱️ Temps moyen de session
-                                    </h2>
+                                <CollapsibleSection title={'⏱️ ' + t('avgSessionDuration')} defaultExpanded={true}>
                                     <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                                         {averageSessionDuration > 0 
-                                            ? `${Math.round(averageSessionDuration / 60000)} min`
+                                            ? `${Math.round(averageSessionDuration / 60000)} ${t('minAbbr')}`
                                             : 'N/A'}
                                     </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                        Durée moyenne que les utilisateurs restent en ligne
+                                        {t('avgSessionDurationDesc')}
                                     </p>
-                                </section>
+                                </CollapsibleSection>
 
                                 {/* Top 10 utilisateurs les plus actifs */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        🎬 Top 10 utilisateurs les plus actifs
-                                    </h2>
+                                <CollapsibleSection title={'🎬 ' + t('topActive')} defaultExpanded={false}>
                                     {top10MostActive.length > 0 ? (
                                         <div className="space-y-2">
                                             {top10MostActive.map((item, index) => (
@@ -390,21 +394,21 @@ const ManageUsersScreen: React.FC = () => {
                                                         </span>
                                                     </div>
                                                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {item.viewCount} vue{item.viewCount > 1 ? 's' : ''}
+                                                        {item.viewCount === 1
+                                                            ? t('views_one', { count: String(item.viewCount) })
+                                                            : t('views_other', { count: String(item.viewCount) })
+                                                        }
                                                     </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 dark:text-gray-400">Aucune donnée disponible</p>
+                                        <p className="text-gray-500 dark:text-gray-400">{t('noData')}</p>
                                     )}
-                                </section>
+                                </CollapsibleSection>
 
                                 {/* Heures de pointe */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        📊 Heures de pointe
-                                    </h2>
+                                <CollapsibleSection title={'📊 ' + t('peakHoursTitle')} defaultExpanded={false}>
                                     {peakHours.length > 0 ? (
                                         <div className="space-y-2">
                                             {peakHours.map((item, index) => (
@@ -414,33 +418,37 @@ const ManageUsersScreen: React.FC = () => {
                                                             #{index + 1}
                                                         </span>
                                                         <span className="font-medium text-gray-900 dark:text-white">
-                                                            {item.hour}h - {item.hour + 1}h
+                                                            {t('hourRange', { start: String(item.hour), end: String(item.hour + 1) })}
                                                         </span>
                                                     </div>
                                                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {item.connectionCount} connexion{item.connectionCount > 1 ? 's' : ''}
+                                                        {item.connectionCount === 1
+                                                            ? t('connections_one', { count: String(item.connectionCount) })
+                                                            : t('connections_other', { count: String(item.connectionCount) })
+                                                        }
                                                     </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 dark:text-gray-400">Aucune donnée disponible</p>
+                                        <p className="text-gray-500 dark:text-gray-400">{t('noData')}</p>
                                     )}
-                                </section>
+                                </CollapsibleSection>
 
                                 {/* Top 10 temps total en ligne */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        ⏰ Top 10 temps total en ligne
-                                    </h2>
+                                <CollapsibleSection title={'⏰ ' + t('topOnlineTime')} defaultExpanded={false}>
                                     {top10TotalOnlineTime.length > 0 ? (
                                         <div className="space-y-2">
                                             {top10TotalOnlineTime.map((item, index) => {
                                                 const hours = Math.floor(item.totalOnlineTime / (1000 * 60 * 60));
                                                 const days = Math.floor(hours / 24);
                                                 const displayTime = days > 0 
-                                                    ? `${days} jour${days > 1 ? 's' : ''}`
-                                                    : `${hours} heure${hours > 1 ? 's' : ''}`;
+                                                    ? (days === 1
+                                                        ? t('days_one', { count: String(days) })
+                                                        : t('days_other', { count: String(days) }))
+                                                    : (hours === 1
+                                                        ? t('hours_one', { count: String(hours) })
+                                                        : t('hours_other', { count: String(hours) }));
                                                 
                                                 return (
                                                     <div key={item.user.uid} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -460,75 +468,88 @@ const ManageUsersScreen: React.FC = () => {
                                             })}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 dark:text-gray-400">Aucune donnée disponible</p>
+                                        <p className="text-gray-500 dark:text-gray-400">{t('noData')}</p>
                                     )}
-                                </section>
+                                </CollapsibleSection>
 
                                 {/* Cartographie des pays */}
-                                <section className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                        🌍 Répartition géographique des utilisateurs
-                                    </h2>
+                                <CollapsibleSection title={'🌍 ' + t('geographyTitle')} defaultExpanded={false}>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                        Statistiques basées sur les utilisateurs ayant complété leur profil avec leur pays actuel
+                                        {t('geographyDesc')}
                                     </p>
                                     <UserGeographyMap onCountryClick={handleCountryClick} />
-                                </section>
+                                </CollapsibleSection>
+
+                                {/* Utilisateurs actifs par jour */}
+                                <CollapsibleSection title={'📈 ' + t('dailyActiveTitle')} defaultExpanded={true}>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                        {t('dailyActiveDesc')}
+                                    </p>
+                                    <DailyActiveUsersChart
+                                        data={dailyActiveUsers}
+                                        loading={dailyActiveUsersLoading}
+                                        days={dailyActiveUsersDays}
+                                        onDaysChange={setDailyActiveUsersDays}
+                                    />
+                                </CollapsibleSection>
                             </div>
                         )}
 
                         {/* Liste des utilisateurs en ligne */}
                         {onlineUsers.length > 0 && (
-                            <section>
-                                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                    En ligne ({onlineUsers.length})
-                                </h2>
+                            <CollapsibleSection
+                                title={t('onlineUsers', { count: String(onlineUsers.length) })}
+                                defaultExpanded={true}
+                                className="p-0"
+                            >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {onlineUsers.map((user) => (
                                         <UserCard key={user.uid} user={user} formatLastSeen={formatLastSeen} getStatusLabel={getStatusLabel} getStatusColor={getStatusColor} />
                                     ))}
                                 </div>
-                            </section>
+                            </CollapsibleSection>
                         )}
 
                         {/* Liste des utilisateurs inactifs */}
                         {awayUsers.length > 0 && (
-                            <section>
-                                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                    Inactifs ({awayUsers.length})
-                                </h2>
+                            <CollapsibleSection
+                                title={t('idleUsers', { count: String(awayUsers.length) })}
+                                defaultExpanded={true}
+                                className="p-0"
+                            >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {awayUsers.map((user) => (
                                         <UserCard key={user.uid} user={user} formatLastSeen={formatLastSeen} getStatusLabel={getStatusLabel} getStatusColor={getStatusColor} />
                                     ))}
                                 </div>
-                            </section>
+                            </CollapsibleSection>
                         )}
 
                         {/* Liste des utilisateurs hors ligne */}
                         {offlineUsers.length > 0 && (
-                            <section>
-                                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                                    Hors ligne ({offlineUsers.length})
-                                </h2>
+                            <CollapsibleSection
+                                title={t('offlineUsers', { count: String(offlineUsers.length) })}
+                                defaultExpanded={true}
+                                className="p-0"
+                            >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {offlineUsers.map((user) => (
                                         <UserCard key={user.uid} user={user} formatLastSeen={formatLastSeen} getStatusLabel={getStatusLabel} getStatusColor={getStatusColor} />
                                     ))}
                                 </div>
-                            </section>
+                            </CollapsibleSection>
                         )}
 
                         {filteredUsers.length === 0 && searchQuery && (
                             <div className="text-center py-10">
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    Aucun utilisateur trouvé pour "{searchQuery}"
+                                    {t('noUsersFor', { term: searchQuery })}
                                 </p>
                             </div>
                         )}
                         {users.length === 0 && !searchQuery && (
                             <div className="text-center py-10">
-                                <p className="text-gray-500 dark:text-gray-400">Aucun utilisateur trouvé</p>
+                                <p className="text-gray-500 dark:text-gray-400">{t('noUsers')}</p>
                             </div>
                         )}
                     </div>
@@ -546,6 +567,7 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, formatLastSeen, getStatusLabel, getStatusColor }) => {
+    const { t } = useAppContext();
     const [showTimeline, setShowTimeline] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
 
@@ -584,13 +606,16 @@ const UserCard: React.FC<UserCardProps> = ({ user, formatLastSeen, getStatusLabe
                 </p>
                 {/* Afficher la dernière activité pour tous les utilisateurs */}
                 <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    <p>Dernière activité: {formatLastSeen(user.lastSeen, user.updatedAt)}</p>
+                    <p>{t('lastActivity')} {formatLastSeen(user.lastSeen, user.updatedAt)}</p>
                 </div>
                 <button
-                    onClick={() => setShowTimeline(!showTimeline)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTimeline(!showTimeline);
+                    }}
                     className="px-3 py-1.5 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
                 >
-                    {showTimeline ? 'Masquer' : 'Voir parcours'}
+                    {showTimeline ? t('hideTimeline') : t('showTimeline')}
                 </button>
             </div>
             </div>
@@ -624,12 +649,13 @@ interface UserDetailsModalProps {
 }
 
 const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, formatLastSeen, getStatusLabel, getStatusColor }) => {
+    const { t } = useAppContext();
     const [secretSeasons, setSecretSeasons] = useState<Array<{ season: SeasonSerie; serie: Serie | null }>>([]);
     const [loadingSeasons, setLoadingSeasons] = useState(false);
     const [seasonSearch, setSeasonSearch] = useState('');
 
     const formatDate = (date?: Date | Timestamp): string => {
-        if (!date) return 'Non disponible';
+        if (!date) return t('notAvailable');
         const d = date instanceof Timestamp ? date.toDate() : date;
         return d.toLocaleString('fr-FR', {
             day: '2-digit',
@@ -736,7 +762,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                 {/* Header */}
                 <div className="sticky top-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Détails de l'utilisateur
+                        {t('userDetails')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -774,7 +800,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                {user.display_name || 'Utilisateur sans nom'}
+                                {user.display_name || t('userWithoutName')}
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {getStatusLabel(user.presence)}
@@ -786,54 +812,54 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Email</p>
-                            <p className="text-gray-900 dark:text-white font-medium">{user.email || 'Non disponible'}</p>
+                            <p className="text-gray-900 dark:text-white font-medium">{user.email || t('notAvailable')}</p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">UID</p>
                             <p className="text-gray-900 dark:text-white font-mono text-xs break-all">{user.uid}</p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Pays actuel</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('currentCountry')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
-                                {user.country || 'Non renseigné'}
+                                {user.country || t('notProvided')}
                             </p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Numéro de téléphone</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('phoneNumber')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
-                                {user.phoneNumber || 'Non renseigné'}
+                                {user.phoneNumber || t('notProvided')}
                             </p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Dernière activité</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('lastActivity')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
                                 {formatLastSeen(user.lastSeen, user.updatedAt)}
                             </p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date de création</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('creationDate')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
                                 {formatDate(user.createdAt)}
                             </p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Dernière mise à jour</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('lastUpdate')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
                                 {formatDate(user.updatedAt)}
                             </p>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">RGPD accepté</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('rgpdAccepted')}</p>
                             <p className="text-gray-900 dark:text-white font-medium">
                                 {user.rgpdAcceptedAt ? (
                                     <span className="flex items-center gap-2">
-                                        <span className="text-green-600 dark:text-green-400">✓ Oui</span>
+                                        <span className="text-green-600 dark:text-green-400">✓ {t('yes')}</span>
                                         <span className="text-xs text-gray-500 dark:text-gray-400">
                                             ({formatDate(user.rgpdAcceptedAt)})
                                         </span>
                                     </span>
                                 ) : (
-                                    <span className="text-red-600 dark:text-red-400">✗ Non</span>
+                                    <span className="text-red-600 dark:text-red-400">✗ {t('no')}</span>
                                 )}
                             </p>
                         </div>
@@ -842,16 +868,16 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                     {/* Informations supplémentaires */}
                     {user.isAdmin !== undefined && (
                         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
-                            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-2">Statut</p>
+                            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-2">{t('status')}</p>
                             <div className="flex flex-wrap gap-2">
                                 {user.isAdmin && (
                                     <span className="px-3 py-1 bg-purple-500 text-white rounded-full text-sm font-medium">
-                                        Administrateur
+                                        {t('adminLabel')}
                                     </span>
                                 )}
                                 {!user.isAdmin && (
                                     <span className="px-3 py-1 bg-gray-500 text-white rounded-full text-sm font-medium">
-                                        Utilisateur standard
+                                        {t('standardUser')}
                                     </span>
                                 )}
                             </div>
@@ -863,10 +889,10 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <p className="text-sm font-semibold text-purple-900 dark:text-purple-200 mb-1">
-                                    Saisons secrètes
+                                    {t('secretSeasons')}
                                 </p>
                                 <p className="text-xs text-purple-700 dark:text-purple-300">
-                                    Gérer les saisons secrètes accessibles par cet utilisateur
+                                    {t('secretSeasonsDesc')}
                                 </p>
                             </div>
                         </div>
@@ -878,7 +904,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                             </div>
                             <input
                                 type="text"
-                                placeholder="Rechercher une saison..."
+                                placeholder={t('searchSeason')}
                                 value={seasonSearch}
                                 onChange={(e) => setSeasonSearch(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -911,10 +937,10 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
                                             >
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-gray-900 dark:text-white truncate">
-                                                        {season.title_season || 'Saison sans titre'}
+                                                        {season.title_season || t('seasonWithoutTitle')}
                                                     </p>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                                        {serie?.title_serie || 'Série inconnue'} - Saison {season.season_number}
+                                                        {serie?.title_serie || t('unknownSeries')} - {t('seasonNumber', { number: String(season.season_number) })}
                                                     </p>
                                                 </div>
                                                 <label className="relative inline-flex items-center cursor-pointer ml-4">
@@ -934,7 +960,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose, form
 
                         {!loadingSeasons && secretSeasons.length === 0 && (
                             <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                                <p className="text-sm">Aucune saison secrète disponible</p>
+                                <p className="text-sm">{t('noSecretSeasons')}</p>
                             </div>
                         )}
                     </div>
@@ -966,6 +992,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
     getStatusLabel,
     getStatusColor
 }) => {
+    const { t } = useAppContext();
     const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
     const modalContent = (
@@ -994,16 +1021,19 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
                 <div className="sticky top-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            Utilisateurs de {country.name} ({country.code})
+                            {t('usersOfCountry', { country: country.name, code: country.code })}
                         </h2>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {users.length} utilisateur{users.length > 1 ? 's' : ''} trouvé{users.length > 1 ? 's' : ''}
+                            {users.length === 1
+                                ? t('usersFound_one', { count: '1' })
+                                : t('usersFound_other', { count: String(users.length) })
+                            }
                         </p>
                     </div>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                        aria-label="Fermer"
+                        aria-label={t('close')}
                     >
                         <span className="text-2xl font-bold">×</span>
                     </button>
@@ -1048,7 +1078,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-gray-900 dark:text-white font-medium truncate">
-                                                {user.display_name || 'Utilisateur sans nom'}
+                                                {user.display_name || t('userWithoutName')}
                                             </p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                                 {user.email}
@@ -1063,7 +1093,7 @@ const CountryUsersModal: React.FC<CountryUsersModalProps> = ({
                         </div>
                     ) : (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                            <p className="text-lg">Aucun utilisateur trouvé pour ce pays</p>
+                            <p className="text-lg">{t('noUsersForCountry')}</p>
                         </div>
                     )}
                 </div>

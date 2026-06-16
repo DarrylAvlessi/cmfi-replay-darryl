@@ -58,7 +58,7 @@ import WhatsNewModal from './components/WhatsNewModal';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
 import PlayerScreenHost from './components/PlayerScreenHost';
 import { ActiveTab, MediaContent, MediaType } from './types';
-import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, movieService } from './lib/db';
+import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, dailyActivityService, movieService } from './lib/db';
 import { usePageTitle } from './lib/pageTitle';
 
 const getTitleFromPath = (path: string, t: (key: string) => string): string => {
@@ -189,6 +189,9 @@ const AppContent: React.FC = () => {
                 videoTitle,
                 videoUid
             );
+
+            // Enregistrer l'activité quotidienne (1 doc unique par user par jour)
+            await dailyActivityService.recordActiveToday(userProfile.uid);
         };
 
         recordNavigationWithVideoTitle().catch(error => {
