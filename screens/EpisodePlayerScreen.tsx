@@ -421,35 +421,6 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
         sessionStorage.setItem(getAdStateKey(), 'true');
     }, []);
 
-    const playerContent = (
-        <>
-            {showAd && (
-                <PromotionPlayer
-                    onPromotionEnd={handleAdEnd}
-                    onSkip={handleAdSkip}
-                />
-            )}
-            {!showAd && (
-                <VideoPlayer
-                    key={episode.uid_episode || episode.title}
-                    src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
-                    poster={episode.picture_path || item.imageUrl}
-                    onUnavailable={onReturnHome}
-                    onEnded={handleVideoEnded}
-                    onPlayingStateChange={handlePlayingStateChange}
-                    initialPosition={initialPlaybackPosition}
-                    videoUid={episode.uid_episode}
-                    isEpisode={true}
-                    showAutoplayToggle={true}
-                    hideControls={effectiveMini}
-                    onTimeUpdate={handleTimeUpdate}
-                    onPipTrigger={handlePipTrigger}
-                    videoRef={videoRef}
-                />
-            )}
-        </>
-    );
-
     return (
         <div className={forceMini ? '' : 'bg-white dark:bg-black min-h-screen animate-fadeIn'}>
             {!forceMini && (
@@ -541,7 +512,32 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                           </button>
                                       </>
                                   )}
-                                  {effectiveMini ? <div className="pointer-events-none">{playerContent}</div> : playerContent}
+                                  <div className={effectiveMini ? 'pointer-events-none' : ''}>
+                                      {showAd && (
+                                          <PromotionPlayer
+                                              onPromotionEnd={handleAdEnd}
+                                              onSkip={handleAdSkip}
+                                          />
+                                      )}
+                                      {!showAd && (
+                                          <VideoPlayer
+                                              key={episode.uid_episode || episode.title}
+                                              src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
+                                              poster={episode.picture_path || item.imageUrl}
+                                              onUnavailable={onReturnHome}
+                                              onEnded={handleVideoEnded}
+                                              onPlayingStateChange={handlePlayingStateChange}
+                                              initialPosition={initialPlaybackPosition}
+                                              videoUid={episode.uid_episode}
+                                              isEpisode={true}
+                                              showAutoplayToggle={true}
+                                              hideControls={effectiveMini}
+                                              onTimeUpdate={handleTimeUpdate}
+                                              onPipTrigger={handlePipTrigger}
+                                              videoRef={videoRef}
+                                          />
+                                      )}
+                                  </div>
                               </div>
                          </div>
 
