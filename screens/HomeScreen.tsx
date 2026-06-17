@@ -14,6 +14,7 @@ import MostWatchedSection from '../components/sections/MostWatchedSection';
 import MostLikedSection from '../components/sections/MostLikedSection';
 import CategorySections from '../components/sections/CategorySections';
 import ErrorBoundary from '../components/ErrorBoundary';
+import ScrollReveal from '../components/ScrollReveal';
 
 interface HomeScreenProps {
     onSelectMedia: (item: MediaContent) => void;
@@ -387,104 +388,118 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                     </div>
                 )}
                 {continueWatchingMedia.length > 0 && (
-                    <div className="py-8 md:py-12">
-                        <div className="px-4 md:px-6 lg:px-8 mb-6">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                                    {t('continueWatching') || 'Continuer à regarder'}
-                                </h3>
+                    <ScrollReveal>
+                        <div className="py-8 md:py-12">
+                            <div className="px-4 md:px-6 lg:px-8 mb-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                                        {t('continueWatching') || 'Continuer à regarder'}
+                                    </h3>
+                                </div>
+                            </div>
+                            <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
+                                {continueWatchingMedia.slice(0, 10).map((content) => (
+                                    <MediaCard
+                                        key={content.id}
+                                        item={content}
+                                        variant="poster"
+                                        onSelect={handleContinueSelect}
+                                        onPlay={handleContinueSelect}
+                                    />
+                                ))}
                             </div>
                         </div>
-                        <div className="flex space-x-2 md:space-x-4 lg:space-x-6 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
-                            {continueWatchingMedia.slice(0, 10).map((content) => (
-                                <MediaCard
-                                    key={content.id}
-                                    item={content}
-                                    variant="poster"
-                                    onSelect={handleContinueSelect}
-                                    onPlay={handleContinueSelect}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    </ScrollReveal>
                 )}
 
                 {/* Section Séries */}
                 {seriesError ? (
                     <SectionError message={seriesError} />
                 ) : (
-                    <SeriesSection
-                        series={series}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                        navigateToCategory={navigateToCategory}
-                        t={t}
-                    />
+                    <ScrollReveal>
+                        <SeriesSection
+                            series={series}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                            navigateToCategory={navigateToCategory}
+                            t={t}
+                        />
+                    </ScrollReveal>
                 )}
 
                 {/* Sections par catégorie */}
                 {categoriesError ? (
                     <SectionError message={categoriesError} />
                 ) : (
-                    <CategorySections
-                        serieCategories={serieCategories}
-                        seriesByCategory={seriesByCategory}
-                        loading={loadingSeriesByCategory}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                    />
+                    <ScrollReveal>
+                        <CategorySections
+                            serieCategories={serieCategories}
+                            seriesByCategory={seriesByCategory}
+                            loading={loadingSeriesByCategory}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                        />
+                    </ScrollReveal>
                 )}
 
                 {/* Section Films */}
                 {moviesError ? (
                     <SectionError message={moviesError} />
                 ) : (
-                    <MoviesSection
-                        movies={movies}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                        navigateToCategory={navigateToCategory}
-                        t={t}
-                    />
+                    <ScrollReveal>
+                        <MoviesSection
+                            movies={movies}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                            navigateToCategory={navigateToCategory}
+                            t={t}
+                        />
+                    </ScrollReveal>
                 )}
 
                 {/* Section Podcasts */}
                 {podcastsError ? (
                     <SectionError message={podcastsError} />
                 ) : (
-                    <PodcastsSection
-                        podcasts={podcasts}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                        navigateToCategory={navigateToCategory}
-                        t={t}
-                    />
+                    <ScrollReveal>
+                        <PodcastsSection
+                            podcasts={podcasts}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                            navigateToCategory={navigateToCategory}
+                            t={t}
+                        />
+                    </ScrollReveal>
                 )}
 
                 {/* Section Most Watched */}
                 {mostWatchedError ? (
                     <SectionError message={mostWatchedError} />
                 ) : (
-                    <MostWatchedSection
-                        items={mostWatchedItems}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                        loading={loadingMostWatched}
-                        t={t}
-                    />
+                    <ScrollReveal>
+                        <MostWatchedSection
+                            items={mostWatchedItems}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                            loading={loadingMostWatched}
+                            t={t}
+                        />
+                    </ScrollReveal>
                 )}
 
                 {/* Section Most Liked */}
                 {mostLikedError ? (
                     <SectionError message={mostLikedError} />
                 ) : (
-                    <MostLikedSection
-                        items={mostLikedItems}
-                        onSelectMedia={onSelectMedia}
-                        onPlay={onPlay}
-                        loading={loadingMostLiked}
-                        t={t}
-                    />
+                    <ScrollReveal>
+                        <MostLikedSection
+                            items={mostLikedItems}
+                            onSelectMedia={onSelectMedia}
+                            onPlay={onPlay}
+                            loading={loadingMostLiked}
+                            t={t}
+                        />
+                    </ScrollReveal>
                 )}
             </div>
 
@@ -503,7 +518,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             {showScrollTop && (
                 <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all duration-200 hover:scale-110"
+                    className="fixed bottom-20 md:bottom-8 right-8 z-50 p-3 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all duration-200 hover:scale-110"
                     aria-label="Scroll to top"
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

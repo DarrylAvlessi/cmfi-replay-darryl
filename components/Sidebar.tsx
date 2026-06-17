@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { updateEpisodeViews, serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 import { toast } from 'react-toastify';
 import { ActiveTab } from '../types';
+import cmfiLogo from '../cmfireplay.svg';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -137,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         aria-label="Menu principal"
       >
         <div className="flex items-center justify-between px-4 py-[17.8px] border-b border-gray-200 dark:border-black">
-          <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">CMFI Replay</h2>
+          <img src={cmfiLogo} alt="CMFI Replay" className="h-8 rounded-md" />
           <div className="flex items-center">
             <button
               onClick={onClose}

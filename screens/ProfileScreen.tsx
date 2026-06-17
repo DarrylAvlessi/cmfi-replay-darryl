@@ -158,27 +158,27 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         return [
             {
                 icon: SettingsIcon,
-                label: 'Gérer les messages d\'information',
+                label: t('manageInfoBar'),
                 action: () => navigateRouter('/manage-info-bar')
             },
             {
                 icon: SettingsIcon,
-                label: 'Gérer les publicités',
+                label: t('manageAds'),
                 action: () => navigateRouter('/manage-ads')
             },
             {
                 icon: SettingsIcon,
-                label: 'Gérer les utilisateurs',
+                label: t('manageUsers'),
                 action: () => navigateRouter('/manage-users')
             },
             {
                 icon: SettingsIcon,
-                label: 'Envoyer une notification à tous',
+                label: t('manageNotifications'),
                 action: () => navigateRouter('/manage-notifications')
             },
             {
                 icon: CommentIcon,
-                label: 'Gérer les signalements',
+                label: t('manageReports'),
                 action: () => navigateRouter('/manage-reports')
             },
             {
@@ -188,7 +188,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             },
             {
                 icon: SettingsIcon,
-                label: 'Admin - Gestion des vidéos',
+                label: t('manageVideos'),
                 action: () => navigateRouter('/admin')
             },
         ];
@@ -215,7 +215,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         ];
         
         if (isAdminValue) {
-            items.push({ id: 'admin' as const, label: 'Administration', icon: 'Shield' });
+            items.push({ id: 'admin' as const, label: t('administration'), icon: 'Shield' });
         }
         
         return items;
@@ -307,7 +307,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 return (
                     <div className="space-y-6">
                         <div className="p-6 bg-white dark:bg-black rounded-lg border border-amber-200 dark:border-amber-800">
-                            <h3 className="text-xl font-serif font-bold mb-4 text-amber-600 dark:text-amber-400">Administration</h3>
+                            <h3 className="text-xl font-serif font-bold mb-4 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden divide-y divide-amber-200 dark:divide-amber-800">
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
@@ -446,7 +446,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </div>
                     {isAdminValue && (
                         <div className="mt-4">
-                            <h3 className="text-lg font-serif font-bold mb-3 text-amber-600 dark:text-amber-400">Administration</h3>
+                            <h3 className="text-lg font-serif font-bold mb-3 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />

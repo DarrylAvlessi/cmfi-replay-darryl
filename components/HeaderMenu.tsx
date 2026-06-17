@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon, UpdateIcon } from './icons';
+import { UserIcon, LogoutIcon, GlobeIcon, HelpIcon, UpdateIcon, SunIcon, MoonIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
 import { Language } from '../lib/i18n';
 import { auth } from '../lib/firebase';
@@ -15,7 +15,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const closeTimeoutRef = useRef<number | null>(null);
-    const { t, setIsAuthenticated, language, setLanguage, user, userProfile, swUpdateAvailable, applyUpdate } = useAppContext();
+    const { t, setIsAuthenticated, language, setLanguage, user, userProfile, swUpdateAvailable, applyUpdate, theme, setTheme } = useAppContext();
 
     const iconColor = variant === 'light' ? 'text-white' : 'text-gray-600 dark:text-gray-400';
     const hoverBg = variant === 'light' ? 'hover:bg-white/20' : 'hover:bg-gray-200 dark:hover:bg-gray-700';
@@ -148,6 +148,18 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
                     <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
 
                     {/* Settings group */}
+                    <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                        {theme === 'dark' ? (
+                            <SunIcon className="w-5 h-5 mr-3 text-amber-400" />
+                        ) : (
+                            <MoonIcon className="w-5 h-5 mr-3 text-gray-400" />
+                        )}
+                        {theme === 'dark' ? t('light') : t('dark')}
+                    </button>
+                    <div className="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
                     <div className="flex items-center gap-1 px-4 py-2.5">
                         <GlobeIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <button

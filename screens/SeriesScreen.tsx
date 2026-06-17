@@ -4,6 +4,7 @@ import { MediaContent, MediaType } from '../types';
 import { serieService, Serie, seasonSerieService, episodeSerieService, serieCategoryService, SerieCategory, getCategoryName } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
+import ScrollReveal from '../components/ScrollReveal';
 import SeriesCard, { SerieWithStats } from '../components/SeriesCard';
 
 interface SeriesScreenProps {
@@ -374,39 +375,43 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
 
                         {/* Grille ou Liste selon le mode */}
                         {viewMode === 'grid' ? (
-                            <div className="relative grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6 z-0">
-                                {filteredAndSortedSeries.map((serie, index) => (
-                                    <div
-                                        key={serie.id}
-                                        className="animate-fadeIn"
-                                        style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
-                                    >
-                                        <SeriesCard
-                                            serie={serie}
-                                            variant="poster"
-                                            onSelect={onSelectMedia}
-                                            onPlay={onPlay}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                            <ScrollReveal>
+                                <div className="relative grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6 z-0">
+                                    {filteredAndSortedSeries.map((serie, index) => (
+                                        <div
+                                            key={serie.id}
+                                            className="animate-fadeIn"
+                                            style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+                                        >
+                                            <SeriesCard
+                                                serie={serie}
+                                                variant="poster"
+                                                onSelect={onSelectMedia}
+                                                onPlay={onPlay}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollReveal>
                         ) : (
-                            <div className="relative space-y-2 z-0">
-                                {filteredAndSortedSeries.map((serie, index) => (
-                                    <div
-                                        key={serie.id}
-                                        className="animate-fadeIn"
-                                        style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
-                                    >
-                                        <SeriesCard
-                                            serie={serie}
-                                            variant="list"
-                                            onSelect={onSelectMedia}
-                                            onPlay={onPlay}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                            <ScrollReveal>
+                                <div className="relative space-y-2 z-0">
+                                    {filteredAndSortedSeries.map((serie, index) => (
+                                        <div
+                                            key={serie.id}
+                                            className="animate-fadeIn"
+                                            style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+                                        >
+                                            <SeriesCard
+                                                serie={serie}
+                                                variant="list"
+                                                onSelect={onSelectMedia}
+                                                onPlay={onPlay}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollReveal>
                         )}
                     </>
                 )}

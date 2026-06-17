@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowLeftIcon, SunIcon, MoonIcon } from './icons';
+import { ArrowLeftIcon } from './icons';
 import HeaderMenu from './HeaderMenu';
-import { useAppContext } from '../context/AppContext';
 import HamburgerMenu from './HamburgerMenu';
 import NotificationBell from './NotificationBell';
 import Navbar from './Navbar';
 import DesktopSearchBar from './DesktopSearchBar';
+import cmfiLogo from '../cmfireplay.svg';
 
 interface HeaderProps {
   title: string;
@@ -22,18 +22,13 @@ const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   isWatchRoute = false
 }) => {
-  const { theme, setTheme, t } = useAppContext();
   const [isSearchActive, setIsSearchActive] = useState(false);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
 
   return (
     <>
       {/* Header pour les écrans mobiles */}
       <div className="fixed top-0 left-0 right-0 z-20 bg-white dark:bg-black p-4 border-b border-gray-200 dark:border-black md:hidden">
-        <div className="w-full flex items-center justify-between">
+        <div className="relative w-full flex items-center justify-between">
           {/* Menu burger à gauche */}
           <HamburgerMenu
             isOpen={isSidebarOpen}
@@ -41,19 +36,14 @@ const Header: React.FC<HeaderProps> = ({
             className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
           />
 
-          {/* Titre au centre */}
-          <h1 className="text-xl font-serif font-bold text-center">CMFI Replay</h1>
+          {/* Logo centré */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <img src={cmfiLogo} alt="CMFI Replay" className="h-8 rounded-md" />
+          </div>
 
           {/* Contrôles à droite */}
           <div className="flex items-center space-x-2">
             <NotificationBell />
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-            </button>
             <div className="relative">
               <HeaderMenu />
             </div>
@@ -80,7 +70,13 @@ const Header: React.FC<HeaderProps> = ({
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
             ) : null}
-            <h1 className="text-lg font-serif font-semibold text-gray-900 dark:text-white">CMFI Replay</h1>
+            {/* Logo - left on desktop */}
+            <img src={cmfiLogo} alt="CMFI Replay" className="hidden lg:block h-8 rounded-md" />
+          </div>
+
+          {/* Logo - centered on tablet */}
+          <div className="absolute left-1/2 -translate-x-1/2 md:block lg:hidden">
+            <img src={cmfiLogo} alt="CMFI Replay" className="h-8 rounded-md" />
           </div>
 
           {/* Navbar central (caché quand la recherche est active) */}
@@ -93,13 +89,6 @@ const Header: React.FC<HeaderProps> = ({
               <DesktopSearchBar onActiveChange={setIsSearchActive} fullWidth={isSearchActive} />
             </div>
             {!isSearchActive && !isWatchRoute && <NotificationBell />}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-            </button>
             {!isWatchRoute && <HeaderMenu />}
           </div>
         </div>

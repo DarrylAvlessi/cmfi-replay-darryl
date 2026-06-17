@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import AuthHeader from '../components/AuthHeader';
 import InputField from '../components/InputField';
 import AuthButton from '../components/AuthButton';
+import cmfiLogo from '../cmfireplay.svg';
 
 const ForgotPasswordScreen: React.FC = () => {
     const { t } = useAppContext();
@@ -58,7 +59,7 @@ const ForgotPasswordScreen: React.FC = () => {
             <AuthHeader />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 text-center">
-                    <h1 className="text-4xl font-bold text-amber-500 tracking-wider">CMFI Replay</h1>
+                    <img src={cmfiLogo} alt="CMFI Replay" className="h-12 mx-auto rounded-lg" />
                     <h2 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
                         {resetRequested ? t('resetLinkSent') : t('forgotPasswordScreenTitle')}
                     </h2>

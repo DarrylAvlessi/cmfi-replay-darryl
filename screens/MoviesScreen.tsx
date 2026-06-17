@@ -5,6 +5,7 @@ import MovieCard from '../components/MovieCard';
 import { movieService, Movie } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
+import ScrollReveal from '../components/ScrollReveal';
 
 interface MoviesScreenProps {
     onSelectMedia: (media: MediaContent) => void;
@@ -229,27 +230,31 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
 
                         {/* Grille ou Liste selon le mode */}
                         {viewMode === 'grid' ? (
-                            <div className="relative grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6 z-0">
-                                {filteredAndSortedMovies.map((movie) => (
-                                    <MovieCard
-                                        key={movie.id}
-                                        movie={movie}
-                                        variant="poster"
-                                        onSelect={onSelectMedia}
-                                    />
-                                ))}
-                            </div>
+                            <ScrollReveal>
+                                <div className="relative grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6 z-0">
+                                    {filteredAndSortedMovies.map((movie) => (
+                                        <MovieCard
+                                            key={movie.id}
+                                            movie={movie}
+                                            variant="poster"
+                                            onSelect={onSelectMedia}
+                                        />
+                                    ))}
+                                </div>
+                            </ScrollReveal>
                         ) : (
-                            <div className="relative space-y-2 z-0">
-                                {filteredAndSortedMovies.map((movie) => (
-                                    <MovieCard
-                                        key={movie.id}
-                                        movie={movie}
-                                        variant="list"
-                                        onSelect={onSelectMedia}
-                                    />
-                                ))}
-                            </div>
+                            <ScrollReveal>
+                                <div className="relative space-y-2 z-0">
+                                    {filteredAndSortedMovies.map((movie) => (
+                                        <MovieCard
+                                            key={movie.id}
+                                            movie={movie}
+                                            variant="list"
+                                            onSelect={onSelectMedia}
+                                        />
+                                    ))}
+                                </div>
+                            </ScrollReveal>
                         )}
                     </>
                 )}

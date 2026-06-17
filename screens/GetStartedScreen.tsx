@@ -97,16 +97,8 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onGetStarted }) => 
                     {/* CONTENT */}
                     <div className="flex-1 flex flex-col items-center md:items-center lg:items-start justify-center px-6 sm:px-10 md:px-12 lg:px-16 pb-16 md:pb-0 md:w-1/2 lg:w-2/5 lg:order-1 bg-black md:pt-16">
                         <section className="w-full max-w-sm md:max-w-md lg:max-w-none mx-auto lg:mx-0">
-                            <div
-                                className="mb-5 md:mb-6 flex md:flex lg:flex"
-                                style={{ animation: 'fadeIn 0.5s ease-out 0.1s both' }}
-                            >
-                                <img src={cmfiLogo} alt="CMFI Replay" className="w-14 h-14 md:w-16 md:h-16 rounded-2xl shadow-2xl shadow-amber-500/25" />
-                            </div>
-                            <div style={{ animation: 'fadeIn 0.5s ease-out 0.2s both' }}>
-                                <h1 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight">
-                                    CMFI Replay
-                                </h1>
+                            <div style={{ animation: 'fadeIn 0.5s ease-out 0.1s both' }}>
+                                <img src={cmfiLogo} alt="CMFI Replay" className="h-12 md:h-16 rounded-xl" />
                             </div>
                             <div
                                 className="mt-3 md:mt-4"
