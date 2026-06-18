@@ -81,15 +81,21 @@ export const userService = {
     },
 
     async createUserProfile(userData: Omit<UserProfile, 'createdAt' | 'updatedAt'>): Promise<void> {
-        const profile: UserProfile = {
-            ...userData,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
         const existing = localProfiles.findIndex(p => p.uid === userData.uid);
         if (existing >= 0) {
-            localProfiles[existing] = profile;
+            // Merge semantics: only update specified fields, preserve existing ones
+            localProfiles[existing] = {
+                ...localProfiles[existing],
+                ...userData,
+                createdAt: localProfiles[existing].createdAt,
+                updatedAt: new Date(),
+            };
         } else {
+            const profile: UserProfile = {
+                ...userData,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
             localProfiles.push(profile);
         }
     },

@@ -115,11 +115,14 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
         setError('');
 
         try {
-            const updatedProfile = await userService.updateUserProfile(user.uid, {
+            const updates: Partial<UserProfile> = {
                 display_name: fullName,
                 email: email,
-                photo_url: photoUrl || null
-            });
+            };
+            if (photoUrl) {
+                updates.photo_url = photoUrl;
+            }
+            const updatedProfile = await userService.updateUserProfile(user.uid, updates);
             
             // Mettre à jour le profil dans le contexte
             setUserProfile(updatedProfile);

@@ -4,34 +4,11 @@ import { useAppContext } from '../context/AppContext';
 import { auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { authService } from '../lib/authService';
-import { userService } from '../lib/db';
 import AuthHeader from '../components/AuthHeader';
 import InputField from '../components/InputField';
 import AuthButton from '../components/AuthButton';
 import { GoogleIcon } from '../components/icons';
 import cmfiLogo from '../cmfireplay.svg';
-
-// Fonction utilitaire pour formater la date au format demandé
-const formatCreatedTime = (date: Date): string => {
-    const months = [
-        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-    ];
-
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    // Obtenir le décalage UTC
-    const offset = -date.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(offset) / 60);
-    const offsetSign = offset >= 0 ? '+' : '-';
-
-    return `${day} ${month} ${year} à ${hours}:${minutes}:${seconds} UTC${offsetSign}${offsetHours}`;
-};
 
 const SocialLoginButton: React.FC<{ onClick: () => void; disabled?: boolean }> = ({ onClick, disabled }) => {
     const { t } = useAppContext();
@@ -64,7 +41,7 @@ const OrSeparator: React.FC = () => {
 };
 
 const RegisterScreen: React.FC = () => {
-    const { t, setIsAuthenticated, language } = useAppContext();
+    const { t, setIsAuthenticated } = useAppContext();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [authLoading, setAuthLoading] = useState(false);
@@ -161,29 +138,7 @@ const RegisterScreen: React.FC = () => {
 
         try {
             // Créer l'utilisateur dans Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // Créer immédiatement le profil utilisateur dans Firestore avec le format demandé
-            const createdTime = formatCreatedTime(new Date());
-
-            await userService.createUserProfile({
-                uid: user.uid,
-                email: user.email || email,
-                display_name: fullName,
-                presence: 'offline',
-                hasAcceptedPrivacyPolicy: false,
-                created_time: createdTime,
-                theme: 'dark',
-                language: language,
-                bookmarkedIds: []
-            });
-
-            console.log('Profil utilisateur créé:', {
-                uid: user.uid,
-                email: user.email,
-                created_time: createdTime
-            });
+            await createUserWithEmailAndPassword(auth, email, password);
 
             setIsAuthenticated(true);
             navigate('/home');

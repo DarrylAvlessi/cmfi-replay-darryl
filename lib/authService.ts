@@ -2,28 +2,6 @@ import { auth, googleProvider } from './firebase';
 import { signInWithPopup, UserCredential, signOut as firebaseSignOut } from 'firebase/auth';
 import { userService } from './db';
 
-// Fonction utilitaire pour formater la date au format demandé
-const formatCreatedTime = (date: Date): string => {
-    const months = [
-        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-    ];
-
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    // Obtenir le décalage UTC
-    const offset = -date.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(offset) / 60);
-    const offsetSign = offset >= 0 ? '+' : '-';
-
-    return `${day} ${month} ${year} à ${hours}:${minutes}:${seconds} UTC${offsetSign}${offsetHours}`;
-};
-
 /**
  * Service d'authentification Google
  */
@@ -43,33 +21,6 @@ export const authService = {
 
             const result = await signInWithPopup(auth, googleProvider);
             console.log('✅ Popup Google réussie, utilisateur:', result.user.email);
-
-            // Vérifier si le profil utilisateur existe, sinon le créer
-            const user = result.user;
-            const existingProfile = await userService.getUserProfile(user.uid);
-
-            if (!existingProfile) {
-                const createdTime = formatCreatedTime(new Date());
-                await userService.createUserProfile({
-                    uid: user.uid,
-                    email: user.email || '',
-                    display_name: user.displayName || 'User',
-                    photo_url: user.photoURL || undefined,
-                    presence: 'offline',
-                    hasAcceptedPrivacyPolicy: false,
-                    created_time: createdTime,
-                    theme: 'dark',
-                    language: 'en',
-                    bookmarkedIds: []
-                });
-                console.log('✅ Profil utilisateur Google créé:', {
-                    uid: user.uid,
-                    email: user.email,
-                    created_time: createdTime
-                });
-            } else {
-                console.log('✅ Profil utilisateur existant trouvé');
-            }
 
             return result;
         } catch (error: any) {

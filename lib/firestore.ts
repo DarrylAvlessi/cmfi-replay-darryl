@@ -327,7 +327,7 @@ export const userService = {
             return null;
         } catch (error) {
             console.error('Error getting user profile:', error);
-            return null;
+            throw error;
         }
     },
 

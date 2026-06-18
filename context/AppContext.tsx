@@ -398,6 +398,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             uid: user.uid,
                             email: user.email || '',
                             display_name: user.displayName || 'User',
+                            photo_url: user.photoURL || undefined,
                             presence: 'online',
                             hasAcceptedPrivacyPolicy: false,
                             created_time: new Date().toISOString(),
