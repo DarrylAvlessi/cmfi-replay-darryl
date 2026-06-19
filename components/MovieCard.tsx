@@ -26,12 +26,18 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Image avec aspect ratio cinématique */}
-        <div className="relative w-28 h-20 md:w-36 md:h-24 lg:w-40 lg:h-28 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105">
+        <div className="relative w-16 h-24 md:w-20 md:h-28 lg:w-24 lg:h-32 bg-gray-200 dark:bg-black rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 group-hover:scale-105">
           <img 
             src={imageUrl} 
             alt={title} 
             className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-110" 
           />
+          {/* Badge durée (style YouTube) */}
+          {movie.duration && (
+            <div className="absolute bottom-1 right-1 z-20 bg-black/80 text-white text-[10px] leading-tight px-1.5 py-0.5 rounded font-medium">
+              {movie.duration}
+            </div>
+          )}
           {/* Overlay au hover */}
           <div
             onClick={handleInfo}
@@ -55,14 +61,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
               {author || movie.theme}
             </p>
           )}
-          {movie.duration && (
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{movie.duration}</span>
-            </div>
-          )}
         </div>
         
         {/* Bouton d'action */}
@@ -81,7 +79,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
 
   // Variant poster optimisé pour 4 cartes par ligne sur mobile
   return (
-    <div onClick={handleSelect} className="flex-shrink-0 w-24 sm:w-32 md:w-40 lg:w-44 xl:w-48 space-y-1.5 sm:space-y-2 cursor-pointer group">
+    <div onClick={handleSelect} className="w-full space-y-1.5 sm:space-y-2 cursor-pointer group hover:z-20">
       <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2">
         <img
           src={imageUrl}
@@ -90,10 +88,21 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
         />
         <div
           onClick={handleInfo}
-          className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-10 cursor-pointer"
+          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-10 cursor-pointer p-3"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/40 transition-transform duration-300 group-hover:scale-110">
-            <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white ml-1" />
+          <h3 className="text-white font-bold text-xs sm:text-sm lg:text-sm xl:text-base text-center leading-tight mb-2 break-words">
+            {title}
+          </h3>
+          {movie.duration && (
+            <div className="flex items-center gap-1 text-white/80 text-[10px] sm:text-xs mb-3">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{movie.duration}</span>
+            </div>
+          )}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/40 transition-transform duration-300 group-hover:scale-110">
+            <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-1" />
           </div>
         </div>
         {/* Barre de progression si présente */}

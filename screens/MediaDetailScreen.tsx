@@ -2,11 +2,11 @@
 
 
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType, Episode } from '../types';
 
-import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, VolumeHighIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon, PencilIcon } from '../components/icons';
+import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon, PencilIcon, EllipsisVerticalIcon, XMarkIcon, InfoIcon } from '../components/icons';
 
 import { useAppContext } from '../context/AppContext';
 
@@ -45,83 +45,166 @@ const EpisodeListItem = React.memo<{
     onClick: () => void, 
     isPlaying: boolean,
     currentSeasonUid?: string,
-    currentSerieTitle?: string
-}>(({ episode, onClick, isPlaying, currentSeasonUid, currentSerieTitle }) => {
-    const playingClasses = isPlaying ? 'bg-amber-100 dark:bg-amber-900/40' : 'hover:bg-gray-100/50 dark:hover:bg-black/50';
+    currentSerieTitle?: string,
+    onShare?: (episode: Episode | EpisodeSerie) => void,
+    isBookmarked?: boolean,
+    onBookmark?: () => void,
+}>(({ episode, onClick, isPlaying, currentSeasonUid, currentSerieTitle, onShare, isBookmarked, onBookmark }) => {
 
-
-
-    // Vérifier si c'est un EpisodeSerie ou un Episode
-
+    const { t } = useAppContext();
     const isEpisodeSerie = 'uid_episode' in episode;
 
-    // Utiliser le numéro d'épisode approprié selon la saison actuelle
     const episodeNumber = isEpisodeSerie && currentSeasonUid && episode.other_seasons && episode.other_seasons[currentSeasonUid]
         ? episode.other_seasons[currentSeasonUid]
         : (isEpisodeSerie ? episode.episode_numero : episode.episodeNumber);
 
     const episodeTitle = isEpisodeSerie ? episode.title : episode.title;
 
-    const episodeDuration = isEpisodeSerie ? episode.runtime_h_m : episode.duration;
+    const episodeDuration = isEpisodeSerie ? formatSeconds(episode.runtime) : episode.duration;
 
     const thumbnailUrl = isEpisodeSerie ? episode.picture_path : episode.thumbnailUrl;
 
-    // Check if episode comes from another series via other_seasons
     const isFromOtherSeries = isEpisodeSerie && 
         currentSeasonUid && 
         episode.other_seasons && 
         episode.other_seasons[currentSeasonUid] &&
         episode.uid_season !== currentSeasonUid;
 
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
-
-        <div onClick={onClick} className={`flex items-start space-x-3 sm:space-x-4 p-3 sm:p-2 rounded-lg ${playingClasses} cursor-pointer transition-all duration-200 relative min-h-[80px] sm:min-h-[72px]`}>
-
-            {isPlaying && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-l-lg"></div>}
-
-            <div className="relative w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 lg:w-28 lg:h-18 bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 mt-1">
-
-                <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" loading="lazy" />
-
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-
-                    {isPlaying ? (
-
-                        <VolumeHighIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white/90" />
-
-                    ) : (
-
-                        <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white/80" />
-
+        <div className={`group flex gap-3 md:gap-4 p-2 rounded-xl transition-colors hover:bg-gray-100 dark:hover:bg-white/[0.04] ${isPlaying ? 'ring-1 ring-amber-500' : ''}`}>
+            <div onClick={onClick} className="flex-1 flex gap-3 md:gap-4 min-w-0 cursor-pointer">
+                <div className="relative w-32 sm:w-36 md:w-44 shrink-0 aspect-video bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden self-start">
+                    <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" loading="lazy" />
+                    {!isPlaying && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                            <PlayIcon className="w-8 h-8 text-white/0 group-hover:text-white/90 transition-all" />
+                        </div>
                     )}
-
+                    {isPlaying && (
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500 text-gray-900 text-xs font-bold rounded-md">
+                            {t('currentlyPlaying')}
+                        </div>
+                    )}
+                    {isEpisodeSerie && episode.runtime > 0 && (
+                        <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
+                            {formatSeconds(episode.runtime)}
+                        </div>
+                    )}
                 </div>
-
-            </div>
-
-            <div className="flex-1 min-w-0 py-1">
-
-                <div className="flex items-center gap-2 mb-1">
-                    <h4 className={`font-semibold text-xs sm:text-sm ${isPlaying ? 'text-amber-800 dark:text-amber-300' : 'text-gray-900 dark:text-white'} leading-snug line-clamp-2 sm:line-clamp-1`}>
-                        {episodeNumber}. {episodeTitle}
+                <div className="flex-1 min-w-0 space-y-1 py-0.5">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs font-medium">{t('episodeLabel', { number: String(episodeNumber) })}</span>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base leading-tight line-clamp-2">
+                        {episodeTitle}
                     </h4>
                     {isFromOtherSeries && (
-                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
-                            Autre production
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
+                            {t('otherProduction')}
                         </span>
                     )}
                 </div>
-
-                <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">{episodeDuration}</p>
-
             </div>
 
+            <div ref={menuRef} className="relative self-start pt-1 shrink-0">
+                <button
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                    className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    aria-label="Episode actions"
+                >
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                </button>
+
+                {menuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-20 py-1 overflow-hidden">
+                        <button
+                            onClick={() => { setShowDetails(true); setMenuOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                        >
+                            <InfoIcon className="w-4 h-4" />
+                            <span>{t('details')}</span>
+                        </button>
+                        <button
+                            onClick={() => { onBookmark?.(); setMenuOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                        >
+                            <svg className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                            <span>{isBookmarked ? t('addedToList') : t('myList')}</span>
+                        </button>
+                        <button
+                            onClick={() => { setMenuOpen(false); onShare?.(episode); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                        >
+                            <ShareIcon className="w-4 h-4" />
+                            <span>{t('share')}</span>
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {showDetails && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setShowDetails(false)}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-start justify-between gap-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{episodeTitle}</h3>
+                            <button onClick={() => setShowDetails(false)} className="p-1 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <p><span className="font-medium text-gray-900 dark:text-white">{t('episode')}:</span> {t('episodeLabel', { number: String(episodeNumber) })}</p>
+                            <p><span className="font-medium text-gray-900 dark:text-white">Duration:</span> {episodeDuration}</p>
+                            {isEpisodeSerie && (episode as EpisodeSerie).overview && (
+                                <div>
+                                    <span className="font-medium text-gray-900 dark:text-white">{t('description')}:</span>
+                                    <p className="mt-1 text-gray-600 dark:text-gray-400 leading-relaxed">{(episode as EpisodeSerie).overview}</p>
+                                </div>
+                            )}
+                            {isEpisodeSerie && (episode as EpisodeSerie).views !== undefined && (
+                                <p><span className="font-medium text-gray-900 dark:text-white">{t('views')}:</span> {(episode as EpisodeSerie).views?.toLocaleString()}</p>
+                            )}
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { onBookmark?.(); }}
+                                className={`flex-1 flex items-center justify-center gap-2 font-bold py-2.5 px-4 rounded-xl transition-colors text-sm border ${
+                                    isBookmarked
+                                        ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
+                                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                <svg className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                </svg>
+                                <span>{isBookmarked ? t('addedToList') : t('myList')}</span>
+                            </button>
+                            <button
+                                onClick={() => { setShowDetails(false); onShare?.(episode); }}
+                                className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2.5 px-4 rounded-xl transition-colors text-sm"
+                            >
+                                <ShareIcon className="w-4 h-4" />
+                                <span>{t('share')}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-
     );
-
 });
 
 
@@ -136,6 +219,16 @@ const formatStat = (num: number | undefined): string => {
 
     return num.toString();
 
+};
+
+const formatSeconds = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+        return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return `${m}:${String(s).padStart(2, '0')}`;
 };
 
 
@@ -171,9 +264,13 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
     const [isSharing, setIsSharing] = useState(false);
 
-    const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+    const [isSeasonDropdownOpen, setIsSeasonDropdownOpen] = useState(false);
 
     const [showSuggestModal, setShowSuggestModal] = useState(false);
+
+    const [bookmarkedEpisodeIds, setBookmarkedEpisodeIds] = useState<string[]>([]);
+
+    const [activeTab, setActiveTab] = useState<'episodes' | 'about'>('episodes');
 
     const descriptionThreshold = 150;
 
@@ -339,20 +436,19 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     // Find the season of the currently playing episode to initialize state
     const playingEpisodeSeasonNumber = useMemo(() => {
         if (playingItem?.media.id === item.id && playingItem.episode) {
-            // Vérifier si c'est un EpisodeSerie ou un Episode
-            const isEpisodeSerie = 'uid_episode' in playingItem.episode;
-            if (isEpisodeSerie) {
-                // Chercher la saison par uid_episode
+            const ep = playingItem.episode;
+            if ('uid_episode' in ep) {
+                const episodeSerie = ep as EpisodeSerie;
                 for (const season of firestoreSeasons) {
                     const episodes = seasonEpisodes[season.uid_season] || [];
-                    if (episodes.some(e => e.uid_episode === playingItem.episode?.uid_episode)) {
+                    if (episodes.some(e => e.uid_episode === episodeSerie.uid_episode)) {
                         return season.season_number;
                     }
                 }
             } else if (seasons) {
-                // Logique existante pour les épisodes mockés
+                const episode = ep as Episode;
                 for (const season of seasons) {
-                    if (season.episodes.some(e => e.episodeNumber === playingItem.episode?.episodeNumber && e.title === playingItem.episode?.title)) {
+                    if (season.episodes.some(e => e.episodeNumber === episode.episodeNumber && e.title === episode.title)) {
                         return season.seasonNumber;
                     }
                 }
@@ -406,7 +502,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
     const handleLike = useCallback(async () => {
         if (!userProfile) {
-            toast.error('Vous devez être connecté pour aimer', {
+            toast.error(t('mustBeLoggedIn'), {
                 position: 'bottom-center',
                 autoClose: 2000,
             });
@@ -422,11 +518,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
             setHasLiked(isLiked);
             setLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));
 
-            const message = isLiked ? 'Contenu aimé avec succès!' : 'Like retiré';
-            toast.success(message, { position: 'bottom-center', autoClose: 2000 });
+            toast.success(isLiked ? t('likeSuccess') : t('likeRemoved'), { position: 'bottom-center', autoClose: 2000 });
         } catch (error) {
             console.error('Error toggling like:', error);
-            toast.error('Erreur lors du like', {
+            toast.error(t('likeError'), {
                 position: 'bottom-center',
                 autoClose: 2000,
             });
@@ -455,7 +550,11 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 mediaPath = `/documentary/${item.id}`;
 
-                shareText = `Retrouvez "${item.title}" sur le CMFI Replay${item.description ? ` - ${item.description.substring(0, 80)}...` : ''}`;
+                shareText = t('shareSeriesText', { title: item.title });
+
+                if (item.description) {
+                    shareText += ` - ${item.description.substring(0, 80)}...`;
+                }
 
             } else if (type === MediaType.Series) {
 
@@ -471,13 +570,13 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                     mediaPath = `/production/${item.id}?season=${selectedSeasonUid}`;
 
-                    shareText = `Retrouvez ${selectedSeason.title_season ? `"${selectedSeason.title_season}"` : `"${item.title}"`} sur CMFI Replay`;
+                    shareText = t('shareSeasonText', { seasonTitle: selectedSeason.title_season || item.title });
 
                 } else {
 
                     mediaPath = `/production/${item.id}`;
 
-                    shareText = `Retrouvez "${item.title}" sur le CMFI Replay`;
+                    shareText = t('shareSeriesText', { title: item.title });
 
                 }
 
@@ -485,7 +584,11 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 mediaPath = `/podcast/${item.id}`;
 
-                shareText = `Retrouvez "${item.title}" sur le CMFI Replay${item.description ? ` - ${item.description.substring(0, 80)}...` : ''}`;
+                shareText = t('shareSeriesText', { title: item.title });
+
+                if (item.description) {
+                    shareText += ` - ${item.description.substring(0, 80)}...`;
+                }
 
             } else {
 
@@ -493,15 +596,21 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 mediaPath = `/media/${item.id}`;
 
-                shareText = `Retrouvez "${item.title}" sur le CMFI Replay${item.description ? ` - ${item.description.substring(0, 80)}...` : ''}`;
+                shareText = t('shareSeriesText', { title: item.title });
+
+                if (item.description) {
+                    shareText += ` - ${item.description.substring(0, 80)}...`;
+                }
 
             }
 
             const shareUrl = `${window.location.origin}${mediaPath}`;
 
+            const seasonNumber = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid)?.season_number;
+
             const shareData = {
-                title: shareType === 'season' && type === MediaType.Series
-                    ? `Saison ${firestoreSeasons.find(s => s.uid_season === selectedSeasonUid)?.season_number} - ${item.title}`
+                title: shareType === 'season' && type === MediaType.Series && seasonNumber !== undefined
+                    ? t('shareSeasonTitle', { number: String(seasonNumber), title: item.title })
                     : item.title,
                 text: shareText,
                 url: shareUrl,
@@ -519,7 +628,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 await navigator.clipboard.writeText(shareUrl);
 
-                toast.success('Lien copié dans le presse-papier', {
+                toast.success(t('linkCopied'), {
 
                     position: 'bottom-center',
 
@@ -535,7 +644,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 console.error('Erreur lors du partage:', error);
 
-                toast.error('Erreur lors du partage', {
+                toast.error(t('shareError'), {
 
                     position: 'bottom-center',
 
@@ -553,25 +662,66 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
     }, [isSharing, type, item, selectedSeasonUid, firestoreSeasons]);
 
+    const handleShareEpisode = useCallback(async (episode: Episode | EpisodeSerie) => {
+        const episodeId = 'uid_episode' in episode ? episode.uid_episode : String(episode.episodeNumber);
+        const episodeTitle = episode.title;
+        const shareUrl = `${window.location.origin}/watch/${episodeId}`;
 
+        const shareData = {
+            title: episodeTitle,
+            text: t('shareSeriesText', { title: episodeTitle }),
+            url: shareUrl,
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success(t('linkCopied'), {
+                    position: 'bottom-center',
+                    autoClose: 2000,
+                });
+            }
+        } catch (error) {
+            if (error instanceof Error && error.name !== 'AbortError') {
+                console.error('Erreur lors du partage:', error);
+                toast.error(t('shareError'), {
+                    position: 'bottom-center',
+                    autoClose: 2000,
+                });
+            }
+        }
+    }, [t]);
+
+    const handleToggleEpisodeBookmark = useCallback((episode: Episode | EpisodeSerie) => {
+        const episodeId = 'uid_episode' in episode ? episode.uid_episode : String(episode.episodeNumber);
+        setBookmarkedEpisodeIds(prev =>
+            prev.includes(episodeId)
+                ? prev.filter(id => id !== episodeId)
+                : [...prev, episodeId]
+        );
+    }, []);
 
     return (
 
-        <div className="animate-fadeIn pb-8 md:pb-12 bg-white dark:bg-black min-h-screen">
+        <div className="animate-fadeIn pb-8 md:pb-12 bg-white dark:bg-[#121212] min-h-screen relative">
 
-            <div className="relative h-[50vh] md:h-[60vh] lg:h-[65vh]">
+            <div className="relative w-full aspect-[3/1] sm:aspect-[4/1] md:aspect-[5/1] lg:aspect-[6/1] max-h-[180px] sm:max-h-[220px] md:max-h-[260px] lg:max-h-[280px] overflow-hidden bg-gray-200 dark:bg-gray-800">
 
-                <img src={imageUrl} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+                <img src={imageUrl} alt="" className="absolute w-full h-full object-cover scale-110 blur-xl" />
 
-                {/* Gradient overlay amélioré pour meilleure lisibilité */}
+                <div className="absolute inset-0 flex items-center justify-center z-[5] px-4">
+                    <h1 className="text-white text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black drop-shadow-xl tracking-tight text-center leading-tight">
+                        {title}
+                    </h1>
+                </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-black dark:via-black/80" />
-
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/40 dark:to-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
 
                 <header className="absolute top-0 left-0 right-0 z-10">
 
-                    <div className="flex items-center justify-between h-16 px-4">
+                    <div className="flex items-center justify-between min-h-16 px-4 py-2">
 
                         <button
 
@@ -579,7 +729,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                             className="p-2 rounded-full text-white bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
 
-                            aria-label="Go back"
+                            aria-label={t('goBack')}
 
                         >
 
@@ -611,228 +761,147 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
 
-            <div className="p-3 sm:p-4 md:p-6 lg:p-8 -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-40 relative z-10 space-y-4 md:space-y-6 max-w-7xl mx-auto">
+            
 
-                {/* Titre avec meilleure gestion du texte */}
-
-                <div className="space-y-3 md:space-y-4">
-
-                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white drop-shadow-lg leading-tight break-words">
-
-                        {title}
-
-                    </h1>
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-5 md:space-y-8 relative z-[1]">
 
 
 
-                    {/* Métadonnées mieux organisées */}
-
-                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
-
-                        {item.duration && (
-
-                            <span className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 font-medium">
-
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-
-                                </svg>
-
-                                {item.duration}
-
-                            </span>
-
-                        )}
-
-                        {languages && languages.length > 0 && (
-
-                            <span className="px-2.5 py-1 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs md:text-sm">
-
-                                {languages[0].toUpperCase()}
-
-                            </span>
-
-                        )}
-
-                        {type && (
-
-                            <span className="px-2.5 py-1 rounded-md bg-gray-300 dark:bg-gray-600 text-black dark:text-gray-200 font-semibold text-xs md:text-sm">
-
-                                {type === MediaType.Movie ? t('movie') : type === MediaType.Series ? t('series') : t('podcast')}
-
-                            </span>
-
-                        )}
-
-                    </div>
-
+                <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">
+                    {item.duration && (
+                        <span className="px-2.5 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium">
+                            {item.duration}
+                        </span>
+                    )}
+                    {languages && languages.length > 0 && (
+                        <span className="px-2.5 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium">
+                            {languages[0].toUpperCase()}
+                        </span>
+                    )}
+                    {type && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-semibold">
+                            {type === MediaType.Movie ? t('movie') : type === MediaType.Series ? t('series') : t('podcast')}
+                        </span>
+                    )}
                 </div>
 
 
 
 
 
-                {/* Stats et actions - Mieux organisés */}
-
-                {type === MediaType.Movie && (
-
-                    <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm md:text-base">
-
-                        {isLoadingLikes ? (
-
-                            <span className="text-gray-500 dark:text-gray-400">Chargement...</span>
-
-                        ) : (
-
-                            <>
-
-                                <span className="flex items-center gap-2">
-
-                                    <LikeIcon className={`w-5 h-5 ${hasLiked ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'}`} />
-
-                                    <span className={hasLiked ? 'text-red-500 font-semibold' : 'text-gray-700 dark:text-gray-300'}>
-
-                                        {likeCount} {t('likes')}
-
-                                    </span>
-
-                                </span>
-
-                                <span className="flex items-center gap-2">
-
-                                    <CommentIcon className="w-5 h-5 text-sky-500" />
-
-                                    <span className="text-gray-700 dark:text-gray-300">
-
-                                        {comments.length} {t(comments.length !== 1 ? 'comments' : 'comment')}
-
-                                    </span>
-
-                                </span>
-
-                            </>
-
-                        )}
-
+                {type === MediaType.Movie && !isLoadingLikes && (
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="flex items-center gap-1.5">
+                            <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} />
+                            <span className={hasLiked ? 'text-red-500 font-semibold' : 'text-gray-600 dark:text-gray-400'}>
+                                {likeCount} {t('likes')}
+                            </span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <CommentIcon className="w-4 h-4 text-sky-500" />
+                            <span className="text-gray-600 dark:text-gray-400">
+                                {comments.length} {t(comments.length !== 1 ? 'comments' : 'comment')}
+                            </span>
+                        </span>
                     </div>
-
                 )}
 
 
 
-                {/* Boutons d'action optimisés pour mobile */}
+                <div className="space-y-3">
+                    <button
+                        onClick={handlePlay}
+                        className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 px-6 rounded-xl transition-colors text-sm sm:text-base shadow-lg"
+                    >
+                        <PlayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <span>{t('play')}</span>
+                    </button>
 
-                <div className="w-full">
-
-                    {/* Bouton Play - Toujours en pleine largeur */}
-
-                    <div className="mb-3 sm:mb-4">
-
-                        <button 
-
-                            onClick={handlePlay} 
-
-                            className="w-full flex items-center justify-center gap-2 bg-amber-500 text-gray-900 font-bold py-2.5 sm:py-3 md:py-3.5 px-4 sm:px-6 md:px-8 rounded-lg md:rounded-xl hover:bg-amber-400 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
-
-                        >
-
-                            <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-
-                            <span>{t('play')}</span>
-
-                        </button>
-
-                    </div>
-
-                    
-
-                    {/* Boutons secondaires - Disposition améliorée */}
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        {/* Bouton Like pour les films - pleine largeur sur mobile */}
+                    <div className="flex flex-wrap items-center gap-2">
                         {type === MediaType.Movie && (
                             <button
                                 onClick={handleLike}
-                                className={`order-2 sm:order-1 flex items-center justify-center gap-2 font-bold py-3 px-4 sm:px-6 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 text-sm sm:text-base ${
-                                    hasLiked
-                                        ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 shadow-lg'
-                                        : 'bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
-                                }`}
                                 disabled={isLoading}
+                                className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
+                                    hasLiked
+                                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+                                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
                             >
-                                <LikeIcon className={`w-5 h-5 ${hasLiked ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`} />
+                                <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-red-500' : ''}`} />
                                 <span>{hasLiked ? t('liked') : t('like')}</span>
                                 {likeCount > 0 && (
-                                    <span className="ml-1 px-2 py-0.5 bg-black/10 dark:bg-white/10 rounded-full text-xs">
-                                        {likeCount}
-                                    </span>
+                                    <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">{likeCount}</span>
                                 )}
                             </button>
                         )}
-                        
-                        {/* Conteneur pour My List et Share - meilleure disposition */}
-                        <div className={`order-1 sm:order-2 flex gap-3 ${type === MediaType.Movie ? 'flex-1' : 'w-full'}`}>
-                            <button
-                                onClick={() => toggleBookmark(item.id)}
-                                className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 text-sm sm:text-base ${
-                                    isBookmarked
-                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 hover:from-amber-400 hover:to-orange-400 shadow-lg'
-                                        : 'bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600'
-                                }`}
-                            >
-                                {isBookmarked ? (
-                                    <CheckIcon className="w-5 h-5" />
-                                ) : (
-                                    <PlusIcon className="w-5 h-5" />
-                                )}
-                                <span className="hidden sm:inline">{isBookmarked ? t('addedToList') : t('myList')}</span>
-                                <span className="sm:hidden">{isBookmarked ? (t('addedToList') || 'Ajouté') : (t('myList') || 'Ma liste')}</span>
-                            </button>
-                            
-                            <div className="relative">
-                                {type === MediaType.Series ? (
-                                    <button
-                                        onClick={() => handleShare('series')}
-                                        disabled={isSharing}
-                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
-                                    >
-                                        <ShareIcon className="w-5 h-5" />
-                                        <span className="hidden sm:inline">{t('share') || 'Partager'}</span>
-                                        <span className="sm:hidden">{t('share') || 'Partager'}</span>
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleShare()}
-                                        disabled={isSharing}
-                                        className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
-                                    >
-                                        <ShareIcon className="w-5 h-5" />
-                                        <span className="hidden sm:inline">{t('share') || 'Partager'}</span>
-                                        <span className="sm:hidden">{t('share') || 'Partager'}</span>
-                                    </button>
-                                )}
-                            </div>
-                            <button
-                                onClick={() => setShowSuggestModal(true)}
-                                className="flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl bg-white/90 dark:bg-black/90 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 text-sm sm:text-base shadow-md border border-gray-200 dark:border-gray-600"
-                                title={t('suggest')}
-                            >
-                                <PencilIcon className="w-5 h-5" />
-                                <span className="hidden sm:inline">{t('suggest')}</span>
-                                <span className="sm:hidden">{t('suggest')}</span>
-                            </button>
-                        </div>
-                    </div>
 
+                        <button
+                            onClick={() => toggleBookmark(item.id, item.title, item.description || '', item.imageUrl || '', item.type === MediaType.Series || item.type === MediaType.Podcast)}
+                            className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
+                                isBookmarked
+                                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
+                                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            }`}
+                        >
+                            {isBookmarked ? <CheckIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}
+                            <span>{isBookmarked ? t('addedToList') : t('myList')}</span>
+                        </button>
+
+                        <button
+                            onClick={() => handleShare(type === MediaType.Series ? 'series' : undefined)}
+                            disabled={isSharing}
+                            className="relative flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                        >
+                            <ShareIcon className="w-4 h-4" />
+                            <span>{t('share')}</span>
+                        </button>
+
+                        <button
+                            onClick={() => setShowSuggestModal(true)}
+                            className="flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xs sm:text-sm"
+                            title={t('suggest')}
+                        >
+                            <PencilIcon className="w-4 h-4" />
+                            <span>{t('suggest')}</span>
+                        </button>
+                    </div>
                 </div>
 
 
 
-                {/* Description avec meilleure lisibilité */}
+                {/* Tab Navigation - Series/Podcast only */}
+                {(type === MediaType.Series || type === MediaType.Podcast) && (
+                    <div className="flex border-b border-gray-200 dark:border-gray-700">
+                        <button
+                            onClick={() => setActiveTab('episodes')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                activeTab === 'episodes'
+                                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            {t('episodes')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('about')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                activeTab === 'about'
+                                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            {t('about')}
+                        </button>
+                    </div>
+                )}
 
-                <div className="space-y-2 md:space-y-3">
+                {/* About Tab - Description + Languages */}
+                {(type === MediaType.Movie || activeTab === 'about') && (
+                    <>
+                    <div className="space-y-2 md:space-y-3">
 
-                    <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{t('description')}</h2>
+                        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{t('description')}</h2>
 
                     {description ? (
 
@@ -870,7 +939,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base italic">
 
-                            {t('noDescription') || 'Aucune description disponible'}
+                            {t('noDescription')}
 
                         </p>
 
@@ -878,63 +947,88 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 </div>
 
+                    </>
+                )}
 
+                {activeTab === 'episodes' && (type === MediaType.Series || type === MediaType.Podcast) && (
 
-                {(type === MediaType.Series || type === MediaType.Podcast) && (
+                    <div className="flex flex-col md:flex-row gap-6 md:gap-8">
 
-                    <div className="space-y-4 md:space-y-6">
+                        {/* Left Column - Season pill + heading */}
+                        <div className="md:w-[35%] md:min-w-[240px] shrink-0">
+                            <div className="md:sticky md:top-24 space-y-4">
 
-                        {/* Header avec titre et sélecteur de saison */}
+                                {firestoreSeasons.length > 0 && selectedSeasonUid && (() => {
+                                    const selectedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
+                                    const episodes = seasonEpisodes[selectedSeasonUid];
+                                    const episodeCount = selectedSeason?.nb_episodes ?? episodes?.length ?? 0;
 
-                        <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{t('episodes')}</h2>
+                                    return (
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
+                                                onBlur={() => setTimeout(() => setIsSeasonDropdownOpen(false), 200)}
+                                                className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-900 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                            >
+                                                <span>{t('season')} {selectedSeason?.season_number}</span>
+                                                <span className="text-gray-500">|</span>
+                                                <span className="text-gray-400 font-normal">{episodeCount} {t('episodes')}</span>
+                                                <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${isSeasonDropdownOpen ? 'rotate-180' : ''}`} />
+                                            </button>
 
-                            {/* Menu déroulant pour sélectionner la saison et bouton de partage */}
-                            {firestoreSeasons.length > 0 && (
-                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
-                                    <div className="sm:max-w-xs flex-1">
-                                        <select
-                                            value={selectedSeasonUid || ''}
-                                            onChange={(e) => setSelectedSeasonUid(e.target.value)}
-                                            className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
-                                        >
-                                            {firestoreSeasons.map(season => (
-                                                <option key={season.uid_season} value={season.uid_season}>
-                                                    {t('season')} {season.season_number}
-                                                    {season.title_season ? ` - ${season.title_season}` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    
-                                    {/* Bouton Partager cette saison */}
-                                    <button
-                                        onClick={() => handleShare('season')}
-                                        disabled={isSharing}
-                                        className="flex items-center justify-center gap-2 font-bold py-2 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-md border-0 whitespace-nowrap"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                                        </svg>
-                                        <span className="hidden sm:inline">{t('shareSeason') || 'Partager cette saison'}</span>
-                                        <span className="sm:hidden">{t('share') || 'Partager'}</span>
-                                    </button>
-                                </div>
-                            )}
+                                            {isSeasonDropdownOpen && (
+                                                <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl z-10 border border-gray-200 dark:border-gray-700">
+                                                    {firestoreSeasons.map(season => {
+                                                        const seasonEpCount = season.nb_episodes ?? seasonEpisodes[season.uid_season]?.length ?? 0;
+                                                        return (
+                                                            <button
+                                                                key={season.uid_season}
+                                                                onClick={() => { setSelectedSeasonUid(season.uid_season); setIsSeasonDropdownOpen(false); }}
+                                                                className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                                                                    season.uid_season === selectedSeasonUid
+                                                                        ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium'
+                                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                                }`}
+                                                            >
+                                                                {t('season')} {season.season_number}
+                                                                {season.title_season ? ` - ${season.title_season}` : ''}
+                                                                <span className="ml-2 text-gray-500 font-normal">({seasonEpCount})</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
 
+                                <button
+                                    onClick={() => handleShare('season')}
+                                    disabled={isSharing}
+                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-amber-600 dark:text-gray-400 dark:hover:text-amber-400 transition-colors disabled:opacity-50"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                    </svg>
+                                    <span>{t('shareSeason')}</span>
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Right Column - Episode list */}
+                        <div className="md:w-[65%] min-w-0 space-y-4">
 
                         {isLoading ? (
 
                             <div className="text-center py-8 md:py-12">
 
-                                <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base">{t('loading') || 'Chargement...'}</div>
+                                <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base">{t('loading')}</div>
 
                             </div>
 
                         ) : (
 
-                            <div className="space-y-2 md:space-y-3">
+                            <div className="space-y-2">
 
                                 {/* Afficher les épisodes de la saison sélectionnée depuis Firestore */}
 
@@ -948,8 +1042,6 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                         if (!selectedSeason) return null;
 
-                                        
-
                                         return (
 
                                             <div className="space-y-1">
@@ -960,15 +1052,16 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                                         <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
 
-                                                        <div className="text-gray-500 dark:text-gray-400 text-sm mt-2">{t('loading') || 'Chargement...'}</div>
+                                                        <div className="text-gray-500 dark:text-gray-400 text-sm mt-2">{t('loading')}</div>
 
                                                     </div>
 
                                                 ) : episodes && episodes.length > 0 ? (
 
                                                     episodes.map(episode => {
-
-                                                        const isPlaying = selectedSeason.season_number === playingEpisodeSeasonNumber && episode.uid_episode === playingItem?.episode?.uid_episode;
+                                                        const playingEpUid = playingItem?.episode && 'uid_episode' in playingItem.episode ? (playingItem.episode as EpisodeSerie).uid_episode : undefined;
+                                                        const isPlaying = selectedSeason.season_number === playingEpisodeSeasonNumber && episode.uid_episode === playingEpUid;
+                                                        const isEpBookmarked = bookmarkedEpisodeIds.includes(episode.uid_episode);
 
                                                         return <EpisodeListItem 
                                                             key={episode.uid_episode} 
@@ -977,6 +1070,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                             isPlaying={isPlaying} 
                                                             currentSeasonUid={selectedSeasonUid}
                                                             currentSerieTitle={title}
+                                                            onShare={handleShareEpisode}
+                                                            isBookmarked={isEpBookmarked}
+                                                            onBookmark={() => handleToggleEpisodeBookmark(episode)}
                                                         />;
 
                                                     })
@@ -985,7 +1081,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
 
-                                                        {t('noEpisodes') || 'Aucun épisode disponible pour cette saison'}
+                                                        {t('noEpisodes')}
 
                                                     </div>
 
@@ -1002,7 +1098,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                     seasons && seasons.length > 0 && (
 
-                                        <div className="space-y-2 md:space-y-3">
+                                        <div className="space-y-2">
 
                                             {seasons.map(season => {
 
@@ -1031,9 +1127,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                             <div className="px-2 pb-2 space-y-1 animate-fadeIn">
 
                                                                 {season.episodes.map(episode => {
+                                                                    const playingEpNum = playingItem?.episode && !('uid_episode' in playingItem.episode) ? (playingItem.episode as Episode).episodeNumber : undefined;
+                                                                    const isPlaying = season.seasonNumber === playingEpisodeSeasonNumber && episode.episodeNumber === playingEpNum;
 
-                                                                    const isPlaying = season.seasonNumber === playingEpisodeSeasonNumber && episode.episodeNumber === playingItem?.episode?.episodeNumber;
-
+                                                                    const isEpBookmarked = bookmarkedEpisodeIds.includes(String(episode.episodeNumber));
                                                                     return <EpisodeListItem 
                                                                     key={episode.episodeNumber} 
                                                                     episode={episode} 
@@ -1041,6 +1138,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                                     isPlaying={isPlaying} 
                                                                     currentSeasonUid={undefined}
                                                                     currentSerieTitle={title}
+                                                                    onShare={handleShareEpisode}
+                                                                    isBookmarked={isEpBookmarked}
+                                                                    onBookmark={() => handleToggleEpisodeBookmark(episode)}
                                                                 />;
 
                                                                 })}
@@ -1065,6 +1165,8 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         )}
 
+                        </div>
+
                     </div>
 
                 )}
@@ -1073,25 +1175,27 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
 
-                <div>
+                {(type === MediaType.Movie || activeTab === 'about') && (
+                    <div>
 
-                    <h2 className="text-xl font-bold mb-2">{t('languages')}</h2>
+                        <h2 className="text-lg md:text-xl font-bold mb-2 text-gray-900 dark:text-white">{t('languages')}</h2>
 
-                    <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2">
 
-                        {languages && languages.map(lang => (
+                            {languages && languages.map(lang => (
 
-                            <span key={lang} className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium py-1 px-3 rounded-full">
+                                <span key={lang} className="px-3 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-medium">
 
-                                {lang}
+                                    {lang}
 
-                            </span>
+                                </span>
 
-                        ))}
+                            ))}
+
+                        </div>
 
                     </div>
-
-                </div>
+                )}
 
                 <SuggestTitleModal
                     isOpen={showSuggestModal}

@@ -24,13 +24,24 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [sortOption, setSortOption] = useState<SortOption>('title');
 
+    // Formater la durée en secondes en hh:mm:ss
+    const formatRuntime = (runtime: string): string => {
+        const totalSeconds = parseInt(runtime, 10);
+        if (isNaN(totalSeconds)) return runtime || '';
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    };
+
     // Convertir un Movie en MediaContent
     const convertMovieToMediaContent = (movie: Movie): MediaContent => ({
         id: movie.uid,
         title: movie.title,
         type: MediaType.Movie,
         imageUrl: movie.picture_path || movie.poster_path || movie.backdrop_path || '',
-        duration: movie.runtime_h_m || '',
+        duration: formatRuntime(movie.runtime),
         theme: '',
         description: movie.overview || '',
         languages: movie.original_language ? [movie.original_language] : [],
@@ -96,15 +107,15 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8">
-            {/* Header avec recherche et contrôles */}
-            <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-black">
-                <div className="px-4 md:px-6 lg:px-8 py-4 space-y-4">
+        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8 lg:flex">
+            {/* Sidebar avec recherche, tri, filtres */}
+            <aside className="bg-white dark:bg-black border-b border-gray-200 dark:border-black lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r lg:border-gray-200 dark:lg:border-gray-700">
+                <div className="px-4 md:px-6 lg:px-4 py-4 space-y-4">
                     {/* Barre de navigation supérieure */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between lg:justify-start lg:gap-3">
                         <button
                             onClick={handleBack}
-                            className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            className="lg:hidden p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                             aria-label={t('back')}
                         >
                             <ArrowLeftIcon className="w-6 h-6" />
@@ -112,8 +123,12 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
                             {t('moviesScreenTitle') || 'Documentaires'}
                         </h1>
-                        <div className="w-10"></div>
                     </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        {t('categoryMoviesDescription')}
+                    </p>
 
                     {/* Barre de recherche */}
                     <div className="relative">
@@ -183,10 +198,11 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
 
             {/* Contenu principal */}
-            <div className="relative px-4 md:px-6 lg:px-8 pt-6 z-10">
+            <main className="flex-1 min-w-0">
+                <div className="relative px-2 md:px-6 lg:px-6 pt-6 z-10">
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="text-center space-y-4">
@@ -198,7 +214,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                     <div className="text-center py-20">
                         <div className="max-w-md mx-auto space-y-4">
                             <svg className="w-24 h-24 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                                 {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noMovies') || 'Aucun documentaire'}
@@ -220,8 +236,18 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                     </div>
                 ) : (
                     <>
+                        {/* Breadcrumb - desktop only */}
+                        <div className="hidden lg:flex items-center gap-2 mb-6 text-sm text-gray-500 dark:text-gray-400">
+                            <button onClick={handleBack} className="hover:text-amber-500 transition-colors flex items-center gap-1">
+                                <ArrowLeftIcon className="w-4 h-4" />
+                                <span>{t('home') || 'Home'}</span>
+                            </button>
+                            <span className="text-gray-300 dark:text-gray-600">/</span>
+                            <span className="text-gray-900 dark:text-white font-medium">{t('moviesScreenTitle') || 'Documentaires'}</span>
+                        </div>
+
                         {/* Compteur de résultats */}
-                        <div className="mb-6">
+                        <div className="mb-4 lg:mb-6">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {filteredAndSortedMovies.length} {filteredAndSortedMovies.length > 1 ? t('movies') || 'documentaires' : t('movie') || 'documentaire'}
                                 {searchTerm && ` ${t('foundFor') || 'trouvé(s) pour'} "${searchTerm}"`}
@@ -231,7 +257,7 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         {/* Grille ou Liste selon le mode */}
                         {viewMode === 'grid' ? (
                             <ScrollReveal>
-                                <div className="relative grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-6 z-0">
+                                <div className="relative grid grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-1.5 sm:gap-4 md:gap-6 z-0">
                                     {filteredAndSortedMovies.map((movie) => (
                                         <MovieCard
                                             key={movie.id}
@@ -258,7 +284,8 @@ const MoviesScreen: React.FC<MoviesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         )}
                     </>
                 )}
-            </div>
+                </div>
+            </main>
         </div>
     );
 };
