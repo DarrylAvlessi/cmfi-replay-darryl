@@ -1,16 +1,18 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const fedapaySecret = defineSecret('FEDAPAY_SECRET_KEY');
-
-interface VerifyFedapayData {
+interface RecordFedapayDonationData {
   transactionId: number;
+  status: string;
+  amount: number;
+  reference: string;
+  currency: string;
+  description?: string;
+  metadata?: Record<string, string>;
 }
 
-export const verifyFedapayTransaction = onCall<VerifyFedapayData>(
+export const recordFedapayDonation = onCall<RecordFedapayDonationData>(
   {
-    secrets: [fedapaySecret],
     cors: true,
   },
   async (request) => {
@@ -21,70 +23,32 @@ export const verifyFedapayTransaction = onCall<VerifyFedapayData>(
       );
     }
 
-    const { transactionId } = request.data;
+    const { transactionId, status, amount, reference, currency, metadata } =
+      request.data;
 
-    if (!transactionId) {
+    if (!transactionId || !status || !amount || !reference) {
       throw new HttpsError(
         'invalid-argument',
-        'transactionId is required.',
+        'transactionId, status, amount, and reference are required.',
       );
     }
 
-    const secretKey = fedapaySecret.value();
-    const environment = secretKey.startsWith('sk_sandbox_') ? 'sandbox' : 'live';
-    const baseUrl = environment === 'sandbox'
-      ? 'https://sandbox-api.fedapay.com/v1'
-      : 'https://api.fedapay.com/v1';
-
-    let transaction: any;
-
-    try {
-      const response = await fetch(`${baseUrl}/transactions/${transactionId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${secretKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('FedaPay API error:', response.status, errorBody);
-        throw new HttpsError(
-          'internal',
-          'Failed to verify transaction with FedaPay.',
-        );
-      }
-
-      const data = await response.json();
-      transaction = data.transaction || data;
-    } catch (error) {
-      console.error('FedaPay verification error:', error);
-      if (error instanceof HttpsError) {
-        throw error;
-      }
-      throw new HttpsError(
-        'internal',
-        'Failed to verify transaction. Please try again.',
-      );
-    }
-
-    if (transaction.status !== 'approved') {
+    if (status !== 'approved') {
       throw new HttpsError(
         'failed-precondition',
-        `Transaction has not been completed. Status: ${transaction.status}`,
+        `Transaction has not been completed. Status: ${status}`,
       );
     }
 
     try {
-      const metadata = transaction.custom_metadata || {};
+      const streamerId = metadata?.streamerId || 'cmfi-replay';
+      const streamerName = metadata?.streamerName || 'CMFI Replay';
 
       const donation = {
-        amount: transaction.amount,
-        currency: transaction.currency?.iso || 'XOF',
-        streamerId: metadata.streamerId || 'cmfi-replay',
-        streamerName: metadata.streamerName || 'CMFI Replay',
+        amount,
+        currency: currency || 'XOF',
+        streamerId,
+        streamerName,
         donorId: request.auth.uid,
         donorName:
           request.auth.token.name ||
@@ -93,7 +57,8 @@ export const verifyFedapayTransaction = onCall<VerifyFedapayData>(
         createdAt: FieldValue.serverTimestamp(),
         status: 'completed' as const,
         paymentMethod: 'fedapay',
-        transactionReference: transaction.reference,
+        transactionReference: reference,
+        transactionId,
       };
 
       const db = getFirestore();
@@ -101,7 +66,7 @@ export const verifyFedapayTransaction = onCall<VerifyFedapayData>(
 
       return { success: true };
     } catch (error) {
-      console.error('recordDonation error:', error);
+      console.error('recordFedapayDonation error:', error);
       throw new HttpsError(
         'internal',
         'Failed to record donation.',

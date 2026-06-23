@@ -67,9 +67,22 @@ const FedapayDonationForm: React.FC<FedapayDonationFormProps> = ({
         const isCompleted = resp.reason === FedaPay.CHECKOUT_COMPLETED || resp.reason === 1;
 
         if (isCompleted) {
-          if (resp.transaction?.id) {
+          const tx = resp.transaction;
+          if (tx?.id && tx?.status && tx?.amount) {
             try {
-              await fedapayService.verifyAndRecordDonation(resp.transaction.id);
+              await fedapayService.recordDonation({
+                transactionId: tx.id,
+                status: tx.status,
+                amount: tx.amount,
+                reference: tx.reference || `TXN-${tx.id}`,
+                currency: (tx.currency?.iso) || 'XOF',
+                description: tx.description,
+                metadata: tx.custom_metadata || {
+                  streamerId,
+                  streamerName,
+                  donorId: user?.uid,
+                },
+              });
               toast.success(
                 t('paymentSuccess') || 'Payment successful! Thank you for your donation.',
               );

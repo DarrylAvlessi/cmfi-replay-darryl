@@ -146,4 +146,4 @@ export const recordDonation = onCall<{ paymentIntentId: string }>(
   },
 );
 
-export { verifyFedapayTransaction } from './fedapay';
+export { recordFedapayDonation } from './fedapay';

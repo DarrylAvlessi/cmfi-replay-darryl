@@ -6,7 +6,17 @@ export const fedapayEnabled = !!fedapayPublicKey;
 
 const functions = getFunctions(app, 'us-central1');
 
-interface VerifyFedapayResponse {
+interface RecordFedapayDonationData {
+  transactionId: number;
+  status: string;
+  amount: number;
+  reference: string;
+  currency: string;
+  description?: string;
+  metadata?: Record<string, string>;
+}
+
+interface RecordFedapayDonationResponse {
   success: boolean;
 }
 
@@ -40,12 +50,12 @@ export const fedapayService = {
     return loadCheckoutJs();
   },
 
-  async verifyAndRecordDonation(transactionId: number): Promise<void> {
-    const verify = httpsCallable<
-      { transactionId: number },
-      VerifyFedapayResponse
-    >(functions, 'verifyFedapayTransaction');
+  async recordDonation(data: RecordFedapayDonationData): Promise<void> {
+    const record = httpsCallable<
+      RecordFedapayDonationData,
+      RecordFedapayDonationResponse
+    >(functions, 'recordFedapayDonation');
 
-    await verify({ transactionId });
+    await record(data);
   },
 };
