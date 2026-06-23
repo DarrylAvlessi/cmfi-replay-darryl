@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recordDonation = exports.createDonationIntent = void 0;
+exports.verifyFedapayTransaction = exports.recordDonation = exports.createDonationIntent = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const app_1 = require("firebase-admin/app");
@@ -85,4 +85,6 @@ exports.recordDonation = (0, https_1.onCall)({
         throw new https_1.HttpsError('internal', 'Failed to record donation.');
     }
 });
+var fedapay_1 = require("./fedapay");
+Object.defineProperty(exports, "verifyFedapayTransaction", { enumerable: true, get: function () { return fedapay_1.verifyFedapayTransaction; } });
 //# sourceMappingURL=index.js.map

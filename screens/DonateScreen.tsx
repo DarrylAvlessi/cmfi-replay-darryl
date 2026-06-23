@@ -1,17 +1,94 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Elements } from '@stripe/react-stripe-js';
 import { useAppContext } from '../context/AppContext';
 import { stripePromise } from '../lib/stripeService';
+import { fedapayEnabled } from '../lib/fedapayService';
 import DonationForm from '../components/DonationForm';
+import FedapayDonationForm from '../components/FedapayDonationForm';
 import StreamAlert from '../components/StreamAlert';
 
 const STREAMER_ID = 'cmfi-replay';
 const STREAMER_NAME = 'CMFI Replay';
 
+type PaymentMethod = 'stripe' | 'fedapay';
+
 const DonateScreen: React.FC = () => {
   const { t, user } = useAppContext();
   const navigate = useNavigate();
+
+  const stripeAvailable = !!stripePromise;
+  const fedapayAvailable = fedapayEnabled;
+
+  const defaultMethod: PaymentMethod = stripeAvailable ? 'stripe' : 'fedapay';
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(defaultMethod);
+
+  const showMethodToggle = stripeAvailable && fedapayAvailable;
+
+  const renderPaymentForm = () => {
+    if (!user) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {t('pleaseLogin') || 'Please log in to donate'}
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-colors"
+          >
+            {t('login')}
+          </button>
+        </div>
+      );
+    }
+
+    if (paymentMethod === 'stripe') {
+      if (!stripePromise) {
+        return (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">
+              {t('stripeNotConfigured') || 'Payment is not configured. Please set VITE_STRIPE_PUBLISHABLE_KEY.'}
+            </p>
+          </div>
+        );
+      }
+      return (
+        <Elements stripe={stripePromise}>
+          <DonationForm
+            streamerId={STREAMER_ID}
+            streamerName={STREAMER_NAME}
+          />
+        </Elements>
+      );
+    }
+
+    if (paymentMethod === 'fedapay') {
+      if (!fedapayAvailable) {
+        return (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">
+              {t('fedapayNotConfigured') || 'Mobile Money payment is not configured.'}
+            </p>
+          </div>
+        );
+      }
+      return (
+        <FedapayDonationForm
+          streamerId={STREAMER_ID}
+          streamerName={STREAMER_NAME}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const getSecurePaymentText = () => {
+    if (paymentMethod === 'stripe') {
+      return t('securePayment') || 'Secure payment via Stripe';
+    }
+    return t('securePaymentFedapay') || 'Secure payment via FedaPay (Mobile Money)';
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -70,34 +147,45 @@ const DonateScreen: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           <div className="flex-1 lg:max-w-lg xl:max-w-xl">
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-xl">
-              {user ? (
-                stripePromise ? (
-                  <Elements stripe={stripePromise}>
-                    <DonationForm
-                      streamerId={STREAMER_ID}
-                      streamerName={STREAMER_NAME}
-                    />
-                  </Elements>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 dark:text-gray-400">
-                      {t('stripeNotConfigured') || 'Payment is not configured. Please set VITE_STRIPE_PUBLISHABLE_KEY.'}
-                    </p>
-                  </div>
-                )
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    {t('pleaseLogin') || 'Please log in to donate'}
-                  </p>
+              {showMethodToggle && (
+                <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                   <button
-                    onClick={() => navigate('/login')}
-                    className="px-6 py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-colors"
+                    type="button"
+                    onClick={() => setPaymentMethod('stripe')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      paymentMethod === 'stripe'
+                        ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
                   >
-                    {t('login')}
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 16" fill="currentColor">
+                        <rect width="24" height="16" rx="2" />
+                      </svg>
+                      {t('payByCard') || 'Card'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('fedapay')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      paymentMethod === 'fedapay'
+                        ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <path d="M6 12h4M14 12h4" strokeLinecap="round" />
+                      </svg>
+                      {t('mobileMoney') || 'Mobile Money'}
+                    </span>
                   </button>
                 </div>
               )}
+
+              {renderPaymentForm()}
             </div>
 
             <div className="mt-6 text-center">
@@ -105,7 +193,7 @@ const DonateScreen: React.FC = () => {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                {t('securePayment') || 'Secure payment via Stripe'}
+                {getSecurePaymentText()}
               </div>
             </div>
           </div>
