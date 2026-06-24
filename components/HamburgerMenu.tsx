@@ -4,12 +4,14 @@ interface HamburgerMenuProps {
   isOpen: boolean;
   onClick: () => void;
   className?: string;
+  'data-tour'?: string;
 }
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isOpen, onClick, className = '' }) => {
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ isOpen, onClick, className = '', 'data-tour': dataTour }) => {
   return (
     <button
       onClick={onClick}
+      data-tour={dataTour}
       className={`p-2 rounded-md text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none ${className}`}
       aria-label={isOpen ? 'Close menu' : 'Open menu'}
     >

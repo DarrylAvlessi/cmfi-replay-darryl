@@ -7,6 +7,7 @@ import { useAppContext } from '../context/AppContext';
 import { likeService, movieService, episodeSerieService, statsVuesService, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile, ContinueWatchingItem } from '../lib/db';
 import InfoBar from '../components/InfoBar';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
+import { useTutorial } from '../context/TutorialContext';
 import MoviesSection from '../components/sections/MoviesSection';
 import SeriesSection from '../components/sections/SeriesSection';
 import PodcastsSection from '../components/sections/PodcastsSection';
@@ -32,6 +33,7 @@ const SectionError: React.FC<{ message: string }> = ({ message }) => (
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigateToCategory }) => {
     const { t, user, userProfile, setUserProfile } = useAppContext();
+    const { tryShowTutorialPrompt, isTourRunning } = useTutorial();
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -55,6 +57,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             }
         }
     }, [userProfile, user]);
+
+    useEffect(() => {
+        if (showProfileModal || isTourRunning) return;
+        const timer = setTimeout(() => tryShowTutorialPrompt(), 2000);
+        return () => clearTimeout(timer);
+    }, [showProfileModal, isTourRunning, tryShowTutorialPrompt]);
 
     // State: Most Liked
     const [mostLikedItems, setMostLikedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount?: number }>>([]);

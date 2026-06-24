@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="hidden lg:flex items-center space-x-1">
+    <nav className="hidden lg:flex items-center space-x-1" data-tour="sidebar-categories">
       {navItems.map((item) => (
         <Link
           key={item.id}

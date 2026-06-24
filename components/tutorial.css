@@ -1,0 +1,71 @@
+.tutorial-popover.driver-popover {
+  background-color: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  max-width: 320px;
+}
+
+.dark .tutorial-popover.driver-popover,
+html.dark .tutorial-popover.driver-popover {
+  background-color: #111827;
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+.tutorial-popover .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Lora', serif;
+}
+
+.tutorial-popover .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+html.dark .tutorial-popover .driver-popover-description {
+  color: #d1d5db;
+}
+
+.tutorial-popover .driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.tutorial-popover .driver-popover-navigation-btns {
+  gap: 0.5rem;
+}
+
+.tutorial-popover .driver-popover-prev-btn,
+.tutorial-popover .driver-popover-next-btn {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  color: #1f2937;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-shadow: none;
+}
+
+.tutorial-popover .driver-popover-prev-btn:hover,
+.tutorial-popover .driver-popover-next-btn:hover {
+  background: linear-gradient(to right, #d97706, #b45309);
+  color: #1f2937;
+}
+
+.tutorial-popover .driver-popover-close-btn {
+  color: #9ca3af;
+}
+
+html.dark .tutorial-popover .driver-popover-close-btn {
+  color: #6b7280;
+}
+
+.driver-active-element,
+.driver-active-element * {
+  pointer-events: none;
+}

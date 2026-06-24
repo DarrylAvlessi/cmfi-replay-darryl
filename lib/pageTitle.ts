@@ -40,6 +40,7 @@ export const usePageTitle = () => {
     if (pathname === '/profile') return `${safeT('profile')} - CMFI Replay`;
     if (pathname === '/preferences') return `${safeT('preferences')} - CMFI Replay`;
     if (pathname === '/history') return `${safeT('history')} - CMFI Replay`;
+    if (pathname === '/docs' || pathname.startsWith('/docs/')) return `${safeT('guides')} - CMFI Replay`;
     if (pathname === '/redeem-voucher') return `${safeT('redeemVoucher')} - CMFI Replay`;
     
     // Pages de détails

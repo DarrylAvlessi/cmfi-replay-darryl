@@ -20,19 +20,51 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
     const iconColor = variant === 'light' ? 'text-white' : 'text-gray-600 dark:text-gray-400';
     const hoverBg = variant === 'light' ? 'hover:bg-white/20' : 'hover:bg-gray-200 dark:hover:bg-gray-700';
 
-    const handleMouseEnter = () => {
+    const isHoverDevice = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    const clearCloseTimeout = () => {
         if (closeTimeoutRef.current !== null) {
             clearTimeout(closeTimeoutRef.current);
             closeTimeoutRef.current = null;
         }
+    };
+
+    const handleMouseEnter = () => {
+        if (!isHoverDevice) return;
+        clearCloseTimeout();
         setIsOpen(true);
     };
 
     const handleMouseLeave = () => {
+        if (!isHoverDevice) return;
         closeTimeoutRef.current = window.setTimeout(() => {
             setIsOpen(false);
         }, 200);
     };
+
+    const handleToggle = () => {
+        clearCloseTimeout();
+        setIsOpen((prev) => !prev);
+    };
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                clearCloseTimeout();
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [isOpen]);
 
     const handleLogout = async () => {
         try {
@@ -66,7 +98,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
 
     return (
         <div className="relative" ref={menuRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <button className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} relative`}>
+            <button onClick={handleToggle} className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} relative`}>
                 {photoUrl ? (
                     <img src={photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
                 ) : (

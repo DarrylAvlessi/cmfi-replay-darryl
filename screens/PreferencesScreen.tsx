@@ -73,8 +73,8 @@ const PreferenceRow: React.FC<{
     );
 };
 
-const PreferenceSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <section className="mb-6">
+const PreferenceSection: React.FC<{ title: string; children: React.ReactNode; 'data-tour'?: string }> = ({ title, children, 'data-tour': dataTour }) => (
+    <section className="mb-6" data-tour={dataTour}>
         <h3 className="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500/80 mb-3 px-1">
             {title}
         </h3>
@@ -104,7 +104,7 @@ const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onBack }) => {
                     </p>
                 </div>
 
-                <PreferenceSection title={t('appearance')}>
+                <PreferenceSection title={t('appearance')} data-tour="profile-preferences">
                     <div className="px-4">
                         <PreferenceRow
                             Icon={SunIcon}

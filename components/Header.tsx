@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({
             isOpen={isSidebarOpen}
             onClick={onToggleSidebar}
             className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            data-tour="mobile-menu-btn"
           />
 
           {/* Logo centré */}
@@ -59,7 +60,12 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-4 z-10">
             {/* Hamburger pour tablette (quand la Navbar est cachée) */}
             <div className="md:flex lg:hidden">
-              <HamburgerMenu isOpen={isSidebarOpen} onClick={onToggleSidebar} className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700" />
+              <HamburgerMenu
+                isOpen={isSidebarOpen}
+                onClick={onToggleSidebar}
+                className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                data-tour="mobile-menu-btn"
+              />
             </div>
             {onBack ? (
               <button

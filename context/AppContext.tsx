@@ -233,11 +233,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateServiceWorker,
     } = useRegisterSW({
         onNeedRefresh() {
-            const desktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
-            if (desktop) {
-                updateServiceWorker();
-            } else {
-                setSwUpdateDismissed(false);
+            setSwUpdateDismissed(false);
+        },
+        onRegistered(registration) {
+            if (registration) {
+                setTimeout(() => { registration.update(); }, 1000);
             }
         },
     });

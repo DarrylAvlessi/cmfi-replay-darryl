@@ -811,6 +811,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                 <div className="space-y-3">
                     <button
                         onClick={handlePlay}
+                        data-tour="detail-play-btn"
                         className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 px-6 rounded-xl transition-colors text-sm sm:text-base shadow-lg"
                     >
                         <PlayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -838,6 +839,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         <button
                             onClick={() => toggleBookmark(item.id, item.title, item.description || '', item.imageUrl || '', item.type === MediaType.Series || item.type === MediaType.Podcast)}
+                            data-tour="bookmark-btn"
                             className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
                                 isBookmarked
                                     ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
@@ -859,6 +861,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                         <button
                             onClick={() => setShowSuggestModal(true)}
+                            data-tour="suggest-title"
                             className="flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xs sm:text-sm"
                             title={t('suggest')}
                         >

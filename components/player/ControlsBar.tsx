@@ -49,7 +49,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
   onVolumeSeek,
   formatTime,
 }) => (
-  <div className="px-2 sm:px-4 pb-2 sm:pb-3">
+  <div className="px-2 sm:px-4 pb-2 sm:pb-3" data-tour="player-controls">
       <div className="flex items-center justify-between text-white text-sm font-medium">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <button

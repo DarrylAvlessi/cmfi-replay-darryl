@@ -8,6 +8,7 @@ import {
     deleteDoc, 
     arrayUnion, 
     arrayRemove, 
+    increment, 
     query, 
     where, 
     limit, 
@@ -302,11 +303,17 @@ export const generateDefaultAvatar = (name?: string): string => {
 
 // Interface pour les commentaires
 export interface Comment {
+    id: string;
     comment: string;
     created_at: string;
     created_by: string;
     uid: string; // uid de l'épisode ou du film
     user_photo_url?: string;
+    likes: number;
+    liked_by: string[];
+    parent_id: string | null;
+    edited: boolean;
+    edited_at?: string;
 }
 
 // Services pour les utilisateurs
@@ -995,46 +1002,126 @@ export const titleSuggestionService = {
 
 // Services pour les commentaires
 export const commentService = {
-    async getComments(itemUid: string): Promise<Comment[]> {
+    async getComments(
+        itemUid: string,
+        options?: { limit?: number; startAfter?: string }
+    ): Promise<{ comments: Comment[]; hasMore: boolean }> {
         try {
-            const q = query(
+            const pageSize = options?.limit ?? 50;
+            let q = query(
                 collection(db, COMMENTS_COLLECTION),
-                where('uid', '==', itemUid)
+                where('uid', '==', itemUid),
+                orderBy('created_at', 'desc'),
+                limit(pageSize + 1)
             );
+            if (options?.startAfter) {
+                const cursorDoc = await getDoc(doc(db, COMMENTS_COLLECTION, options.startAfter));
+                if (cursorDoc.exists()) {
+                    q = query(q, startAfter(cursorDoc));
+                }
+            }
             const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => doc.data() as Comment);
+            const docs = querySnapshot.docs;
+            const hasMore = docs.length > pageSize;
+            const results = docs.slice(0, pageSize).map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    comment: data.comment || '',
+                    created_at: data.created_at || '',
+                    created_by: data.created_by || '',
+                    uid: data.uid || '',
+                    user_photo_url: data.user_photo_url,
+                    likes: data.likes ?? 0,
+                    liked_by: data.liked_by ?? [],
+                    parent_id: data.parent_id ?? null,
+                    edited: data.edited ?? false,
+                    edited_at: data.edited_at,
+                } as Comment;
+            });
+            return { comments: results, hasMore };
         } catch (error) {
             console.error('Error getting comments:', error);
-            return [];
+            return { comments: [], hasMore: false };
         }
     },
 
-    async addComment(itemUid: string, text: string, user: UserProfile): Promise<Comment | null> {
+    async addComment(
+        itemUid: string,
+        text: string,
+        user: UserProfile,
+        parentId?: string
+    ): Promise<Comment | null> {
         try {
-            const commentData: Omit<Comment, 'uid'> = {
+            const docRef = doc(collection(db, COMMENTS_COLLECTION));
+            const commentData: Comment = {
+                id: docRef.id,
                 comment: text,
-                created_at: new Date().toLocaleString('fr-FR', { timeZoneName: 'short' }),
+                created_at: new Date().toISOString(),
                 created_by: user.display_name || user.email.split('@')[0],
+                uid: itemUid,
+                user_photo_url: user.photo_url || undefined,
+                likes: 0,
+                liked_by: [],
+                parent_id: parentId ?? null,
+                edited: false,
             };
 
-            // Ajouter user_photo_url uniquement s'il a une valeur
-            if (user.photo_url) {
-                commentData.user_photo_url = user.photo_url;
-            }
-
-            const docRef = doc(collection(db, COMMENTS_COLLECTION));
-            await setDoc(docRef, {
-                ...commentData,
-                uid: itemUid,
-            });
-
-            return {
-                ...commentData,
-                uid: itemUid,
-            } as Comment;
+            await setDoc(docRef, commentData);
+            return commentData;
         } catch (error) {
             console.error('Error adding comment:', error);
             return null;
+        }
+    },
+
+    async updateComment(commentId: string, text: string): Promise<boolean> {
+        try {
+            await updateDoc(doc(db, COMMENTS_COLLECTION, commentId), {
+                comment: text,
+                edited: true,
+                edited_at: new Date().toISOString(),
+            });
+            return true;
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            return false;
+        }
+    },
+
+    async deleteComment(commentId: string): Promise<boolean> {
+        try {
+            await deleteDoc(doc(db, COMMENTS_COLLECTION, commentId));
+            return true;
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            return false;
+        }
+    },
+
+    async likeComment(commentId: string, userId: string): Promise<boolean> {
+        try {
+            await updateDoc(doc(db, COMMENTS_COLLECTION, commentId), {
+                liked_by: arrayUnion(userId),
+                likes: increment(1),
+            });
+            return true;
+        } catch (error) {
+            console.error('Error liking comment:', error);
+            return false;
+        }
+    },
+
+    async unlikeComment(commentId: string, userId: string): Promise<boolean> {
+        try {
+            await updateDoc(doc(db, COMMENTS_COLLECTION, commentId), {
+                liked_by: arrayRemove(userId),
+                likes: increment(-1),
+            });
+            return true;
+        } catch (error) {
+            console.error('Error unliking comment:', error);
+            return false;
         }
     },
 };

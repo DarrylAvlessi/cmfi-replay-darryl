@@ -328,6 +328,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   return (
     <div 
       className="relative w-full h-[60vh] md:h-[80vh] bg-black overflow-hidden group"
+      data-tour="home-hero"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

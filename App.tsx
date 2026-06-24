@@ -34,6 +34,7 @@ const NotificationsScreen = React.lazy(() => import('./screens/NotificationsScre
 const ManageNotificationsScreen = React.lazy(() => import('./screens/ManageNotificationsScreen'));
 const AdminBackupVideosScreen = React.lazy(() => import('./screens/AdminBackupVideosScreen'));
 const HelpScreen = React.lazy(() => import('./screens/HelpScreen'));
+const GuidesScreen = React.lazy(() => import('./screens/GuidesScreen'));
 const WhatsNewScreen = React.lazy(() => import('./screens/WhatsNewScreen'));
 const DonateScreen = React.lazy(() => import('./screens/DonateScreen'));
 const ManageReportsScreen = React.lazy(() => import('./screens/ManageReportsScreen'));
@@ -58,6 +59,9 @@ import WhatsNewModal from './components/WhatsNewModal';
 import RouteLoadingBar from './components/RouteLoadingBar';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
 import PlayerScreenHost from './components/PlayerScreenHost';
+import TutorialHost from './components/TutorialHost';
+import TutorialPromptModal from './components/TutorialPromptModal';
+import { TutorialProvider, useTutorial } from './context/TutorialContext';
 import { ActiveTab, MediaContent, MediaType } from './types';
 import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, dailyActivityService, movieService } from './lib/db';
 import { usePageTitle } from './lib/pageTitle';
@@ -78,6 +82,7 @@ const getTitleFromPath = (path: string, t: (key: string) => string): string => {
     if (path === '/history') return t('history');
     if (path === '/bookmarks' || path === '/favorites') return t('favorites');
     if (path === '/help') return t('help');
+    if (path === '/docs' || path.startsWith('/docs/')) return t('guides');
     return '';
 };
 
@@ -88,11 +93,13 @@ const AppContent: React.FC = () => {
         loading,
         user,
         activeTab: contextActiveTab,
-        setActiveTab: setContextActiveTab
+        setActiveTab: setContextActiveTab,
+        showWhatsNew,
     } = useAppContext();
     const location = useLocation();
     const navigate = useNavigate();
     const { userProfile, setUserProfile } = useAppContext();
+    const { registerSidebarOpener, setCanStartTour } = useTutorial();
     const [showRGPDModal, setShowRGPDModal] = useState(false);
     const [routeLoading, setRouteLoading] = useState(false);
 
@@ -140,6 +147,7 @@ const AppContent: React.FC = () => {
             if (path === '/history') return 'Historique';
             if (path === '/bookmarks' || path === '/favorites') return 'Favoris';
             if (path === '/help') return 'Aide';
+            if (path === '/docs' || path.startsWith('/docs/')) return 'Guides';
             if (path === '/manage-reports') return 'Gestion Signalements';
             if (path === '/manage-users') return 'Gestion Utilisateurs';
             if (path === '/admin') return 'Administration';
@@ -214,6 +222,14 @@ const AppContent: React.FC = () => {
     });
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        registerSidebarOpener(() => setIsSidebarOpen(true));
+    }, [registerSidebarOpener]);
+
+    useEffect(() => {
+        setCanStartTour(!showRGPDModal && !showWhatsNew);
+    }, [showRGPDModal, showWhatsNew, setCanStartTour]);
     const [playingItem, setPlayingItem] = useState<{ media: MediaContent; episode?: EpisodeSerie } | null>(null);
     const [episodesCache, setEpisodesCache] = useState<{ serieId: string; episodes: EpisodeSerie[] } | null>(null);
 
@@ -499,6 +515,12 @@ const AppContent: React.FC = () => {
                             <Route path="/help" element={
                                 <HelpScreen />
                             } />
+                            <Route path="/docs" element={
+                                <GuidesScreen />
+                            } />
+                            <Route path="/docs/:guideId" element={
+                                <GuidesScreen />
+                            } />
                             <Route path="/whats-new" element={
                                 <WhatsNewScreen />
                             } />
@@ -572,6 +594,8 @@ const AppContent: React.FC = () => {
 
             <UpdatePrompt />
             <WhatsNewModal />
+            <TutorialHost />
+            <TutorialPromptModal />
             <PlayerScreenHost />
         </div>
     );
@@ -583,7 +607,9 @@ const App: React.FC = () => {
             <AppProvider>
                 <ThemeProvider>
                     <MiniPlayerProvider>
-                        <AppContent />
+                        <TutorialProvider>
+                            <AppContent />
+                        </TutorialProvider>
                     </MiniPlayerProvider>
                 </ThemeProvider>
             </AppProvider>

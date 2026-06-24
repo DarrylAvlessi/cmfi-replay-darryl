@@ -175,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2" data-tour="sidebar-categories">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => (
               <li key={item.id}>

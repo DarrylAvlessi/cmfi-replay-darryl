@@ -102,7 +102,17 @@ const HelpScreen: React.FC = () => {
                 </button>
 
                 <h1 className="text-2xl font-serif font-bold mb-2">{t('help')}</h1>
-                <p className="text-gray-500 dark:text-gray-400 mb-8">{t('contactUs')}</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">{t('contactUs')}</p>
+
+                <div className="mb-8 p-4 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{t('guidesLinkHelp')}</p>
+                    <button
+                        onClick={() => navigate('/docs')}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-amber-500 text-gray-900 hover:bg-amber-600 transition-colors whitespace-nowrap"
+                    >
+                        {t('guidesLinkHelpAction')}
+                    </button>
+                </div>
 
                 <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
                     <button

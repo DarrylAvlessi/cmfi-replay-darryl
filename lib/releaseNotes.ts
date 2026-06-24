@@ -25,6 +25,17 @@ export const isVersionNewerThan = (v1: string, v2: string): boolean => {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: '1.3.0',
+    date: '2026-06-24',
+    changes: [
+      { type: 'Added', en: 'Interactive guided tours for Getting Started, Player, Search, and Profile with step-by-step spotlight overlays and a first-visit welcome prompt.', fr: 'Visites guidées interactives pour les Premiers pas, le Lecteur, la Recherche et le Profil avec surbrillance étape par étape et une fenêtre de bienvenue à la première visite.' },
+      { type: 'Added', en: 'Guides & Tutorials hub at /docs with read guides and tour launchers.', fr: 'Hub Guides et tutoriels sur /docs avec guides de lecture et lanceurs de visite.' },
+      { type: 'Changed', en: 'Redesigned CommentSection with threaded replies, likes, edit/delete, pagination, and optimistic updates.', fr: 'Refonte de la section commentaires avec réponses imbriquées, likes, édition/suppression, pagination et mises à jour optimistes.' },
+      { type: 'Changed', en: 'Comment form redesigned with minimal bottom-border input, auto-expand, and inline Cancel/Comment buttons.', fr: 'Formulaire de commentaire restylisée avec champ minimal, expansion automatique et boutons Annuler/Commenter.' },
+      { type: 'Fixed', en: 'Responsive layout fixes for comment rows and action bars on narrow screens.', fr: 'Corrections de la responsivité pour les lignes de commentaires et barres d\'actions.' },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-06-10',
     changes: [

@@ -47,6 +47,7 @@ const PlayerScreenHost: React.FC = () => {
   return (
     <div
       className={forceMini ? 'fixed inset-0 z-[9999] pointer-events-none' : ''}
+      data-tour={forceMini ? 'mini-player' : undefined}
       style={forceMini ? { background: 'transparent' } : undefined}
     >
       {playerData.type === 'episode' && playerData.episode ? (

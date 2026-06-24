@@ -22,6 +22,7 @@ import {
     UpdateIcon
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
+import { useTutorial } from '../context/TutorialContext';
 import { UserProfile, userService, reportService, Report } from '../lib/db';
 import WhatsNewScreen from './WhatsNewScreen';
 
@@ -55,6 +56,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
     }, [isAdminValue, userProfile]);
 
     const navigateRouter = useNavigate();
+    const { registerProfileTabSetter } = useTutorial();
+
+    useEffect(() => {
+        registerProfileTabSetter((tab) => {
+            setActiveTab(tab as typeof activeTab);
+        });
+    }, [registerProfileTabSetter]);
     const [historyItems, setHistoryItems] = useState<ContinueWatchingItem[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -211,6 +219,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
             { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
             { id: 'whatsnew' as const, label: t('whatsNew'), icon: 'Update' },
+            { id: 'guides' as const, label: t('guides'), icon: 'Book' },
             { id: 'help' as const, label: t('help') || 'Aide', icon: 'Help' },
         ];
         
@@ -272,17 +281,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             
             case 'history':
                 return (
-                    <HistorySection
-                        items={loadingHistory ? [] : historyItems}
-                        onItemClick={handleHistoryItemClick}
-                        title={t('continueWatching')}
-                        isLoading={loadingHistory}
-                    />
+                    <div data-tour="profile-history">
+                        <HistorySection
+                            items={loadingHistory ? [] : historyItems}
+                            onItemClick={handleHistoryItemClick}
+                            title={t('continueWatching')}
+                            isLoading={loadingHistory}
+                        />
+                    </div>
                 );
             
             case 'account':
                 return (
-                    <div className="space-y-6">
+                    <div className="space-y-6" data-tour="profile-settings">
                         <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                             <h3 className="text-xl font-serif font-bold mb-4">{t('accountSettings')}</h3>
                             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
@@ -430,14 +441,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     </button>
                 </div>
 
-                <HistorySection
-                    items={loadingHistory ? [] : historyItems}
-                    onItemClick={handleHistoryItemClick}
-                    title={t('continueWatching')}
-                    isLoading={loadingHistory}
-                />
+                <div data-tour="profile-history">
+                    <HistorySection
+                        items={loadingHistory ? [] : historyItems}
+                        onItemClick={handleHistoryItemClick}
+                        title={t('continueWatching')}
+                        isLoading={loadingHistory}
+                    />
+                </div>
 
-                <section className="px-4 py-4">
+                <section className="px-4 py-4" data-tour="profile-settings">
                     <h3 className="text-xl font-serif font-bold mb-3">{t('accountSettings')}</h3>
                     <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
                         {mobileSettingsItems.map((item) => (
@@ -466,6 +479,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                 adornment={newReleaseNotes.length > 0 ? (
                                     <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
                                 ) : undefined}
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-4">
+                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
+                            <SettingsItem
+                                Icon={HelpIcon}
+                                label={t('guides')}
+                                onClick={() => navigateRouter('/docs')}
                             />
                         </div>
                     </div>
@@ -512,7 +534,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             {navItems.map((item) => (
                                 <li key={item.id}>
                                     <button
-                                        onClick={() => setActiveTab(item.id)}
+                                        onClick={() => {
+                                            if (item.id === 'guides') {
+                                                navigateRouter('/docs');
+                                            } else {
+                                                setActiveTab(item.id);
+                                            }
+                                        }}
                                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                                             activeTab === item.id
                                                 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-l-4 border-amber-500'

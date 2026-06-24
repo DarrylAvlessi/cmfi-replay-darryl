@@ -131,6 +131,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
         <div className="relative">
           <input
             type="text"
+            data-tour="search-input"
             placeholder={t('searchPlaceholder') || 'Rechercher...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -147,7 +148,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
         </div>
 
         {/* Filtres */}
-        <div className="flex gap-2 mt-2 mb-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 mt-2 mb-2 overflow-x-auto pb-2 scrollbar-hide" data-tour="search-filters">
           {filters.map(filter => (
             <button
               key={filter.value}

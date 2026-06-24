@@ -249,28 +249,110 @@ export const titleSuggestionService = {
 };
 
 export const commentService = {
-    async getComments(itemUid: string): Promise<Comment[]> {
+    async getComments(
+        itemUid: string,
+        options?: { limit?: number; startAfter?: string }
+    ): Promise<{ comments: Comment[]; hasMore: boolean }> {
         const local = localComments.filter(c => c.uid === itemUid);
+        let real: Comment[] = [];
         try {
-            const real = await realCommentService.getComments(itemUid);
-            return [...real, ...local];
+            const result = await realCommentService.getComments(itemUid, options);
+            real = result.comments;
         } catch {
-            return local;
+            // fallback to local only
+        }
+        const all = [...real, ...local].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const pageSize = options?.limit ?? 50;
+        const page = options?.startAfter
+            ? all.filter(c => c.id !== options.startAfter)
+            : all;
+        return { comments: page.slice(0, pageSize), hasMore: page.length > pageSize };
+    },
+
+    async addComment(
+        itemUid: string,
+        text: string,
+        user: UserProfile,
+        parentId?: string
+    ): Promise<Comment | null> {
+        const comment: Comment = {
+            id: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+            comment: text,
+            created_at: new Date().toISOString(),
+            created_by: user.display_name || user.email.split('@')[0],
+            uid: itemUid,
+            user_photo_url: user.photo_url || undefined,
+            likes: 0,
+            liked_by: [],
+            parent_id: parentId ?? null,
+            edited: false,
+        };
+        localComments.push(comment);
+        return comment;
+    },
+
+    async updateComment(commentId: string, text: string): Promise<boolean> {
+        const idx = localComments.findIndex(c => c.id === commentId);
+        if (idx !== -1) {
+            localComments[idx] = { ...localComments[idx], comment: text, edited: true, edited_at: new Date().toISOString() };
+            return true;
+        }
+        try {
+            return await realCommentService.updateComment(commentId, text);
+        } catch {
+            return false;
         }
     },
 
-    async addComment(itemUid: string, text: string, user: UserProfile): Promise<Comment | null> {
-        const commentData: Omit<Comment, 'uid'> = {
-            comment: text,
-            created_at: new Date().toLocaleString('fr-FR', { timeZoneName: 'short' }),
-            created_by: user.display_name || user.email.split('@')[0],
-        };
-        if (user.photo_url) {
-            commentData.user_photo_url = user.photo_url;
+    async deleteComment(commentId: string): Promise<boolean> {
+        const idx = localComments.findIndex(c => c.id === commentId);
+        if (idx !== -1) {
+            localComments.splice(idx, 1);
+            return true;
         }
-        const comment: Comment = { ...commentData, uid: itemUid };
-        localComments.push(comment);
-        return comment;
+        try {
+            return await realCommentService.deleteComment(commentId);
+        } catch {
+            return false;
+        }
+    },
+
+    async likeComment(commentId: string, userId: string): Promise<boolean> {
+        const idx = localComments.findIndex(c => c.id === commentId);
+        if (idx !== -1) {
+            const c = localComments[idx];
+            if (!c.liked_by.includes(userId)) {
+                localComments[idx] = { ...c, liked_by: [...c.liked_by, userId], likes: (c.likes || 0) + 1 };
+            }
+            return true;
+        }
+        try {
+            return await realCommentService.likeComment(commentId, userId);
+        } catch {
+            return false;
+        }
+    },
+
+    async unlikeComment(commentId: string, userId: string): Promise<boolean> {
+        const idx = localComments.findIndex(c => c.id === commentId);
+        if (idx !== -1) {
+            const c = localComments[idx];
+            if (c.liked_by.includes(userId)) {
+                localComments[idx] = {
+                    ...c,
+                    liked_by: c.liked_by.filter(id => id !== userId),
+                    likes: Math.max(0, (c.likes || 0) - 1),
+                };
+            }
+            return true;
+        }
+        try {
+            return await realCommentService.unlikeComment(commentId, userId);
+        } catch {
+            return false;
+        }
     },
 };
 
