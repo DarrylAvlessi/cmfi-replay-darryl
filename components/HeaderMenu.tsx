@@ -98,11 +98,11 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({ variant = 'dark' }) => {
 
     return (
         <div className="relative" ref={menuRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <button onClick={handleToggle} className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} relative`}>
+            <button onClick={handleToggle} className={`p-1 rounded-full transition-colors ${iconColor} ${hoverBg} relative`} data-tour="header-avatar">
                 {photoUrl ? (
-                    <img src={photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={photoUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-500/70" />
                 ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center ring-2 ring-amber-500/70">
                         <UserIcon className="w-5 h-5 text-white" />
                     </div>
                 )}

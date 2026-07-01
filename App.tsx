@@ -99,7 +99,7 @@ const AppContent: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { userProfile, setUserProfile } = useAppContext();
-    const { registerSidebarOpener, setCanStartTour } = useTutorial();
+    const { registerSidebarOpener, registerSidebarCloser, setCanStartTour } = useTutorial();
     const [showRGPDModal, setShowRGPDModal] = useState(false);
     const [routeLoading, setRouteLoading] = useState(false);
 
@@ -225,7 +225,8 @@ const AppContent: React.FC = () => {
 
     useEffect(() => {
         registerSidebarOpener(() => setIsSidebarOpen(true));
-    }, [registerSidebarOpener]);
+        registerSidebarCloser(() => setIsSidebarOpen(false));
+    }, [registerSidebarOpener, registerSidebarCloser]);
 
     useEffect(() => {
         setCanStartTour(!showRGPDModal && !showWhatsNew);

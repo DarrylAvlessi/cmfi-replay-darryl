@@ -63,6 +63,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             setActiveTab(tab as typeof activeTab);
         });
     }, [registerProfileTabSetter]);
+
     const [historyItems, setHistoryItems] = useState<ContinueWatchingItem[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
 

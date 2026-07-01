@@ -15,9 +15,10 @@ const GuidesScreen: React.FC = () => {
   const navigate = useNavigate();
   const { guideId } = useParams<{ guideId?: string }>();
   const { t, language } = useAppContext();
-  const { startTour, isTourCompleted } = useTutorial();
+  const { startTour, isTourCompleted, playerTourAvailable } = useTutorial();
   const [activeCategory, setActiveCategory] = useState<GuideCategory | 'all'>('all');
 
+  const appTourGuide = getGuideById('app-tour');
   const selectedGuide = guideId ? getGuideById(guideId) : null;
 
   const filteredGuides = useMemo(() => {
@@ -77,7 +78,8 @@ const GuidesScreen: React.FC = () => {
             <div className="space-y-3">
               <button
                 onClick={() => handleStartTour(selectedGuide.tourId)}
-                className="w-full py-3 text-sm font-bold text-gray-900 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-[0.98]"
+                disabled={selectedGuide.tourId === 'player' && !playerTourAvailable}
+                className="w-full py-3 text-sm font-bold text-gray-900 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t('startTour')}
               </button>
@@ -110,6 +112,33 @@ const GuidesScreen: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
           {t('guidesSubtitle')}
         </p>
+
+        {appTourGuide && (
+          <div className="mb-8 p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-900 dark:to-gray-800/80 border-2 border-amber-400/60 dark:border-amber-500/30 shadow-lg">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">
+                {getLocalized(appTourGuide, 'title')}
+              </h2>
+              {isTourCompleted('app-tour') && (
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 flex-shrink-0">
+                  {t('tourCompletedBadge')}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+              {getLocalized(appTourGuide, 'summary')}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+              {t('readTime', { minutes: String(appTourGuide.readMinutes) })}
+            </p>
+            <button
+              onClick={() => handleStartTour('app-tour')}
+              className="w-full py-3 text-sm font-bold text-gray-900 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-[0.98]"
+            >
+              {t('startTour')}
+            </button>
+          </div>
+        )}
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           {GUIDE_CATEGORIES.map((cat) => (
@@ -159,7 +188,8 @@ const GuidesScreen: React.FC = () => {
                 {guide.tourId && (
                   <button
                     onClick={() => handleStartTour(guide.tourId)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500 text-gray-900 hover:bg-amber-600 transition-colors"
+                    disabled={guide.tourId === 'player' && !playerTourAvailable}
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500 text-gray-900 hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {t('startTour')}
                   </button>

@@ -278,8 +278,6 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
     const isBookmarked = bookmarkedIds.includes(item.id);
 
-
-
     // Charger les données depuis Firestore si c'est une série
 
     useEffect(() => {

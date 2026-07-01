@@ -58,9 +58,9 @@ const Navbar: React.FC = () => {
         <Link
           key={item.id}
           to={item.path}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive(item.path)
-              ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50'
+          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${isActive(item.path)
+              ? 'text-amber-500 border-b-2 border-amber-500'
+              : 'text-gray-700 hover:text-amber-600 dark:text-gray-300 dark:hover:text-amber-400'
             }`}
           aria-current={isActive(item.path) ? 'page' : undefined}
         >
@@ -71,9 +71,9 @@ const Navbar: React.FC = () => {
       <div className="relative group">
         <Link
           to="/productions"
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${isActive('/productions')
-              ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black/50'
+          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${isActive('/productions')
+              ? 'text-amber-500 border-b-2 border-amber-500'
+              : 'text-gray-700 hover:text-amber-600 dark:text-gray-300 dark:hover:text-amber-400'
             }`}
           aria-current={isActive('/productions') ? 'page' : undefined}
         >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { driver, DriveStep, Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -52,11 +52,13 @@ const TutorialHost: React.FC = () => {
     markTourCompleted,
     advanceTourStep,
     onStepBeforeShow,
+    closeSidebar,
     demoVideoUid,
   } = useTutorial();
   const { language, t } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showContinuePrompt, setShowContinuePrompt] = useState(false);
     const driverRef = useRef<Driver | null>(null);
   const tourNavTokenRef = useRef(0);
   const prevNavTokenRef = useRef(0);
@@ -79,8 +81,22 @@ const TutorialHost: React.FC = () => {
   );
 
   useEffect(() => {
+    const pathChanged = prevPathRef.current !== location.pathname;
+
+    if (activeTourId && pathChanged) {
+      if (prevNavTokenRef.current === tourNavTokenRef.current) {
+        destroyDriver();
+        stopTour();
+        prevPathRef.current = location.pathname;
+        return;
+      }
+      prevNavTokenRef.current = tourNavTokenRef.current;
+    }
+    prevPathRef.current = location.pathname;
+
     if (!activeTourId) {
       destroyDriver();
+      prevNavTokenRef.current = tourNavTokenRef.current;
       return;
     }
 
@@ -91,7 +107,8 @@ const TutorialHost: React.FC = () => {
     }
 
     const isMobile = window.innerWidth < 1024;
-    const visibleSteps = getVisibleTourSteps(tour, isMobile);
+    const ctx: TourContext = { demoVideoUid };
+    const visibleSteps = getVisibleTourSteps(tour, isMobile, ctx);
 
     if (currentStepIndex >= visibleSteps.length) {
       finishTour(activeTourId);
@@ -99,7 +116,6 @@ const TutorialHost: React.FC = () => {
     }
 
     const step = visibleSteps[currentStepIndex];
-    const ctx: TourContext = { demoVideoUid };
     const targetRoute = resolveTourRoute(step.route, ctx);
 
     let cancelled = false;
@@ -110,8 +126,11 @@ const TutorialHost: React.FC = () => {
         await wait(DOM_SETTLE_MS);
       }
 
+      if (cancelled) return;
+
       if (targetRoute && location.pathname !== targetRoute) {
         tourNavTokenRef.current++;
+        closeSidebar();
         navigate(targetRoute);
         await wait(DOM_SETTLE_MS + 300);
       }
@@ -142,7 +161,9 @@ const TutorialHost: React.FC = () => {
           progressText: `${stepNumber} / ${totalSteps}`,
           onNextClick: () => {
             destroyDriver();
-            if (isLast) {
+            if (step.pauseAfterThisStep) {
+              setShowContinuePrompt(true);
+            } else if (isLast) {
               finishTour(activeTourId);
             } else {
               advanceTourStep();
@@ -207,28 +228,31 @@ const TutorialHost: React.FC = () => {
     t,
   ]);
 
-  useEffect(() => {
-    if (!activeTourId) {
-      prevPathRef.current = location.pathname;
-      prevNavTokenRef.current = tourNavTokenRef.current;
-      return;
-    }
+  const handleContinueTour = () => {
+    setShowContinuePrompt(false);
+    advanceTourStep();
+  };
 
-    const pathChanged = prevPathRef.current !== location.pathname;
+  const handleStopTour = () => {
+    setShowContinuePrompt(false);
+    stopTour();
+  };
 
-    if (pathChanged) {
-      if (prevNavTokenRef.current !== tourNavTokenRef.current) {
-        prevNavTokenRef.current = tourNavTokenRef.current;
-      } else {
-        destroyDriver();
-        stopTour();
-      }
-    }
-
-    prevPathRef.current = location.pathname;
-  }, [location.pathname, activeTourId, destroyDriver, stopTour]);
-
-  return null;
+  return showContinuePrompt ? (
+    <div className="tutorial-continue-overlay">
+      <div className="tutorial-continue-modal">
+        <p className="tutorial-continue-text">{t('continueTourPrompt')}</p>
+        <div className="tutorial-continue-buttons">
+          <button onClick={handleContinueTour} className="tutorial-btn tutorial-btn-primary">
+            {t('continueTour')}
+          </button>
+          <button onClick={handleStopTour} className="tutorial-btn tutorial-btn-secondary">
+            {t('stopTour')}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 };
 
 export default TutorialHost;

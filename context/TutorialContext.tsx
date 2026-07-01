@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -11,13 +12,16 @@ import { getTourById } from '../lib/tours';
 
 const COMPLETED_TOURS_KEY = 'completedTours';
 const TUTORIAL_PROMPT_KEY = 'tutorialPromptDismissed';
+const PER_TOUR_PROMPT_PREFIX = 'tourPromptDismissed_';
 
 interface TutorialContextType {
   activeTourId: string | null;
   isTourRunning: boolean;
   completedTours: string[];
   showTutorialPrompt: boolean;
+  pendingTourId: string | null;
   demoVideoUid: string | null;
+  playerTourAvailable: boolean;
   startTour: (tourId: string) => Promise<void>;
   stopTour: () => void;
   markTourCompleted: (tourId: string) => void;
@@ -25,8 +29,10 @@ interface TutorialContextType {
   dismissTutorialPrompt: (permanent?: boolean) => void;
   acceptTutorialPrompt: () => Promise<void>;
   registerSidebarOpener: (fn: () => void) => void;
+  registerSidebarCloser: (fn: () => void) => void;
   registerProfileTabSetter: (fn: (tab: string) => void) => void;
   openSidebar: () => void;
+  closeSidebar: () => void;
   setProfileTab: (tab: string) => void;
   onStepBeforeShow: (action: string) => void;
   advanceTourStep: () => void;
@@ -35,6 +41,7 @@ interface TutorialContextType {
   canStartTour: boolean;
   setCanStartTour: (value: boolean) => void;
   tryShowTutorialPrompt: () => void;
+  tryShowTourPrompt: (tourId: string) => void;
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -53,13 +60,20 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedTours, setCompletedTours] = useState<string[]>(readCompletedTours);
   const [showTutorialPrompt, setShowTutorialPrompt] = useState(false);
+  const [pendingTourId, setPendingTourId] = useState<string | null>(null);
   const [demoVideoUid, setDemoVideoUid] = useState<string | null>(null);
+  const [playerTourAvailable, setPlayerTourAvailable] = useState(false);
   const [canStartTour, setCanStartTour] = useState(true);
   const sidebarOpenerRef = useRef<(() => void) | null>(null);
+  const sidebarCloserRef = useRef<(() => void) | null>(null);
   const profileTabSetterRef = useRef<((tab: string) => void) | null>(null);
 
   const registerSidebarOpener = useCallback((fn: () => void) => {
     sidebarOpenerRef.current = fn;
+  }, []);
+
+  const registerSidebarCloser = useCallback((fn: () => void) => {
+    sidebarCloserRef.current = fn;
   }, []);
 
   const registerProfileTabSetter = useCallback((fn: (tab: string) => void) => {
@@ -70,14 +84,23 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     sidebarOpenerRef.current?.();
   }, []);
 
+  const closeSidebar = useCallback(() => {
+    sidebarCloserRef.current?.();
+  }, []);
+
   const setProfileTab = useCallback((tab: string) => {
     profileTabSetterRef.current?.(tab);
   }, []);
 
+  const SUB_TOUR_IDS = ['app-tour', 'getting-started', 'search', 'profile', 'player'];
+
   const markTourCompleted = useCallback((tourId: string) => {
     setCompletedTours((prev) => {
-      if (prev.includes(tourId)) return prev;
-      const next = [...prev, tourId];
+      const toAdd = tourId === 'app-tour' ? SUB_TOUR_IDS : [tourId];
+      const next = [...prev];
+      for (const id of toAdd) {
+        if (!next.includes(id)) next.push(id);
+      }
       localStorage.setItem(COMPLETED_TOURS_KEY, JSON.stringify(next));
       return next;
     });
@@ -102,6 +125,15 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  useEffect(() => {
+    fetchDemoVideoUid().then((uid) => {
+      if (uid) {
+        setDemoVideoUid(uid);
+        setPlayerTourAvailable(true);
+      }
+    });
+  }, [fetchDemoVideoUid]);
+
   const startTour = useCallback(
     async (tourId: string) => {
       const tour = getTourById(tourId);
@@ -109,29 +141,36 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       setShowTutorialPrompt(false);
 
-      if (tourId === 'player') {
-        const uid = await fetchDemoVideoUid();
-        setDemoVideoUid(uid);
-      }
+      if (tourId === 'player' && !playerTourAvailable) return;
 
       setCurrentStepIndex(0);
       setActiveTourId(tourId);
     },
-    [canStartTour, fetchDemoVideoUid]
+    [canStartTour, playerTourAvailable]
   );
 
   const dismissTutorialPrompt = useCallback((permanent = false) => {
+    const tourId = pendingTourId ?? 'app-tour';
     setShowTutorialPrompt(false);
+    setPendingTourId(null);
     if (permanent) {
-      localStorage.setItem(TUTORIAL_PROMPT_KEY, 'true');
+      localStorage.setItem(`${PER_TOUR_PROMPT_PREFIX}${tourId}`, 'true');
+      if (tourId === 'getting-started') {
+        localStorage.setItem(TUTORIAL_PROMPT_KEY, 'true');
+      }
     }
-  }, []);
+  }, [pendingTourId]);
 
   const acceptTutorialPrompt = useCallback(async () => {
-    localStorage.setItem(TUTORIAL_PROMPT_KEY, 'true');
+    const tourId = pendingTourId ?? 'app-tour';
+    localStorage.setItem(`${PER_TOUR_PROMPT_PREFIX}${tourId}`, 'true');
+    if (tourId === 'getting-started') {
+      localStorage.setItem(TUTORIAL_PROMPT_KEY, 'true');
+    }
     setShowTutorialPrompt(false);
-    await startTour('getting-started');
-  }, [startTour]);
+    setPendingTourId(null);
+    await startTour(tourId);
+  }, [pendingTourId, startTour]);
 
   const onStepBeforeShow = useCallback(
     (action: string) => {
@@ -148,10 +187,19 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const tryShowTutorialPrompt = useCallback(() => {
     if (!canStartTour) return;
-    if (shouldShowTutorialPrompt()) {
+    if (shouldShowTourPrompt('app-tour')) {
       setShowTutorialPrompt(true);
     }
   }, [canStartTour]);
+
+  const tryShowTourPrompt = useCallback((tourId: string) => {
+    if (!canStartTour) return;
+    if (activeTourId !== null) return;
+    if (tourId === 'player' && !playerTourAvailable) return;
+    if (!shouldShowTourPrompt(tourId)) return;
+    setPendingTourId(tourId);
+    setShowTutorialPrompt(true);
+  }, [canStartTour, activeTourId, playerTourAvailable]);
 
   const value = useMemo(
     () => ({
@@ -159,7 +207,9 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       isTourRunning: activeTourId !== null,
       completedTours,
       showTutorialPrompt,
+      pendingTourId,
       demoVideoUid,
+      playerTourAvailable,
       startTour,
       stopTour,
       markTourCompleted,
@@ -167,8 +217,10 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       dismissTutorialPrompt,
       acceptTutorialPrompt,
       registerSidebarOpener,
+      registerSidebarCloser,
       registerProfileTabSetter,
       openSidebar,
+      closeSidebar,
       setProfileTab,
       onStepBeforeShow,
       advanceTourStep,
@@ -177,12 +229,15 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       canStartTour,
       setCanStartTour,
       tryShowTutorialPrompt,
+      tryShowTourPrompt,
     }),
     [
       activeTourId,
       completedTours,
       showTutorialPrompt,
+      pendingTourId,
       demoVideoUid,
+      playerTourAvailable,
       startTour,
       stopTour,
       markTourCompleted,
@@ -190,8 +245,10 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       dismissTutorialPrompt,
       acceptTutorialPrompt,
       registerSidebarOpener,
+      registerSidebarCloser,
       registerProfileTabSetter,
       openSidebar,
+      closeSidebar,
       setProfileTab,
       onStepBeforeShow,
       advanceTourStep,
@@ -214,10 +271,17 @@ export function useTutorial(): TutorialContextType {
   return ctx;
 }
 
-export function shouldShowTutorialPrompt(): boolean {
-  if (localStorage.getItem(TUTORIAL_PROMPT_KEY) === 'true') return false;
+export function shouldShowTourPrompt(tourId: string): boolean {
+  if (tourId === 'getting-started' || tourId === 'app-tour') {
+    if (localStorage.getItem(TUTORIAL_PROMPT_KEY) === 'true') return false;
+  }
+  if (localStorage.getItem(`${PER_TOUR_PROMPT_PREFIX}${tourId}`) === 'true') return false;
   const completed = readCompletedTours();
-  return !completed.includes('getting-started');
+  return !completed.includes(tourId);
 }
 
-export { TUTORIAL_PROMPT_KEY };
+export function shouldShowTutorialPrompt(): boolean {
+  return shouldShowTourPrompt('getting-started');
+}
+
+export { TUTORIAL_PROMPT_KEY, PER_TOUR_PROMPT_PREFIX };

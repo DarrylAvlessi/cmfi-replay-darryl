@@ -1,11 +1,20 @@
 import { useAppContext } from '../context/AppContext';
 import { useTutorial } from '../context/TutorialContext';
+import { getGuideById } from '../lib/userGuides';
 
 const TutorialPromptModal = () => {
-  const { t } = useAppContext();
-  const { showTutorialPrompt, acceptTutorialPrompt, dismissTutorialPrompt } = useTutorial();
+  const { t, language } = useAppContext();
+  const { showTutorialPrompt, pendingTourId, acceptTutorialPrompt, dismissTutorialPrompt } = useTutorial();
 
   if (!showTutorialPrompt) return null;
+
+  const guide = pendingTourId ? getGuideById(pendingTourId) : null;
+  const promptTitle = guide
+    ? (language === 'fr' ? guide.title.fr : guide.title.en)
+    : t('tutorialPromptTitle');
+  const promptSubtitle = guide
+    ? (language === 'fr' ? guide.summary.fr : guide.summary.en)
+    : t('tutorialPromptSubtitle');
 
   return (
     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
@@ -16,8 +25,8 @@ const TutorialPromptModal = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             <div>
-              <p className="text-white font-bold text-lg">{t('tutorialPromptTitle')}</p>
-              <p className="text-white/80 text-sm mt-0.5">{t('tutorialPromptSubtitle')}</p>
+              <p className="text-white font-bold text-lg">{promptTitle}</p>
+              <p className="text-white/80 text-sm mt-0.5">{promptSubtitle}</p>
             </div>
           </div>
         </div>

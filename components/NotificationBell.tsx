@@ -38,7 +38,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ className = '' }) =
         >
             <BellIcon className="w-6 h-6 text-gray-900 dark:text-white" />
             {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-black">
                     {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
             )}

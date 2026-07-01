@@ -1,4 +1,4 @@
-export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile';
+export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile' | 'full-app';
 
 export interface GuideStep {
   en: string;
@@ -144,10 +144,79 @@ export const USER_GUIDES: UserGuide[] = [
       },
     ],
   },
+  {
+    id: 'app-tour',
+    category: 'full-app',
+    tourId: 'app-tour',
+    title: {
+      en: 'Full App Tour',
+      fr: 'Visite complète',
+    },
+    summary: {
+      en: 'A complete walkthrough of CMFI Replay — from the home page to search, profile, and the video player. Recommended for new users.',
+      fr: 'Une visite complète de CMFI Replay — de la page d\'accueil à la recherche, au profil et au lecteur vidéo. Recommandé pour les nouveaux utilisateurs.',
+    },
+    readMinutes: 10,
+    steps: [
+      {
+        en: 'The home page highlights featured documentaries and productions. Use the Play button to start watching instantly.',
+        fr: 'La page d\'accueil met en avant des documentaires et productions. Utilisez le bouton Lire pour commencer immédiatement.',
+      },
+      {
+        en: 'On mobile, use the bottom navigation bar to switch between Home, Search, and Profile.',
+        fr: 'Sur mobile, utilisez la barre de navigation en bas pour passer entre Accueil, Recherche et Profil.',
+      },
+      {
+        en: 'Browse content categories: Documentaries, Productions, and Podcasts from the menu or navigation bar.',
+        fr: 'Parcourez les catégories : Documentaires, Productions et Podcasts depuis le menu ou la barre de navigation.',
+      },
+      {
+        en: 'Scroll down on the home page to find Continue Watching, Most Liked, and category sections.',
+        fr: 'Faites défiler la page d\'accueil pour trouver Reprendre, Les plus aimés et les sections par catégorie.',
+      },
+      {
+        en: 'Open the Search tab and type keywords to find documentaries, productions, podcasts, seasons, and episodes.',
+        fr: 'Ouvrez l\'onglet Recherche et saisissez des mots-clés pour trouver documentaires, productions, podcasts, saisons et épisodes.',
+      },
+      {
+        en: 'Use filter chips to narrow results by type: Documentaries, Productions, Podcasts, Seasons, or Episodes.',
+        fr: 'Utilisez les filtres pour affiner par type : Documentaires, Productions, Podcasts, Saisons ou Épisodes.',
+      },
+      {
+        en: 'Open Profile to see your Continue Watching history and pick up where you left off.',
+        fr: 'Ouvrez Profil pour voir votre historique Reprendre et continuer où vous vous êtes arrêté.',
+      },
+      {
+        en: 'Access Account Settings to edit your profile, change your password, and manage your account.',
+        fr: 'Accédez aux Paramètres du compte pour modifier votre profil, changer votre mot de passe et gérer votre compte.',
+      },
+      {
+        en: 'In Preferences, switch between light and dark theme and choose English or French.',
+        fr: 'Dans Préférences, basculez entre les thèmes clair/sombre et choisissez l\'anglais ou le français.',
+      },
+      {
+        en: 'On a content detail page, tap My List to save it to your favorites for quick access later.',
+        fr: 'Sur une page de détail, appuyez sur Ma liste pour sauvegarder dans vos favoris.',
+      },
+      {
+        en: 'Use the Suggest button (pencil icon) to propose a better title for any video.',
+        fr: 'Utilisez le bouton Suggérer (icône crayon) pour proposer un meilleur titre.',
+      },
+      {
+        en: 'Press Play to open the full video player with playback controls: play/pause, volume, speed, picture-in-picture, and fullscreen.',
+        fr: 'Appuyez sur Lire pour ouvrir le lecteur avec les contrôles : lecture, volume, vitesse, incrustation et plein écran.',
+      },
+      {
+        en: 'When you navigate away during playback, the video continues in a mini player at the bottom of the screen.',
+        fr: 'En quittant la lecture, la vidéo continue dans un mini lecteur en bas de l\'écran.',
+      },
+    ],
+  },
 ];
 
 export const GUIDE_CATEGORIES: { id: GuideCategory | 'all'; labelKey: string }[] = [
   { id: 'all', labelKey: 'guideCategoryAll' },
+  { id: 'full-app', labelKey: 'guideCategoryFullApp' },
   { id: 'getting-started', labelKey: 'guideCategoryGettingStarted' },
   { id: 'player', labelKey: 'guideCategoryPlayer' },
   { id: 'search', labelKey: 'guideCategorySearch' },
