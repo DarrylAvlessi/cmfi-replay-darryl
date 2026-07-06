@@ -709,7 +709,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 <img src={imageUrl} alt="" className="absolute w-full h-full object-cover scale-110 blur-xl" />
 
-                <div className="absolute inset-0 flex items-center justify-center z-[5] px-4">
+                <div className="absolute inset-0 flex items-center justify-center z-[5] px-4 pt-14 sm:pt-16">
                     <h1 className="text-white text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black drop-shadow-xl tracking-tight text-center leading-tight">
                         {title}
                     </h1>
@@ -719,7 +719,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                 <header className="absolute top-0 left-0 right-0 z-10">
 
-                    <div className="flex items-center justify-between min-h-16 px-4 py-2">
+                    <div className="flex items-center justify-between min-h-16 px-4 py-2 pt-4 sm:pt-2">
 
                         <button
 
@@ -968,8 +968,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                         <div className="relative">
                                             <button
                                                 onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
-                                                onBlur={() => setTimeout(() => setIsSeasonDropdownOpen(false), 200)}
                                                 className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-900 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                aria-haspopup="listbox"
+                                                aria-expanded={isSeasonDropdownOpen}
                                             >
                                                 <span>{t('season')} {selectedSeason?.season_number}</span>
                                                 <span className="text-gray-500">|</span>
@@ -978,12 +979,17 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                             </button>
 
                                             {isSeasonDropdownOpen && (
-                                                <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl z-10 border border-gray-200 dark:border-gray-700">
+                                                <div
+                                                    className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl z-10 border border-gray-200 dark:border-gray-700"
+                                                    role="listbox"
+                                                >
                                                     {firestoreSeasons.map(season => {
                                                         const seasonEpCount = season.nb_episodes ?? seasonEpisodes[season.uid_season]?.length ?? 0;
                                                         return (
                                                             <button
                                                                 key={season.uid_season}
+                                                                role="option"
+                                                                aria-selected={season.uid_season === selectedSeasonUid}
                                                                 onClick={() => { setSelectedSeasonUid(season.uid_season); setIsSeasonDropdownOpen(false); }}
                                                                 className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                                                                     season.uid_season === selectedSeasonUid
@@ -998,6 +1004,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                         );
                                                     })}
                                                 </div>
+                                            )}
+
+                                            {isSeasonDropdownOpen && (
+                                                <div className="fixed inset-0 z-0" onClick={() => setIsSeasonDropdownOpen(false)} />
                                             )}
                                         </div>
                                     );
@@ -1049,12 +1059,20 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                                 {isLoadingEpisodes ? (
 
-                                                    <div className="text-center py-8">
-
-                                                        <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-
-                                                        <div className="text-gray-500 dark:text-gray-400 text-sm mt-2">{t('loading')}</div>
-
+                                                    <div className="space-y-3 animate-pulse">
+                                                        {[1, 2, 3].map((n) => (
+                                                            <div key={n} className="flex gap-3 md:gap-4 p-2 rounded-xl">
+                                                                <div className="flex-1 flex gap-3 md:gap-4 min-w-0">
+                                                                    <div className="w-32 sm:w-36 md:w-44 shrink-0 aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                                                                    <div className="flex-1 min-w-0 space-y-2 py-1">
+                                                                        <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                                                                        <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
+                                                                        <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-7 h-7 mt-1 rounded-lg bg-gray-200 dark:bg-gray-700 shrink-0" />
+                                                            </div>
+                                                        ))}
                                                     </div>
 
                                                 ) : episodes && episodes.length > 0 ? (

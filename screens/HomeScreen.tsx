@@ -239,10 +239,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                 const categories = await serieCategoryService.getAllCategories();
                 if (cancelled) return;
                 setSerieCategories(categories);
+                const catResults = await Promise.all(
+                    categories.map(cat =>
+                        serieCategoryService.getSeriesByCategory(cat.id)
+                            .then(series => ({ catId: cat.id, series }))
+                    )
+                );
                 const seriesByCat: Record<string, Serie[]> = {};
-                for (const cat of categories) {
-                    const catSeries = await serieCategoryService.getSeriesByCategory(cat.id);
-                    if (catSeries.length > 0) seriesByCat[cat.id] = catSeries;
+                for (const { catId, series } of catResults) {
+                    if (series.length > 0) seriesByCat[catId] = series;
                 }
                 if (!cancelled) setSeriesByCategory(seriesByCat);
             } catch (err) {
