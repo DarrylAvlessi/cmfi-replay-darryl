@@ -4,7 +4,7 @@ import { featuredContent } from '../data/mockData';
 import { MediaContent, MediaType } from '../types';
 import MediaCard from '../components/MediaCard';
 import { useAppContext } from '../context/AppContext';
-import { likeService, movieService, episodeSerieService, statsVuesService, viewService, Movie, Serie, serieService, serieCategoryService, SerieCategory, UserProfile, ContinueWatchingItem } from '../lib/db';
+import { episodeSerieService, serieService, seasonSerieService, EpisodeSerie, ContinueWatchingItem } from '../lib/db';
 import InfoBar from '../components/InfoBar';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import { useTutorial } from '../context/TutorialContext';
@@ -16,6 +16,12 @@ import MostLikedSection from '../components/sections/MostLikedSection';
 import CategorySections from '../components/sections/CategorySections';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ScrollReveal from '../components/ScrollReveal';
+import { useTenHomeMovies } from '../hooks/useMovies';
+import { useTenHomeSeries, useTenHomePodcasts } from '../hooks/useSeries';
+import { useCategories, useSeriesByCategories } from '../hooks/useCategories';
+import { useMostLikedItems } from '../hooks/useMostLiked';
+import { useMostWatchedItems } from '../hooks/useMostWatched';
+import { useContinueWatching } from '../hooks/useContinueWatching';
 
 interface HomeScreenProps {
     onSelectMedia: (item: MediaContent) => void;
@@ -32,10 +38,13 @@ const SectionError: React.FC<{ message: string }> = ({ message }) => (
 );
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigateToCategory }) => {
-    const { t, user, userProfile, setUserProfile } = useAppContext();
+    const { t, user, userProfile, setUserProfile, connectionQuality } = useAppContext();
     const { tryShowTutorialPrompt, isTourRunning } = useTutorial();
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
+
+    const skipNonEssential = connectionQuality === 'slow';
+    const itemLimit = skipNonEssential ? 5 : connectionQuality === 'medium' ? 8 : 10;
 
     useEffect(() => {
         const handleScroll = () => setShowScrollTop(window.scrollY > 600);
@@ -43,13 +52,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Vérifier si le profil doit être complété
     useEffect(() => {
         if (userProfile && user) {
-            // Vérifier si le pays est manquant (seul champ obligatoire)
             const countryMissing = !userProfile.country || userProfile.country.trim() === '';
-            const needsCompletion = countryMissing; // Seul le pays est obligatoire
-            
+            const needsCompletion = countryMissing;
             if (needsCompletion) {
                 setShowProfileModal(true);
             } else {
@@ -64,224 +70,51 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
         return () => clearTimeout(timer);
     }, [showProfileModal, isTourRunning, tryShowTutorialPrompt]);
 
-    // State: Most Liked
-    const [mostLikedItems, setMostLikedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount?: number }>>([]);
-    const [loadingMostLiked, setLoadingMostLiked] = useState(true);
-    const [mostLikedError, setMostLikedError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingMostLiked(true);
-                setMostLikedError(null);
-                const likedItems = await likeService.getMostLikedItems(10);
-                const itemsWithDetails = await Promise.all(
-                    likedItems.map(async (item) => {
-                        let movie = await movieService.getMovieByUid(item.uid);
-                        if (movie && !movie.hidden) {
-                            const mediaContent: MediaContent = {
-                                id: movie.uid, type: MediaType.Movie, title: movie.title, author: undefined, theme: '',
-                                imageUrl: movie.picture_path || movie.backdrop_path || movie.poster_path,
-                                duration: movie.runtime_h_m, description: movie.overview, languages: [movie.original_language], video_path_hd: movie.video_path_hd
-                            };
-                            return { content: mediaContent, likeCount: item.likeCount };
-                        }
-                        let episode = await episodeSerieService.getEpisodeByUid(item.uid);
-                        if (episode && !episode.hidden) {
-                            const mediaContent: MediaContent = {
-                                id: episode.uid_episode, type: MediaType.Series, title: episode.title, author: episode.title_serie, theme: '',
-                                imageUrl: episode.backdrop_path || episode.picture_path, duration: episode.runtime_h_m,
-                                description: episode.overviewFr || episode.overview, languages: [], video_path_hd: episode.video_path_hd
-                            };
-                            return { content: mediaContent, likeCount: item.likeCount };
-                        }
-                        return null;
-                    })
-                );
-                const valid = itemsWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount?: number } => item !== null);
-                if (!cancelled) setMostLikedItems(valid);
-            } catch (err) {
-                if (!cancelled) setMostLikedError('Failed to load most liked');
-            } finally {
-                if (!cancelled) setLoadingMostLiked(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: mostLikedItems,
+        isLoading: loadingMostLiked,
+        error: mostLikedError,
+    } = useMostLikedItems(itemLimit);
 
-    // State: Most Watched
-    const [mostWatchedItems, setMostWatchedItems] = useState<Array<{ content: MediaContent; likeCount: number; viewCount: number }>>([]);
-    const [loadingMostWatched, setLoadingMostWatched] = useState(true);
-    const [mostWatchedError, setMostWatchedError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingMostWatched(true);
-                setMostWatchedError(null);
-                const watchedItems = await viewService.getMostWatchedItems(10);
-                const watchedWithDetails = await Promise.all(
-                    watchedItems.map(async (item) => {
-                        if (item.type === 'movie') {
-                            let movie = await movieService.getMovieByUid(item.uid);
-                            if (movie && !movie.hidden) {
-                                const mediaContent: MediaContent = {
-                                    id: movie.uid, type: MediaType.Movie, title: movie.title, author: undefined, theme: '',
-                                    imageUrl: movie.picture_path || movie.backdrop_path || movie.poster_path,
-                                    duration: movie.runtime_h_m, description: movie.overview, languages: [movie.original_language], video_path_hd: movie.video_path_hd
-                                };
-                                return { content: mediaContent, likeCount: item.viewCount, viewCount: item.viewCount };
-                            }
-                        } else {
-                            let episode = await episodeSerieService.getEpisodeByUid(item.uid);
-                            if (episode && !episode.hidden) {
-                                const mediaContent: MediaContent = {
-                                    id: episode.uid_episode, type: MediaType.Series, title: episode.title, author: episode.title_serie, theme: '',
-                                    imageUrl: episode.backdrop_path || episode.picture_path, duration: episode.runtime_h_m,
-                                    description: episode.overviewFr || episode.overview, languages: [], video_path_hd: episode.video_path_hd
-                                };
-                                return { content: mediaContent, likeCount: item.viewCount, viewCount: item.viewCount };
-                            }
-                        }
-                        return null;
-                    })
-                );
-                const valid = watchedWithDetails.filter((item): item is { content: MediaContent; likeCount: number; viewCount: number } => item !== null);
-                if (!cancelled) setMostWatchedItems(valid);
-            } catch (err) {
-                if (!cancelled) setMostWatchedError('Failed to load most watched');
-            } finally {
-                if (!cancelled) setLoadingMostWatched(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: mostWatchedItems,
+        isLoading: loadingMostWatched,
+        error: mostWatchedError,
+    } = useMostWatchedItems(itemLimit);
 
-    // State: Movies
-    const [movies, setMovies] = useState<Movie[]>([]);
-    const [loadingMovies, setLoadingMovies] = useState(true);
-    const [moviesError, setMoviesError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingMovies(true);
-                setMoviesError(null);
-                const data = await movieService.getTenHomeMovies();
-                if (!cancelled) setMovies(data);
-            } catch (err) {
-                if (!cancelled) setMoviesError('Failed to load movies');
-            } finally {
-                if (!cancelled) setLoadingMovies(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: movies,
+        isLoading: loadingMovies,
+        error: moviesError,
+    } = useTenHomeMovies();
 
-    // State: Series
-    const [series, setSeries] = useState<Serie[]>([]);
-    const [loadingSeries, setLoadingSeries] = useState(true);
-    const [seriesError, setSeriesError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingSeries(true);
-                setSeriesError(null);
-                const data = await serieService.getTenHomeSeries();
-                if (!cancelled) setSeries(data);
-            } catch (err) {
-                if (!cancelled) setSeriesError('Failed to load series');
-            } finally {
-                if (!cancelled) setLoadingSeries(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: series,
+        isLoading: loadingSeries,
+        error: seriesError,
+    } = useTenHomeSeries();
 
-    // State: Podcasts
-    const [podcasts, setPodcasts] = useState<Serie[]>([]);
-    const [loadingPodcasts, setLoadingPodcasts] = useState(true);
-    const [podcastsError, setPodcastsError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingPodcasts(true);
-                setPodcastsError(null);
-                const data = await serieService.getTenHomePodcasts();
-                if (!cancelled) setPodcasts(data);
-            } catch (err) {
-                if (!cancelled) setPodcastsError('Failed to load podcasts');
-            } finally {
-                if (!cancelled) setLoadingPodcasts(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: podcasts,
+        isLoading: loadingPodcasts,
+        error: podcastsError,
+    } = useTenHomePodcasts();
 
-    // State: Categories
-    const [serieCategories, setSerieCategories] = useState<SerieCategory[]>([]);
-    const [seriesByCategory, setSeriesByCategory] = useState<Record<string, Serie[]>>({});
-    const [loadingSeriesByCategory, setLoadingSeriesByCategory] = useState(true);
-    const [categoriesError, setCategoriesError] = useState<string | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            try {
-                setLoadingSeriesByCategory(true);
-                setCategoriesError(null);
-                const categories = await serieCategoryService.getAllCategories();
-                if (cancelled) return;
-                setSerieCategories(categories);
-                const catResults = await Promise.all(
-                    categories.map(cat =>
-                        serieCategoryService.getSeriesByCategory(cat.id)
-                            .then(series => ({ catId: cat.id, series }))
-                    )
-                );
-                const seriesByCat: Record<string, Serie[]> = {};
-                for (const { catId, series } of catResults) {
-                    if (series.length > 0) seriesByCat[catId] = series;
-                }
-                if (!cancelled) setSeriesByCategory(seriesByCat);
-            } catch (err) {
-                if (!cancelled) setCategoriesError('Failed to load categories');
-            } finally {
-                if (!cancelled) setLoadingSeriesByCategory(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, []);
+    const {
+        data: serieCategories,
+        isLoading: loadingCategories,
+        error: categoriesError,
+    } = useCategories();
 
-    // State: Continue Watching
-    const [continueWatchingItems, setContinueWatchingItems] = useState<ContinueWatchingItem[]>([]);
-    const [loadingContinueWatching, setLoadingContinueWatching] = useState(true);
-    useEffect(() => {
-        let cancelled = false;
-        const fetchData = async () => {
-            if (!user) {
-                if (!cancelled) setLoadingContinueWatching(false);
-                return;
-            }
-            try {
-                const items = await statsVuesService.getContinueWatching(user.uid, 10);
-                if (!cancelled) setContinueWatchingItems(items);
-            } catch (err) {
-                console.error('Error fetching continue watching items:', err);
-            } finally {
-                if (!cancelled) setLoadingContinueWatching(false);
-            }
-        };
-        fetchData();
-        return () => { cancelled = true; };
-    }, [user]);
+    const {
+        data: seriesByCategory,
+        isLoading: loadingSeriesByCategory,
+    } = useSeriesByCategories(serieCategories || []);
+
+    const {
+        data: continueWatchingItems,
+        isLoading: loadingContinueWatching,
+    } = useContinueWatching(user?.uid, 10);
 
     const cwToMediaContent = (item: ContinueWatchingItem): MediaContent => ({
         id: item.id,
@@ -303,12 +136,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
         return `${m} min`;
     }
 
-    const continueWatchingMedia = continueWatchingItems.map(cwToMediaContent);
+    const continueWatchingMedia = (continueWatchingItems || []).map(cwToMediaContent);
 
     const handleContinueWatchingClick = useCallback(async (item: ContinueWatchingItem) => {
         if (item.type === 'movie') {
-            // C'est un film
-            const movie = await movieService.getMovieByUid(item.uid);
+            const movie = await (await import('../lib/db')).movieService.getMovieByUid(item.uid);
             if (movie) {
                 const mediaContent: MediaContent = {
                     id: movie.uid,
@@ -325,22 +157,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                 onPlay(mediaContent);
             }
         } else {
-            // C'est un épisode - utiliser uid_episode en priorité, sinon uid
             const episodeUid = item.uid_episode || item.uid;
             let episode = null;
 
-            // Essayer de récupérer par UID
             if (episodeUid) {
                 episode = await episodeSerieService.getEpisodeByUid(episodeUid);
             }
 
-            // Si pas trouvé et qu'on a un ID de document (fallback legacy)
             if (!episode && item.episodeId) {
                 episode = await episodeSerieService.getEpisodeById(item.episodeId);
             }
 
             if (episode) {
-                // S'assurer que l'épisode a un uid_episode pour la navigation
                 if (!episode.uid_episode && item.episodeId) {
                     episode.uid_episode = item.episodeId;
                 }
@@ -358,14 +186,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                     video_path_hd: episode.video_path_hd
                 };
 
-                // Passer l'épisode directement à onPlay
                 onPlay(mediaContent, episode);
             }
         }
     }, [onPlay]);
 
     const handleContinueSelect = useCallback(async (content: MediaContent) => {
-        const cwItem = continueWatchingItems.find(cw => cw.id === content.id);
+        const cwItem = (continueWatchingItems || []).find(cw => cw.id === content.id);
         if (cwItem) {
             await handleContinueWatchingClick(cwItem);
         }
@@ -374,17 +201,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
     return (
         <div className="min-h-screen bg-white dark:bg-black">
 
-            {/* Hero Section Prime Video */}
             <div className="animate-fadeIn">
                 <HeroPrimeVideo items={featuredContent} onSelectMedia={onSelectMedia} onPlay={onPlay} />
             </div>
 
-            {/* Barre d'information déroulante */}
             <InfoBar />
 
-            {/* Sections horizontales style Prime Video */}
+            {connectionQuality === 'slow' && (
+                <div className="px-4 md:px-6 lg:px-8 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+                    <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 text-center">
+                        {'Connexion lente détectée — certains contenus sont masqués pour économiser les données.'}
+                    </p>
+                </div>
+            )}
+
             <div className="bg-white dark:bg-black">
-                {/* Section Continue Watching */}
                 {loadingContinueWatching && (
                     <div className="py-8 md:py-12">
                         <div className="px-4 md:px-6 lg:px-8 mb-6">
@@ -401,6 +232,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                     </div>
                 )}
                 {continueWatchingMedia.length > 0 && (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <div className="py-8 md:py-12">
                             <div className="px-4 md:px-6 lg:px-8 mb-6">
@@ -423,100 +255,106 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                             </div>
                         </div>
                     </ScrollReveal>
+                    </div>
                 )}
 
-                {/* Section Séries */}
                 {seriesError ? (
-                    <SectionError message={seriesError} />
+                    <SectionError message={String(seriesError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <SeriesSection
-                            series={series}
+                            series={series || []}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             navigateToCategory={navigateToCategory}
                             t={t}
                         />
                     </ScrollReveal>
+                    </div>
                 )}
 
-                {/* Sections par catégorie */}
                 {categoriesError ? (
-                    <SectionError message={categoriesError} />
+                    <SectionError message={String(categoriesError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <CategorySections
-                            serieCategories={serieCategories}
-                            seriesByCategory={seriesByCategory}
-                            loading={loadingSeriesByCategory}
+                            serieCategories={serieCategories || []}
+                            seriesByCategory={seriesByCategory || {}}
+                            loading={loadingCategories || loadingSeriesByCategory}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                         />
                     </ScrollReveal>
+                    </div>
                 )}
 
-                {/* Section Films */}
                 {moviesError ? (
-                    <SectionError message={moviesError} />
+                    <SectionError message={String(moviesError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <MoviesSection
-                            movies={movies}
+                            movies={movies || []}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             navigateToCategory={navigateToCategory}
                             t={t}
                         />
                     </ScrollReveal>
+                    </div>
                 )}
 
-                {/* Section Podcasts */}
-                {podcastsError ? (
-                    <SectionError message={podcastsError} />
+                {!skipNonEssential && (podcastsError ? (
+                    <SectionError message={String(podcastsError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <PodcastsSection
-                            podcasts={podcasts}
+                            podcasts={podcasts || []}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             navigateToCategory={navigateToCategory}
                             t={t}
                         />
                     </ScrollReveal>
-                )}
+                    </div>
+                ))}
 
-                {/* Section Most Watched */}
-                {mostWatchedError ? (
-                    <SectionError message={mostWatchedError} />
+                {!skipNonEssential && (mostWatchedError ? (
+                    <SectionError message={String(mostWatchedError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <MostWatchedSection
-                            items={mostWatchedItems}
+                            items={mostWatchedItems || []}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             loading={loadingMostWatched}
                             t={t}
                         />
                     </ScrollReveal>
-                )}
+                    </div>
+                ))}
 
-                {/* Section Most Liked */}
-                {mostLikedError ? (
-                    <SectionError message={mostLikedError} />
+                {!skipNonEssential && (mostLikedError ? (
+                    <SectionError message={String(mostLikedError)} />
                 ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <MostLikedSection
-                            items={mostLikedItems}
+                            items={mostLikedItems || []}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             loading={loadingMostLiked}
                             t={t}
                         />
                     </ScrollReveal>
-                )}
+                    </div>
+                ))}
             </div>
 
-            {/* Modal de complétion du profil */}
             {showProfileModal && userProfile && (
                 <ProfileCompletionModal
                     userProfile={userProfile}
@@ -527,7 +365,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                 />
             )}
 
-            {/* Scroll to top */}
             {showScrollTop && (
                 <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

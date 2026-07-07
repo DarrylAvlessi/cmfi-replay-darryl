@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -62,6 +62,7 @@ import PlayerScreenHost from './components/PlayerScreenHost';
 import TutorialHost from './components/TutorialHost';
 import TutorialPromptModal from './components/TutorialPromptModal';
 import { TutorialProvider, useTutorial } from './context/TutorialContext';
+import { QueryProvider } from './context/QueryProvider';
 import { ActiveTab, MediaContent, MediaType } from './types';
 import { serieService, seasonSerieService, episodeSerieService, EpisodeSerie, initializeMovieViews, navigationTrackingService, dailyActivityService, movieService } from './lib/db';
 import { usePageTitle } from './lib/pageTitle';
@@ -122,6 +123,9 @@ const AppContent: React.FC = () => {
     usePageTitle();
 
     // Tracking de navigation avec limitation
+    const NAVIGATION_DEBOUNCE_MS = 20_000;
+    const lastNavigationRef = useRef(0);
+
     useEffect(() => {
         if (!isAuthenticated || !userProfile?.uid) return;
 
@@ -129,6 +133,10 @@ const AppContent: React.FC = () => {
         if (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password') {
             return;
         }
+
+        const now = Date.now();
+        if (now - lastNavigationRef.current < NAVIGATION_DEBOUNCE_MS) return;
+        lastNavigationRef.current = now;
 
         const getPageName = (path: string): string => {
             if (path === '/home') return 'Accueil';
@@ -606,13 +614,15 @@ const App: React.FC = () => {
     return (
         <BrowserRouter>
             <AppProvider>
-                <ThemeProvider>
-                    <MiniPlayerProvider>
-                        <TutorialProvider>
-                            <AppContent />
-                        </TutorialProvider>
-                    </MiniPlayerProvider>
-                </ThemeProvider>
+                <QueryProvider>
+                    <ThemeProvider>
+                        <MiniPlayerProvider>
+                            <TutorialProvider>
+                                <AppContent />
+                            </TutorialProvider>
+                        </MiniPlayerProvider>
+                    </ThemeProvider>
+                </QueryProvider>
             </AppProvider>
         </BrowserRouter>
     );

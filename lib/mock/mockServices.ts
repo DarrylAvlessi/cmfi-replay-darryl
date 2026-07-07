@@ -428,6 +428,14 @@ export const movieService = {
             return [];
         }
     },
+
+    async getMoviesByUids(uids: string[]): Promise<Map<string, Movie>> {
+        try {
+            return await realMovieService.getMoviesByUids(uids);
+        } catch {
+            return new Map();
+        }
+    },
 };
 
 export const serieService = {
@@ -706,6 +714,14 @@ export const episodeSerieService = {
         }
     },
 
+    async getEpisodesByUids(uids: string[]): Promise<Map<string, EpisodeSerie>> {
+        try {
+            return await realEpisodeSerieService.getEpisodesByUids(uids);
+        } catch {
+            return new Map();
+        }
+    },
+
     async removeEpisodeFromSeason(uid_episode: string, seasonUid: string): Promise<void> {
         try {
             await realEpisodeSerieService.removeEpisodeFromSeason(uid_episode, seasonUid);
@@ -774,7 +790,7 @@ export const serieCategoryService = {
 };
 
 export const likeService = {
-    async toggleLike(itemUid: string, itemTitle: string, user: UserProfile): Promise<boolean> {
+    async toggleLike(itemUid: string, itemTitle: string, user: UserProfile, _contentType: 'movie' | 'episode'): Promise<boolean> {
         const existingIdx = localLikes.findIndex(l => l.uid === itemUid && l.likedby === user.email);
         if (existingIdx >= 0) {
             localLikes.splice(existingIdx, 1);
@@ -787,6 +803,7 @@ export const likeService = {
             title: itemTitle,
             uid: itemUid,
             username: user.display_name || user.email.split('@')[0],
+            contentType: _contentType,
         };
         localLikes.push(newLike);
         return true;
@@ -812,21 +829,21 @@ export const likeService = {
         }
     },
 
-    async getMostLikedItems(limitCount: number = 10): Promise<Array<{ uid: string; likeCount: number; title: string }>> {
+    async getMostLikedItems(limitCount: number = 10): Promise<Array<{ uid: string; likeCount: number; title: string; isEpisode: boolean }>> {
         try {
             return await realLikeService.getMostLikedItems(limitCount);
         } catch {
-            const likesMap = new Map<string, { count: number; title: string }>();
+            const likesMap = new Map<string, { count: number; title: string; isEpisode: boolean }>();
             localLikes.forEach(l => {
                 const current = likesMap.get(l.uid);
                 if (current) {
                     current.count++;
                 } else {
-                    likesMap.set(l.uid, { count: 1, title: l.title });
+                    likesMap.set(l.uid, { count: 1, title: l.title, isEpisode: l.contentType === 'episode' });
                 }
             });
             return Array.from(likesMap.entries())
-                .map(([uid, data]) => ({ uid, likeCount: data.count, title: data.title }))
+                .map(([uid, data]) => ({ uid, likeCount: data.count, title: data.title, isEpisode: data.isEpisode }))
                 .sort((a, b) => b.likeCount - a.likeCount)
                 .slice(0, limitCount);
         }

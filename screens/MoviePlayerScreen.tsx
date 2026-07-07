@@ -238,7 +238,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
         const itemTitle = movieData?.title || item.title;
 
         try {
-            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile);
+            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile, 'movie');
             setHasLiked(isLiked);
             setLikeCount(prev => isLiked ? prev + 1 : prev - 1);
         } catch (error) {

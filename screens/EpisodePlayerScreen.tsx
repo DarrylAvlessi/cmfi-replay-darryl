@@ -254,7 +254,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
         const itemTitle = episode.title;
 
         try {
-            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile);
+            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile, 'episode');
             setHasLiked(isLiked);
             setLikeCount(prev => isLiked ? prev + 1 : prev - 1);
         } catch (error) {

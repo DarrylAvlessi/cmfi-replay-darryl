@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAppContext } from '../context/AppContext';
+import { statsVuesService } from '../lib/db';
 
 const SPEED_PRESETS = [1, 1.25, 1.5, 2, 3];
 const DOUBLE_TAP_DELAY_MS = 300;
@@ -8,7 +9,7 @@ const DOUBLE_TAP_MAX_DISTANCE_PX = 60;
 const LONG_PRESS_DELAY = 500;
 const LONG_PRESS_MOVE_THRESHOLD = 20;
 const CONTROLS_TIMEOUT_MS = 3000;
-const SAVE_INTERVAL_MS = 10000;
+const SAVE_INTERVAL_MS = 30000;
 const SAVE_THRESHOLD_SEC = 5;
 const SEEK_STEP_SEC = 10;
 const KEYBOARD_SEEK_STEP_SEC = 5;
@@ -599,7 +600,6 @@ export function useVideoPlayer({
 
       if (Math.abs(currentTime - lastSavedPosition.current) >= SAVE_THRESHOLD_SEC) {
         try {
-          const { statsVuesService } = await import('../lib/db');
           await statsVuesService.updateViewingProgress(
             userProfile.uid,
             videoUid,

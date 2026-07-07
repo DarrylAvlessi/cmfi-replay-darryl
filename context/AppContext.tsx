@@ -1,15 +1,14 @@
-import React, { createContext, useContext, useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { i18n, Language, TranslationKey } from '../lib/i18n';
-import { auth, db } from '../lib/firebase';
-import { userService, UserProfile, bookDocService, bookSeriesService } from '../lib/db';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { onSnapshot, doc } from 'firebase/firestore';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import React, { createContext, useContext, useMemo, useEffect } from 'react';
+import { Language, TranslationKey } from '../lib/i18n';
+import { userService, UserProfile } from '../lib/db';
+import { User } from 'firebase/auth';
 import { ActiveTab } from '../types';
-import { APP_VERSION } from '../lib/version';
-import { RELEASE_NOTES, ReleaseNoteItem, isVersionNewerThan } from '../lib/releaseNotes';
+import { ReleaseNoteItem } from '../lib/releaseNotes';
+import { useNetworkStatus, ConnectionQuality } from '../hooks/useNetworkStatus';
+import { useThemeLogic } from './useThemeLogic';
+import { useAuthLogic } from './useAuthLogic';
+import { useUIState } from './useUIState';
 
-type Theme = 'light' | 'dark';
 type HomeViewMode = 'default' | 'prime' | 'netflix';
 
 interface AppContextType {
@@ -44,6 +43,9 @@ interface AppContextType {
     markWhatsNewSeen: () => void;
     newReleaseNotes: ReleaseNoteItem[];
     lastSeenVersion: string | null;
+    connectionQuality: ConnectionQuality;
+    effectiveType: string;
+    saveData: boolean;
 }
 
 export type { HomeViewMode };
@@ -51,508 +53,18 @@ export type { HomeViewMode };
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') {
-            const savedTheme = window.localStorage.getItem('theme') as 'light' | 'dark';
-            if (savedTheme) {
-                const root = window.document.documentElement;
-                root.classList.remove('light', 'dark');
-                root.classList.add(savedTheme);
-                return savedTheme;
-            }
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const defaultTheme = prefersDark ? 'dark' : 'light';
-            localStorage.setItem('theme', defaultTheme);
-            return defaultTheme;
-        }
-        return 'light';
-    });
-
-    const themeRef = useRef(theme);
-    themeRef.current = theme;
-
-    const setTheme = useCallback((newTheme: 'light' | 'dark') => {
-        setThemeState(prevTheme => {
-            if (prevTheme !== newTheme) {
-                if (typeof window !== 'undefined') {
-                    const root = window.document.documentElement;
-                    root.classList.remove(prevTheme);
-                    root.classList.add(newTheme);
-                    localStorage.setItem('theme', newTheme);
-                }
-                return newTheme;
-            }
-            return prevTheme;
-        });
-    }, []);
-
-    const [language, setLanguageState] = useState<Language>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = window.localStorage.getItem('language');
-            if (saved === 'en' || saved === 'fr') return saved;
-        }
-        return 'en';
-    });
-    const setLanguage = useCallback((lang: Language) => {
-        setLanguageState(lang);
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem('language', lang);
-        }
-    }, []);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            const savedState = window.localStorage.getItem('sidebarCollapsed');
-            return savedState === 'true';
-        }
-        return false;
-    });
-
-    const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Home);
-
-    const [autoplay, setAutoplayState] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            const savedAutoplay = window.localStorage.getItem('autoplay');
-            return savedAutoplay === 'true';
-        }
-        return false;
-    });
-
-    const setAutoplay = (value: boolean) => {
-        setAutoplayState(value);
-        localStorage.setItem('autoplay', String(value));
-    };
-
-    // État pour le mode d'affichage de la page d'accueil
-    const [homeViewMode, setHomeViewModeState] = useState<HomeViewMode>('default');
-    const [loadingViewMode, setLoadingViewMode] = useState(true);
-
-    // Charger le mode d'affichage depuis Firestore (paramètres globaux)
-    useEffect(() => {
-        const loadViewMode = async () => {
-            try {
-                const { appSettingsService } = await import('../lib/db');
-                const settings = await appSettingsService.getAppSettings();
-                if (settings) {
-                    setHomeViewModeState(settings.homeViewMode);
-                }
-            } catch (error) {
-                console.error('Error loading view mode:', error);
-                // Fallback sur localStorage si erreur
-                if (typeof window !== 'undefined') {
-                    const saved = window.localStorage.getItem('homeViewMode') as HomeViewMode;
-                    if (saved) {
-                        setHomeViewModeState(saved);
-                    }
-                }
-            } finally {
-                setLoadingViewMode(false);
-            }
-        };
-
-        loadViewMode();
-    }, []);
-
-    // Écouter les changements de mode d'affichage en temps réel
-    useEffect(() => {
-        const settingsRef = doc(db, 'appSettings', 'global');
-        const unsubscribe = onSnapshot(settingsRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.data();
-                if (data.homeViewMode) {
-                    setHomeViewModeState(data.homeViewMode);
-                }
-            }
-        }, (error) => {
-            console.error('Error listening to view mode changes:', error);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const setHomeViewMode = async (mode: HomeViewMode) => {
-        // Mise à jour optimiste
-        setHomeViewModeState(mode);
-        
-        // Sauvegarder dans Firestore si l'utilisateur est admin
-        if (userProfile?.isAdmin && user) {
-            try {
-                const { appSettingsService } = await import('../lib/db');
-                await appSettingsService.setHomeViewMode(mode, user.uid);
-            } catch (error) {
-                console.error('Error saving view mode to Firestore:', error);
-                // En cas d'erreur, sauvegarder dans localStorage comme fallback
-                if (typeof window !== 'undefined') {
-                    window.localStorage.setItem('homeViewMode', mode);
-                }
-            }
-        } else {
-            // Si l'utilisateur n'est pas admin, sauvegarder uniquement dans localStorage
-            if (typeof window !== 'undefined') {
-                window.localStorage.setItem('homeViewMode', mode);
-            }
-        }
-    };
-
-    // Service Worker update state
-    const [swUpdateDismissed, setSwUpdateDismissed] = useState(false);
-
-    // What's New after update
-    const [showWhatsNew, setShowWhatsNew] = useState(false);
-    const [newReleaseNotes, setNewReleaseNotes] = useState<ReleaseNoteItem[]>([]);
-    const [lastSeenVersion, setLastSeenVersion] = useState<string | null>(null);
+    const { theme, setTheme, language, setLanguage, t } = useThemeLogic();
+    const authLogic = useAuthLogic({ theme, language, setTheme });
+    const uiState = useUIState(authLogic.userProfile, authLogic.user);
+    const { connectionQuality, effectiveType, saveData } = useNetworkStatus();
 
     useEffect(() => {
-      const ls = localStorage.getItem('lastSeenVersion');
-      setLastSeenVersion(ls);
-      if (ls && ls !== APP_VERSION) {
-        const filtered = RELEASE_NOTES.filter((note) => isVersionNewerThan(note.version, ls));
-        if (filtered.length > 0) {
-          setShowWhatsNew(true);
-          setNewReleaseNotes(filtered);
-        }
-      }
-      if (!ls) {
-        localStorage.setItem('lastSeenVersion', APP_VERSION);
-        setLastSeenVersion(APP_VERSION);
-      }
-    }, []);
-
-    const markWhatsNewSeen = useCallback(() => {
-      localStorage.setItem('lastSeenVersion', APP_VERSION);
-      setLastSeenVersion(APP_VERSION);
-      setShowWhatsNew(false);
-    }, []);
-
-    const {
-        needRefresh: [needRefresh, setNeedRefresh],
-        updateServiceWorker,
-    } = useRegisterSW({
-        onNeedRefresh() {
-            setSwUpdateDismissed(false);
-        },
-        onRegistered(registration) {
-            if (registration) {
-                setTimeout(() => { registration.update(); }, 1000);
-            }
-        },
-    });
-
-    const swUpdateAvailable = needRefresh;
-
-    const applyUpdate = useCallback(() => {
-        updateServiceWorker();
-    }, [updateServiceWorker]);
-
-    const dismissUpdate = useCallback(() => {
-        setSwUpdateDismissed(true);
-    }, []);
-
-    // Mettre à jour le statut de présence de l'utilisateur avec lastSeen
-    const updateUserPresence = async (uid: string, status: 'online' | 'offline' | 'idle' | 'away') => {
-        try {
-            await userService.updateUserProfile(uid, { 
-                presence: status,
-                lastSeen: new Date() // Mettre à jour lastSeen à chaque changement de statut
-            });
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour du statut de présence:', error);
-        }
-    };
-
-    // Système de heartbeat : mettre à jour lastSeen toutes les 5 minutes
-    useEffect(() => {
-        if (!user?.uid) return;
-
-        // Mettre à jour immédiatement
-        updateUserPresence(user.uid, userProfile?.presence || 'online');
-
-        // Heartbeat : mettre à jour lastSeen toutes les 5 minutes
-        // Mettre à jour uniquement si l'onglet est visible (pour permettre le passage à "inactif" quand l'onglet est en arrière-plan)
-        const heartbeatInterval = setInterval(async () => {
-            if (user?.uid && document.visibilityState === 'visible') {
-                try {
-                    // Mettre à jour uniquement lastSeen sans changer le statut
-                    // Cela permet de garder le statut "online" tant que l'onglet est actif
-                    await userService.updateUserProfile(user.uid, { 
-                        lastSeen: new Date() 
-                    });
-                } catch (error) {
-                    console.error('Erreur lors du heartbeat:', error);
-                }
-            }
-        }, 300000); // Toutes les 5 minutes (300000 ms = 5 * 60 * 1000)
-
-        // Gérer la visibilité de l'onglet
-        const handleVisibilityChange = async () => {
-            if (user && user.uid) {
-                if (document.visibilityState === 'visible') {
-                    await updateUserPresence(user.uid, 'online');
-                } else {
-                    await updateUserPresence(user.uid, 'away');
-                }
-            }
-        };
-
-        // Gérer la fermeture de l'onglet/application
-        const handleBeforeUnload = () => {
-            if (user?.uid) {
-                // Utiliser sendBeacon pour une mise à jour plus fiable lors de la fermeture
-                // sendBeacon est plus fiable que les requêtes async dans beforeunload
-                try {
-                    const data = JSON.stringify({
-                        uid: user.uid,
-                        presence: 'offline',
-                        lastSeen: new Date().toISOString()
-                    });
-                    
-                    // Envoyer via sendBeacon si disponible (plus fiable)
-                    if (navigator.sendBeacon) {
-                        // Note: sendBeacon nécessite une URL, on ne peut pas l'utiliser directement avec Firestore
-                        // On garde donc la méthode actuelle mais on améliore la logique de détection
-                    }
-                    
-                    // Tentative de mise à jour synchrone (peut ne pas aboutir si la page se ferme trop vite)
-                    // Le filtrage par lastSeen gérera les déconnexions si cette mise à jour échoue
-                    userService.updateUserProfile(user.uid, { 
-                        presence: 'offline',
-                        lastSeen: new Date()
-                    }).catch(() => {
-                        // Ignorer les erreurs lors de la fermeture
-                    });
-                } catch (error) {
-                    // Ignorer les erreurs
-                }
-            }
-        };
-
-        const handlePageHide = async () => {
-            if (user?.uid) {
-                try {
-                    // Mettre à jour immédiatement lors du masquage de la page
-                    await userService.updateUserProfile(user.uid, { 
-                        presence: 'offline',
-                        lastSeen: new Date()
-                    });
-                } catch (error) {
-                    // Ignorer les erreurs lors de la fermeture
-                }
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        window.addEventListener('pagehide', handlePageHide);
-
-        return () => {
-            clearInterval(heartbeatInterval);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-            window.removeEventListener('pagehide', handlePageHide);
-        };
-    }, [user, userProfile?.presence]);
-
-    // Initialiser l'état avec l'utilisateur actuel s'il est déjà connecté
-    useEffect(() => {
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-            setUser(currentUser);
-            setIsAuthenticated(true);
-        }
-        
-        let unsubscribeProfile: (() => void) | null = null;
-        
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            console.log(' État d\'authentification changé:', user ? `Utilisateur connecté: ${user.uid}` : 'Déconnecté');
-            setUser(user);
-            setIsAuthenticated(!!user);
-            setLoading(true);
-
-            if (user) {
-                try {
-                    // Mettre à jour le statut en ligne lors de la connexion
-                    await updateUserPresence(user.uid, 'online');
-                    
-                    // Charger le profil initial
-                    const profile = await userService.getUserProfile(user.uid);
-                    if (profile) {
-                        setUserProfile(profile);
-                        setTheme(profile.theme);
-                        setBookmarkedIds(profile.bookmarkedIds || []);
-
-                        // Charger les bookmarks depuis bookDoc et bookSeries
-                        const bookDocs = await bookDocService.getUserBookmarks(user.email!);
-                        const bookSeries = await bookSeriesService.getUserBookmarks(user.email!);
-                        const allBookmarkIds = [
-                            ...bookDocs.map(doc => doc.uid),
-                            ...bookSeries.map(series => series.uid)
-                        ];
-                        setBookmarkedIds(allBookmarkIds);
-
-                    } else {
-                        await userService.createUserProfile({
-                            uid: user.uid,
-                            email: user.email || '',
-                            display_name: user.displayName || 'User',
-                            photo_url: user.photoURL || undefined,
-                            presence: 'online',
-                            hasAcceptedPrivacyPolicy: false,
-                            created_time: new Date().toISOString(),
-                            theme,
-                            language,
-                            bookmarkedIds: []
-                        });
-
-                    }
-
-                    // S'abonner aux changements du profil en temps réel (pour détecter isAdmin, etc.)
-                    const userProfileRef = doc(db, 'users', user.uid);
-                    unsubscribeProfile = onSnapshot(userProfileRef, (snapshot) => {
-                        if (snapshot.exists()) {
-                            const rawData = snapshot.data();
-                            console.log('🔄 [onSnapshot] Raw data from Firestore:', {
-                                uid: rawData.uid,
-                                isAdmin: rawData.isAdmin,
-                                isAdminType: typeof rawData.isAdmin,
-                                isAdminValue: rawData.isAdmin,
-                                allFields: Object.keys(rawData)
-                            });
-                            const updatedProfile = rawData as UserProfile;
-                            console.log('🔄 Profil mis à jour en temps réel - isAdmin:', updatedProfile.isAdmin, 'Type:', typeof updatedProfile.isAdmin);
-                            setUserProfile(updatedProfile);
-                            if (updatedProfile.theme && updatedProfile.theme !== themeRef.current) {
-                                setTheme(updatedProfile.theme);
-                            }
-                        }
-                    }, (error) => {
-                        console.error('Erreur lors de l\'écoute du profil:', error);
-                    });
-                } catch (error) {
-                    console.error('Error loading user profile:', error);
-                }
-            } else {
-                // Nettoyer l'abonnement au profil lors de la déconnexion
-                if (unsubscribeProfile) {
-                    unsubscribeProfile();
-                    unsubscribeProfile = null;
-                }
-                
-                // Mettre à jour le statut hors ligne lors de la déconnexion
-                if (userProfile?.uid) {
-                    try {
-                        // Mettre à jour le statut à offline ET lastSeen pour éviter qu'il soit remis à online
-                        await userService.updateUserProfile(userProfile.uid, { 
-                            presence: 'offline',
-                            lastSeen: new Date() // Mettre à jour lastSeen pour éviter qu'il soit remis à online
-                        });
-                    } catch (error) {
-                        console.error('Erreur lors de la mise à jour du statut hors ligne:', error);
-                    }
-                }
-                setUserProfile(null);
-                setBookmarkedIds([]);
-            }
-
-            setLoading(false);
-        });
-
-        // Nettoyage lors du démontage du composant
-        return () => {
-            // Mettre à jour le statut hors ligne lors de la déconnexion
-            if (userProfile?.uid) {
-                updateUserPresence(userProfile.uid, 'offline').catch(console.error);
-            }
-            // Nettoyer l'abonnement au profil
-            if (unsubscribeProfile) {
-                unsubscribeProfile();
-            }
-            unsubscribe();
-        };
-    }, []);
-
-    // Mettre à jour le thème dans le profil utilisateur uniquement si nécessaire
-    useEffect(() => {
-        if (userProfile && user && theme !== undefined) {
-            // Vérifier si le thème a réellement changé avant de mettre à jour
-            if (theme !== userProfile.theme) {
-                const updates: Partial<UserProfile> = { theme };
-                // Ne pas attendre la fin de la mise à jour pour éviter les retards d'UI
-                userService.updateUserProfile(user.uid, updates).catch(error => {
-                    console.error('Failed to update user theme:', error);
-                });
+        if (authLogic.userProfile && authLogic.user && theme !== undefined) {
+            if (theme !== authLogic.userProfile.theme) {
+                userService.updateUserProfile(authLogic.user.uid, { theme }).catch(() => {});
             }
         }
-    }, [theme, userProfile, user]);
-
-    const toggleBookmark = async (id: string, title: string, description: string, image: string, isseries: boolean = false) => {
-        if (!user || !user.email) return;
-
-        try {
-            const isBookmarked = await bookDocService.toggleBookmark(
-                id,
-                user.email,
-                title,
-                description,
-                image,
-                isseries
-            );
-
-            setBookmarkedIds(prev =>
-                isBookmarked
-                    ? [...prev, id]
-                    : prev.filter(bookmarkedId => bookmarkedId !== id)
-            );
-
-            // Mettre à jour aussi dans le userProfile
-            await userService.toggleBookmark(user.uid, id);
-        } catch (error) {
-            console.error('Error toggling bookmark:', error);
-        }
-    };
-
-    const toggleSeriesBookmark = async (
-        id: string,
-        title: string,
-        description: string,
-        image: string,
-        moviepath: string,
-        runtime: string
-    ) => {
-        if (!user || !user.email) return;
-
-        try {
-            const isBookmarked = await bookSeriesService.toggleBookmark(
-                id,
-                user.email,
-                title,
-                description,
-                image,
-                moviepath,
-                runtime
-            );
-
-            setBookmarkedIds(prev =>
-                isBookmarked
-                    ? [...prev, id]
-                    : prev.filter(bookmarkedId => bookmarkedId !== id)
-            );
-
-            // Mettre à jour aussi dans le userProfile
-            await userService.toggleBookmark(user.uid, id);
-        } catch (error) {
-            console.error('Error toggling series bookmark:', error);
-        }
-    };
-
-    const t = useMemo(() => i18n(language), [language]);
-
-    const toggleSidebarCollapse = () => {
-        setIsSidebarCollapsed(!isSidebarCollapsed);
-    };
+    }, [theme, authLogic.userProfile, authLogic.user]);
 
     const value = useMemo(() => ({
         theme,
@@ -560,65 +72,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         language,
         setLanguage,
         t,
-        isAuthenticated,
-        setIsAuthenticated,
-        bookmarkedIds,
-        toggleBookmark,
-        toggleSeriesBookmark,
-        user,
-        userProfile,
-        setUserProfile,
-        loading,
-        autoplay,
-        setAutoplay,
-        isSidebarCollapsed,
-        setIsSidebarCollapsed,
-        toggleSidebarCollapse,
-        activeTab,
-        setActiveTab,
-        homeViewMode,
-        setHomeViewMode,
-        swUpdateAvailable,
-        swUpdateDismissed,
-        applyUpdate,
-        dismissUpdate,
-        showWhatsNew,
-        markWhatsNewSeen,
-        newReleaseNotes,
-        lastSeenVersion,
+        isAuthenticated: authLogic.isAuthenticated,
+        setIsAuthenticated: authLogic.setIsAuthenticated,
+        bookmarkedIds: authLogic.bookmarkedIds,
+        toggleBookmark: authLogic.toggleBookmark,
+        toggleSeriesBookmark: authLogic.toggleSeriesBookmark,
+        user: authLogic.user,
+        userProfile: authLogic.userProfile,
+        setUserProfile: authLogic.setUserProfile,
+        loading: authLogic.loading,
+        autoplay: uiState.autoplay,
+        setAutoplay: uiState.setAutoplay,
+        isSidebarCollapsed: uiState.isSidebarCollapsed,
+        setIsSidebarCollapsed: uiState.setIsSidebarCollapsed,
+        toggleSidebarCollapse: uiState.toggleSidebarCollapse,
+        activeTab: uiState.activeTab,
+        setActiveTab: uiState.setActiveTab,
+        homeViewMode: uiState.homeViewMode,
+        setHomeViewMode: uiState.setHomeViewMode,
+        swUpdateAvailable: uiState.swUpdateAvailable,
+        swUpdateDismissed: uiState.swUpdateDismissed,
+        applyUpdate: uiState.applyUpdate,
+        dismissUpdate: uiState.dismissUpdate,
+        showWhatsNew: uiState.showWhatsNew,
+        markWhatsNewSeen: uiState.markWhatsNewSeen,
+        newReleaseNotes: uiState.newReleaseNotes,
+        lastSeenVersion: uiState.lastSeenVersion,
+        connectionQuality,
+        effectiveType,
+        saveData,
     }), [
         theme,
         language,
         t,
-        isAuthenticated,
-        bookmarkedIds,
-        user,
-        userProfile,
-        loading,
-        autoplay,
-        isSidebarCollapsed,
-        activeTab,
-        homeViewMode,
-        swUpdateAvailable,
-        swUpdateDismissed,
-        applyUpdate,
-        dismissUpdate,
-        showWhatsNew,
-        markWhatsNewSeen,
-        newReleaseNotes,
-        lastSeenVersion,
-        // Fonctions
+        authLogic.isAuthenticated,
+        authLogic.setIsAuthenticated,
+        authLogic.bookmarkedIds,
+        authLogic.toggleBookmark,
+        authLogic.toggleSeriesBookmark,
+        authLogic.user,
+        authLogic.userProfile,
+        authLogic.setUserProfile,
+        authLogic.loading,
+        uiState.autoplay,
+        uiState.setAutoplay,
+        uiState.isSidebarCollapsed,
+        uiState.setIsSidebarCollapsed,
+        uiState.toggleSidebarCollapse,
+        uiState.activeTab,
+        uiState.setActiveTab,
+        uiState.homeViewMode,
+        uiState.setHomeViewMode,
+        uiState.swUpdateAvailable,
+        uiState.swUpdateDismissed,
+        uiState.applyUpdate,
+        uiState.dismissUpdate,
+        uiState.showWhatsNew,
+        uiState.markWhatsNewSeen,
+        uiState.newReleaseNotes,
+        uiState.lastSeenVersion,
+        connectionQuality,
+        effectiveType,
+        saveData,
         setTheme,
         setLanguage,
-        setIsAuthenticated,
-        toggleBookmark,
-        toggleSeriesBookmark,
-        setUserProfile,
-        setAutoplay,
-        setIsSidebarCollapsed,
-        toggleSidebarCollapse,
-        setActiveTab,
-        setHomeViewMode,
     ]);
 
     return (

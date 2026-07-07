@@ -511,7 +511,8 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
             setIsLoading(true);
             const itemUid = movieData?.uid || item.id;
             const itemTitle = movieData?.title || item.title;
-            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile);
+            const contentType = type === MediaType.Movie ? 'movie' : 'episode';
+            const isLiked = await likeService.toggleLike(itemUid, itemTitle, userProfile, contentType);
 
             setHasLiked(isLiked);
             setLikeCount(prev => isLiked ? prev + 1 : Math.max(0, prev - 1));

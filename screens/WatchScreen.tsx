@@ -36,7 +36,11 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
 
             setLoading(true);
             try {
-                const movie = await movieService.getMovieByUid(uid);
+                const [movie, episodeResult] = await Promise.all([
+                    movieService.getMovieByUid(uid),
+                    episodeSerieService.getEpisodeByUid(uid),
+                ]);
+
                 if (movie) {
                     setMedia({
                         id: movie.uid,
@@ -53,31 +57,32 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                     return;
                 }
 
-                let episodeData = await episodeSerieService.getEpisodeByUid(uid);
+                let episodeData = episodeResult;
 
                 if (!episodeData) {
                     episodeData = await episodeSerieService.getEpisodeById(uid);
                 }
 
                 if (episodeData) {
-                    const season = await seasonSerieService.getSeasonByUid(episodeData.uid_season);
-                    if (season) {
-                        const serie = await serieService.getSerieByUid(season.uid_serie);
-                        if (serie) {
-                            setMedia({
-                                id: serie.uid_serie,
-                                title: serie.title_serie,
-                                description: serie.overview_serie || '',
-                                imageUrl: serie.image_path || '',
-                                type: serie.serie_type === 'podcast' ? MediaType.Podcast : MediaType.Series,
-                                duration: serie.runtime_h_m || '',
-                                theme: '',
-                                languages: Array.isArray(serie.lang) ? serie.lang : [serie.lang || 'fr'],
-                            });
-                            setEpisode(episodeData);
-                            setLoading(false);
-                            return;
-                        }
+                    const [season, serie] = await Promise.all([
+                        seasonSerieService.getSeasonByUid(episodeData.uid_season),
+                        episodeData.uid_serie ? serieService.getSerieByUid(episodeData.uid_serie) : Promise.resolve(null),
+                    ]);
+
+                    if (season && serie) {
+                        setMedia({
+                            id: serie.uid_serie,
+                            title: serie.title_serie,
+                            description: serie.overview_serie || '',
+                            imageUrl: serie.image_path || '',
+                            type: serie.serie_type === 'podcast' ? MediaType.Podcast : MediaType.Series,
+                            duration: serie.runtime_h_m || '',
+                            theme: '',
+                            languages: Array.isArray(serie.lang) ? serie.lang : [serie.lang || 'fr'],
+                        });
+                        setEpisode(episodeData);
+                        setLoading(false);
+                        return;
                     }
                 }
 

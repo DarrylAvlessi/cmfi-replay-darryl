@@ -18,7 +18,45 @@ export default defineConfig(({ mode }) => {
           registerType: 'prompt',
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
           workbox: {
-            globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+            navigateFallback: '/index.html',
+            navigateFallbackAllowlist: [/^(?!\/__)/],
+            runtimeCaching: [
+              {
+                urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'firestore-cache',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 7 * 24 * 60 * 60,
+                  },
+                  cacheableResponse: { statuses: [0, 200] },
+                },
+              },
+              {
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)(?:\?.*)?$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'images-cache',
+                  expiration: {
+                    maxEntries: 60,
+                    maxAgeSeconds: 30 * 24 * 60 * 60,
+                  },
+                },
+              },
+              {
+                urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'fonts-cache',
+                  expiration: {
+                    maxEntries: 30,
+                    maxAgeSeconds: 365 * 24 * 60 * 60,
+                  },
+                },
+              },
+            ],
           },
           manifest: {
             name: 'CMFI Replay',
@@ -50,7 +88,12 @@ export default defineConfig(({ mode }) => {
           output: {
             entryFileNames: 'assets/[name].[hash].js',
             chunkFileNames: 'assets/[name].[hash].js',
-            assetFileNames: 'assets/[name].[hash].[ext]'
+            assetFileNames: 'assets/[name].[hash].[ext]',
+            manualChunks: {
+              'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+              'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+              'vendor-ui': ['recharts', 'react-toastify'],
+            }
           }
         }
       },
