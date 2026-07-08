@@ -310,7 +310,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
             const [count, userLiked] = await Promise.all([
 
-                likeService.getLikeCount(itemUid),
+                likeService.getLikeCount(itemUid, type === MediaType.Movie ? 'movie' : 'episode'),
 
                 likeService.hasUserLiked(itemUid, userProfile.email || '')
 
@@ -330,7 +330,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
             // Map Firestore comments to the expected format if needed
 
-            const mappedComments = fetchedComments.map(comment => ({
+            const mappedComments = fetchedComments.comments.map(comment => ({
 
                 ...comment,
 
@@ -981,7 +981,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                             {isSeasonDropdownOpen && (
                                                 <div
-                                                    className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl z-10 border border-gray-200 dark:border-gray-700"
+                                                    className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl max-h-72 overflow-y-auto shadow-xl z-10 border border-gray-200 dark:border-gray-700"
                                                     role="listbox"
                                                 >
                                                     {firestoreSeasons.map(season => {

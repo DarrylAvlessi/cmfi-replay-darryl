@@ -342,15 +342,22 @@ export const likeService = {
         }
     },
 
-    async getLikeCount(itemUid: string): Promise<number> {
+    async getLikeCount(itemUid: string, contentType: 'movie' | 'episode'): Promise<number> {
         try {
+            const collectionName = contentType === 'movie' ? MOVIES_COLLECTION : EPISODES_SERIES_COLLECTION;
+            const uidField = contentType === 'movie' ? 'uid' : 'uid_episode';
             const q = query(
-                collection(db, LIKES_COLLECTION),
-                where('uid', '==', itemUid),
-                where('isliked', '==', true)
+                collection(db, collectionName),
+                where(uidField, '==', itemUid),
+                limit(1)
             );
             const querySnapshot = await getDocs(q);
-            return querySnapshot.size;
+
+            if (!querySnapshot.empty) {
+                const content = querySnapshot.docs[0].data() as Movie | EpisodeSerie;
+                return content.likesCount || 0;
+            }
+            return 0;
         } catch (error) {
             console.error('Error getting like count:', error);
             return 0;

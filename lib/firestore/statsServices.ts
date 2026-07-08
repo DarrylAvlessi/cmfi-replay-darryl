@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import {
+    increment,
     collection,
     doc,
     getDoc,
@@ -774,10 +775,8 @@ export const viewService = {
 
             if (!querySnapshot.empty) {
                 const movieDoc = querySnapshot.docs[0];
-                const currentViews = movieDoc.data().views || 0;
-
                 await updateDoc(movieDoc.ref, {
-                    views: currentViews + 1
+                    views: increment(1)
                 });
             }
         } catch (error) {
@@ -796,10 +795,8 @@ export const viewService = {
 
             if (!querySnapshot.empty) {
                 const episodeDoc = querySnapshot.docs[0];
-                const currentViews = episodeDoc.data().views || 0;
-
                 await updateDoc(episodeDoc.ref, {
-                    views: currentViews + 1
+                    views: increment(1)
                 });
             }
         } catch (error) {
@@ -809,13 +806,19 @@ export const viewService = {
 
     async getViewCount(uid: string, videoType: 'movie' | 'episode'): Promise<number> {
         try {
+            const collectionName = videoType === 'movie' ? MOVIES_COLLECTION : EPISODES_SERIES_COLLECTION;
+            const uidField = videoType === 'movie' ? 'uid' : 'uid_episode';
             const q = query(
-                collection(db, USER_VIEW_COLLECTION),
-                where('uid', '==', uid),
-                where('video_type', '==', videoType)
+                collection(db, collectionName),
+                where(uidField, '==', uid),
+                limit(1)
             );
             const querySnapshot = await getDocs(q);
-            return querySnapshot.size;
+            if (!querySnapshot.empty) {
+                const content = querySnapshot.docs[0].data() as Movie | EpisodeSerie;
+                return content.views || 0;
+            }
+            return 0;
         } catch (error) {
             console.error('Error getting view count:', error);
             return 0;
@@ -846,7 +849,8 @@ export const viewService = {
             const moviesQuery = query(
                 collection(db, MOVIES_COLLECTION),
                 where('hidden', '==', false),
-                where('views', '>', 0)
+                orderBy('views', 'desc'),
+                limit(limitCount)
             );
             const moviesSnapshot = await getDocs(moviesQuery);
 
@@ -865,7 +869,8 @@ export const viewService = {
             const episodesQuery = query(
                 collection(db, EPISODES_SERIES_COLLECTION),
                 where('hidden', '==', false),
-                where('views', '>', 0)
+                orderBy('views', 'desc'),
+                limit(limitCount)
             );
             const episodesSnapshot = await getDocs(episodesQuery);
 

@@ -105,7 +105,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
         const fetchLikeData = async () => {
             const itemUid = episode.uid_episode;
             try {
-                const count = await likeService.getLikeCount(itemUid);
+                const count = await likeService.getLikeCount(itemUid, 'episode');
                 setLikeCount(count);
 
                 if (userProfile?.email) {

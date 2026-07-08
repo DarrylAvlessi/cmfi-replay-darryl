@@ -736,6 +736,21 @@ export const episodeSerieService = {
     getEpisodeSeasons(episode: EpisodeSerie): string[] {
         return realEpisodeSerieService.getEpisodeSeasons(episode);
     },
+
+    async getTranscript(uidEpisode: string): Promise<string | null> {
+        try {
+            return await realEpisodeSerieService.getTranscript(uidEpisode);
+        } catch {
+            return null;
+        }
+    },
+
+    async updateTranscript(uidEpisode: string, text: string): Promise<void> {
+        try {
+            await realEpisodeSerieService.updateTranscript(uidEpisode, text);
+        } catch {
+        }
+    },
 };
 
 export const serieCategoryService = {
@@ -809,10 +824,10 @@ export const likeService = {
         return true;
     },
 
-    async getLikeCount(itemUid: string): Promise<number> {
+    async getLikeCount(itemUid: string, contentType: 'movie' | 'episode'): Promise<number> {
         const localCount = localLikes.filter(l => l.uid === itemUid && l.isliked).length;
         try {
-            const realCount = await realLikeService.getLikeCount(itemUid);
+            const realCount = await realLikeService.getLikeCount(itemUid, contentType);
             return realCount + localCount;
         } catch {
             return localCount;

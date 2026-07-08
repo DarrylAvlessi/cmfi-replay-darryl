@@ -186,14 +186,10 @@ export const movieService = {
         try {
             if (movieIds.length === 0) return [];
 
-            const movies: Movie[] = [];
-            for (const id of movieIds) {
-                const movie = await this.getMovieById(id);
-                if (movie && !movie.hidden) {
-                    movies.push(movie);
-                }
-            }
-            return movies;
+            const moviesMap = await this.getMoviesByUids(movieIds);
+            return movieIds
+                .map(id => moviesMap.get(id))
+                .filter((m): m is Movie => !!m && !m.hidden);
         } catch (error) {
             console.error('Error getting bookmarked movies:', error);
             return [];
@@ -448,22 +444,10 @@ export const serieService = {
 
     async calculateAndUpdateSeriesStats(uid_serie: string): Promise<void> {
         try {
-            const seasons = await seasonSerieService.getSeasonsBySerie(uid_serie);
-            const seasonsCount = seasons.length;
-
-            let episodesCount = 0;
-            let totalDuration = 0;
-
-            for (const season of seasons) {
-                const episodes = await episodeSerieService.getEpisodesBySeason(season.uid_season);
-                episodesCount += episodes.length;
-
-                for (const episode of episodes) {
-                    if (episode.runtime) {
-                        totalDuration += episode.runtime;
-                    }
-                }
-            }
+            const episodes = await episodeSerieService.getEpisodesBySerie(uid_serie);
+            const seasonsCount = new Set(episodes.map(e => e.uid_season)).size;
+            const episodesCount = episodes.length;
+            const totalDuration = episodes.reduce((sum, e) => sum + (e.runtime || 0), 0);
 
             const q = query(
                 collection(db, SERIES_COLLECTION),

@@ -443,6 +443,15 @@ const AppVideosTab: React.FC = () => {
             // Ne pas inclure uid_serie dans editForm car ce n'est pas un champ de l'épisode
         });
         
+        // Charger le transcript depuis la collection dédiée
+        if (video.uid_episode) {
+            episodeSerieService.getTranscript(video.uid_episode).then(transcript => {
+                if (transcript) {
+                    setEditForm(prev => ({ ...prev, TranscriptText: transcript }));
+                }
+            });
+        }
+        
         // S'assurer que la série et la saison sont ouvertes
         if (serieUid) {
             setExpandedSeries(prev => {
@@ -467,6 +476,9 @@ const AppVideosTab: React.FC = () => {
             // Mettre à jour directement dans Firestore
             // editingVideo.id est l'ID Firestore
             await episodeSerieService.updateEpisodeById(editingVideo.id, editForm);
+            if (editingVideo.uid_episode) {
+                await episodeSerieService.updateTranscript(editingVideo.uid_episode, editForm.TranscriptText);
+            }
             toast.success('Vidéo mise à jour avec succès');
             
             // Mettre à jour l'état local au lieu de recharger toutes les données

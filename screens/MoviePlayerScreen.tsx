@@ -91,7 +91,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
         const fetchLikeData = async () => {
             const itemUid = movieData?.uid || item.id;
             try {
-                const count = await likeService.getLikeCount(itemUid);
+                const count = await likeService.getLikeCount(itemUid, 'movie');
                 setLikeCount(count);
 
                 if (userProfile?.email) {

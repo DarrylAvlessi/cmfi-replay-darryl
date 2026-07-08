@@ -68,7 +68,7 @@ export interface SeasonSerie {
 
 export interface EpisodeSerie {
     id: string;
-    TranscriptText: string;
+    TranscriptText?: string;
     backdrop_path: string;
     embedUrl: string;
     episode_numero: number;

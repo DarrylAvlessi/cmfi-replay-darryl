@@ -6,6 +6,7 @@ import {
     getDocs,
     setDoc,
     updateDoc,
+    deleteField,
     query,
     where,
     limit,
@@ -14,6 +15,7 @@ import {
 import { EpisodeSerie } from './types';
 import {
     EPISODES_SERIES_COLLECTION,
+    EPISODE_TRANSCRIPTS_COLLECTION,
 } from './constants';
 
 export const episodeSerieService = {
@@ -192,11 +194,15 @@ export const episodeSerieService = {
 
     async updateEpisodeById(id: string, updates: Partial<EpisodeSerie>): Promise<void> {
         try {
+            const { TranscriptText, ...docUpdates } = updates;
             const episodeRef = doc(db, EPISODES_SERIES_COLLECTION, id);
             await updateDoc(episodeRef, {
-                ...updates,
+                ...docUpdates,
                 updatedAt: new Date().toISOString()
             } as any);
+            if (TranscriptText !== undefined) {
+                await this.updateTranscript(id, TranscriptText);
+            }
         } catch (error) {
             console.error('Error updating episode:', error);
             throw error;
@@ -308,5 +314,26 @@ export const episodeSerieService = {
             seasons.push(...Object.keys(episode.other_seasons));
         }
         return seasons;
+    },
+
+    async getTranscript(uidEpisode: string): Promise<string | null> {
+        try {
+            const docRef = doc(db, EPISODE_TRANSCRIPTS_COLLECTION, uidEpisode);
+            const snap = await getDoc(docRef);
+            return snap.exists() ? snap.data().TranscriptText ?? null : null;
+        } catch (error) {
+            console.error('Error getting transcript:', error);
+            return null;
+        }
+    },
+
+    async updateTranscript(uidEpisode: string, text: string): Promise<void> {
+        try {
+            const docRef = doc(db, EPISODE_TRANSCRIPTS_COLLECTION, uidEpisode);
+            await setDoc(docRef, { TranscriptText: text }, { merge: true });
+        } catch (error) {
+            console.error('Error updating transcript:', error);
+            throw error;
+        }
     },
 };

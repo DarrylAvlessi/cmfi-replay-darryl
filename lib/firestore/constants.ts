@@ -19,3 +19,4 @@ export const USERS_REPORTS_COLLECTION = 'users_reports';
 export const TITLE_SUGGESTIONS_COLLECTION = 'title_suggestions';
 export const USER_DAILY_ACTIVITY_COLLECTION = 'user_daily_activity';
 export const INFO_BAR_COLLECTION = 'infoBarMessages';
+export const EPISODE_TRANSCRIPTS_COLLECTION = 'episodeTranscripts';
