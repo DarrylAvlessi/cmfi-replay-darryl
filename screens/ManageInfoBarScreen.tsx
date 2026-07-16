@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Timestamp } from 'firebase/firestore';
 import { infoBarService, InfoBarMessage } from '../lib/db';
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, CheckIcon, XMarkIcon } from '../components/icons';
@@ -259,7 +260,7 @@ const ManageInfoBarScreen: React.FC = () => {
                                                         )}
                                                     </span>
                                                     <span>
-                                                        Mis à jour: {new Date(message.updatedAt).toLocaleDateString('fr-FR')}
+                                                        Mis à jour: {new Date(message.updatedAt instanceof Timestamp ? message.updatedAt.toDate() : message.updatedAt).toLocaleDateString('fr-FR')}
                                                     </span>
                                                 </div>
                                             </div>

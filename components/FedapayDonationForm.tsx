@@ -116,7 +116,7 @@ const FedapayDonationForm: React.FC<FedapayDonationFormProps> = ({
         },
         customer: {
           email: user?.email || '',
-          firstname: userProfile?.displayName || user?.displayName || '',
+          firstname: userProfile?.display_name || user?.displayName || '',
           lastname: '',
         },
         onComplete,

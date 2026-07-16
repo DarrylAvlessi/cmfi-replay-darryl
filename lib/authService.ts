@@ -1,5 +1,5 @@
 import { auth, googleProvider } from './firebase';
-import { signInWithPopup, UserCredential, signOut as firebaseSignOut } from 'firebase/auth';
+import { signInWithPopup, getRedirectResult, UserCredential, signOut as firebaseSignOut } from 'firebase/auth';
 import { userService } from './db';
 
 /**
@@ -45,6 +45,18 @@ export const authService = {
             return await authService.signInWithGooglePopup();
         } catch (error: any) {
             console.error('❌ Erreur lors de la connexion Google:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Vérifie si un résultat de redirection Google est disponible
+     */
+    getGoogleRedirectResult: async (): Promise<UserCredential | null> => {
+        try {
+            return await getRedirectResult(auth);
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération du résultat de redirection:', error);
             throw error;
         }
     },

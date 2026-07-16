@@ -6,12 +6,10 @@ import { userService, UserProfile, bookDocService, bookSeriesService } from '../
 import { onAuthStateChanged } from 'firebase/auth';
 
 interface UseAuthLogicParams {
-    theme: 'light' | 'dark';
     language: 'en' | 'fr';
-    setTheme: (theme: 'light' | 'dark') => void;
 }
 
-export function useAuthLogic({ theme, language, setTheme }: UseAuthLogicParams) {
+export function useAuthLogic({ language }: UseAuthLogicParams) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -116,7 +114,6 @@ export function useAuthLogic({ theme, language, setTheme }: UseAuthLogicParams) 
                     const profile = await userService.getUserProfile(user.uid);
                     if (profile) {
                         setUserProfile(profile);
-                        setTheme(profile.theme);
                         setBookmarkedIds(profile.bookmarkedIds || []);
 
                         const bookDocs = await bookDocService.getUserBookmarks(user.email!);
@@ -136,7 +133,7 @@ export function useAuthLogic({ theme, language, setTheme }: UseAuthLogicParams) 
                             presence: 'online',
                             hasAcceptedPrivacyPolicy: false,
                             created_time: new Date().toISOString(),
-                            theme,
+                            theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
                             language,
                             bookmarkedIds: []
                         });
@@ -148,9 +145,6 @@ export function useAuthLogic({ theme, language, setTheme }: UseAuthLogicParams) 
                             const updatedProfile = snapshot.data() as UserProfile;
                             console.log('🔄 Profil mis à jour en temps réel - isAdmin:', updatedProfile.isAdmin, 'Type:', typeof updatedProfile.isAdmin);
                             setUserProfile(updatedProfile);
-                            if (updatedProfile.theme && updatedProfile.theme !== theme) {
-                                setTheme(updatedProfile.theme);
-                            }
                         }
                     }, (error) => {
                         console.error('Erreur lors de l\'écoute du profil:', error);

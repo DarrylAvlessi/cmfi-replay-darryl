@@ -61,9 +61,9 @@ const UserNavigationTimeline: React.FC<UserNavigationTimelineProps> = ({ userUid
                                 if (episode.title && episode.title.trim()) {
                                     title = episode.title;
                                 } else if (episode.title_serie) {
-                                    title = `${episode.title_serie} - Épisode ${episode.episode_number || episode.episode_numero || ''}`;
+                                    title = `${episode.title_serie} - Épisode ${episode.episode_numero || ''}`;
                                 } else {
-                                    title = `Épisode ${episode.episode_number || episode.episode_numero || ''}`;
+                                    title = `Épisode ${episode.episode_numero || ''}`;
                                 }
                                 return { ...nav, video_title: title, video_uid: videoUid };
                             }
@@ -250,11 +250,12 @@ const UserNavigationTimeline: React.FC<UserNavigationTimelineProps> = ({ userUid
                     <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                         <span>
                             Première visite: {
-                                navigations[navigations.length - 1].timestamp instanceof Date 
-                                    ? navigations[navigations.length - 1].timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-                                    : navigations[navigations.length - 1].timestamp instanceof Timestamp
-                                        ? navigations[navigations.length - 1].timestamp.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-                                        : new Date(navigations[navigations.length - 1].timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                                (() => {
+                                    const ts = navigations[navigations.length - 1].timestamp;
+                                    if (ts instanceof Date) return ts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    if (ts instanceof Timestamp) return ts.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    return new Date(ts as string).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                })()
                             }
                         </span>
                         <span>

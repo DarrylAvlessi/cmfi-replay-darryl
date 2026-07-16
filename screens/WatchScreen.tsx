@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MediaContent, MediaType } from '../types';
 import { movieService, serieService, episodeSerieService, seasonSerieService, EpisodeSerie } from '../lib/db';
@@ -19,6 +19,8 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let ignore = false;
+
         // If player already exists for this uid, no fetch needed
         if (playerData && (
             (playerData.type === 'movie' && playerData.item.id === uid) ||
@@ -40,6 +42,8 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                     movieService.getMovieByUid(uid),
                     episodeSerieService.getEpisodeByUid(uid),
                 ]);
+
+                if (ignore) return;
 
                 if (movie) {
                     setMedia({
@@ -66,8 +70,10 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                 if (episodeData) {
                     const [season, serie] = await Promise.all([
                         seasonSerieService.getSeasonByUid(episodeData.uid_season),
-                        episodeData.uid_serie ? serieService.getSerieByUid(episodeData.uid_serie) : Promise.resolve(null),
+                        episodeData.uid_season ? serieService.getSerieByUid(episodeData.uid_season) : Promise.resolve(null),
                     ]);
+
+                    if (ignore) return;
 
                     if (season && serie) {
                         setMedia({
@@ -94,10 +100,14 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
         };
 
         fetchMedia();
+
+        return () => { ignore = true; };
     }, [uid, navigate]);
 
     // Set player data when media is loaded
     useEffect(() => {
+        let ignore = false;
+
         if (!media) return;
 
         const data: any = {
@@ -142,7 +152,11 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
             data.type = 'movie';
         }
 
-        setPlayerData(data);
+        if (!ignore) {
+            setPlayerData(data);
+        }
+
+        return () => { ignore = true; };
     }, [media, episode]);
 
     if (loading) {

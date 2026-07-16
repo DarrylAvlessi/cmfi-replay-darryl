@@ -5,11 +5,11 @@ import { reportService, Report, titleSuggestionService, TitleSuggestion } from '
 import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from '../components/icons';
 
-const reportTypes: { value: 'bug' | 'suggestion' | 'question'; labelKey: string; descKey: string }[] = [
-    { value: 'bug', labelKey: 'reportBug', descKey: 'reportBugDesc' },
-    { value: 'suggestion', labelKey: 'suggestion', descKey: 'suggestionDesc' },
-    { value: 'question', labelKey: 'question', descKey: 'questionDesc' },
-];
+const reportTypes = [
+    { value: 'bug' as const, labelKey: 'reportBug' as const, descKey: 'reportBugDesc' as const },
+    { value: 'suggestion' as const, labelKey: 'suggestion' as const, descKey: 'suggestionDesc' as const },
+    { value: 'question' as const, labelKey: 'question' as const, descKey: 'questionDesc' as const },
+] as const;
 
 const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',

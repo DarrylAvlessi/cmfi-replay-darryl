@@ -82,8 +82,9 @@ const ForgotPasswordScreen: React.FC = () => {
                             </div>
                         ) : (
                             <>
-                                <form className="space-y-8" onSubmit={handleForgotPassword}>
+                                <form className="space-y-8" onSubmit={handleForgotPassword} >
                                     <InputField
+                                        
                                         label={t('email')}
                                         id="email-reset"
                                         name="email"
@@ -94,12 +95,14 @@ const ForgotPasswordScreen: React.FC = () => {
                                         required
                                         placeholder="e.g. howard.thurman@gmail.com"
                                     />
-                                    <AuthButton type="submit" disabled={authLoading}>
-                                        {authLoading ? t('loading') || 'Envoi...' : t('sendResetLink')}
-                                    </AuthButton>
+                                    <div >
+                                        <AuthButton type="submit" disabled={authLoading}>
+                                            {authLoading ? t('loading') || 'Envoi...' : t('sendResetLink')}
+                                        </AuthButton>
+                                    </div>
                                 </form>
                                 <div className="mt-6 text-center text-sm">
-                                    <button type="button" onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500">
+                                    <button type="button" onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500" >
                                         {t('backToLogin')}
                                     </button>
                                 </div>

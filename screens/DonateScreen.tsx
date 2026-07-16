@@ -148,7 +148,7 @@ const DonateScreen: React.FC = () => {
           <div className="flex-1 lg:max-w-lg xl:max-w-xl">
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-xl">
               {showMethodToggle && (
-                <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1" data-tour="donate-toggle">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('stripe')}
@@ -185,7 +185,9 @@ const DonateScreen: React.FC = () => {
                 </div>
               )}
 
-              {renderPaymentForm()}
+              <div data-tour="donate-form">
+                {renderPaymentForm()}
+              </div>
             </div>
 
             <div className="mt-6 text-center">

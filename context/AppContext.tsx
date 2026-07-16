@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { Language, TranslationKey } from '../lib/i18n';
-import { userService, UserProfile } from '../lib/db';
+import { UserProfile } from '../lib/db';
 import { User } from 'firebase/auth';
 import { ActiveTab } from '../types';
 import { ReleaseNoteItem } from '../lib/releaseNotes';
 import { useNetworkStatus, ConnectionQuality } from '../hooks/useNetworkStatus';
-import { useThemeLogic } from './useThemeLogic';
+import { useTheme } from './useTheme';
+import { useThemeSync } from './useThemeSync';
+import { useLanguage } from './useLanguage';
 import { useAuthLogic } from './useAuthLogic';
 import { useUIState } from './useUIState';
 
@@ -53,22 +55,16 @@ export type { HomeViewMode };
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { theme, setTheme, language, setLanguage, t } = useThemeLogic();
-    const authLogic = useAuthLogic({ theme, language, setTheme });
+    const { theme, setTheme } = useTheme();
+    const { language, setLanguage, t } = useLanguage();
+    const authLogic = useAuthLogic({ language });
+    const { updateTheme } = useThemeSync({ theme, setTheme, user: authLogic.user });
     const uiState = useUIState(authLogic.userProfile, authLogic.user);
     const { connectionQuality, effectiveType, saveData } = useNetworkStatus();
 
-    useEffect(() => {
-        if (authLogic.userProfile && authLogic.user && theme !== undefined) {
-            if (theme !== authLogic.userProfile.theme) {
-                userService.updateUserProfile(authLogic.user.uid, { theme }).catch(() => {});
-            }
-        }
-    }, [theme, authLogic.userProfile, authLogic.user]);
-
     const value = useMemo(() => ({
         theme,
-        setTheme,
+        setTheme: updateTheme,
         language,
         setLanguage,
         t,
@@ -134,7 +130,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         connectionQuality,
         effectiveType,
         saveData,
-        setTheme,
         setLanguage,
     ]);
 

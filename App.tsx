@@ -1,7 +1,6 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
-import { ThemeProvider } from './components/ThemeProvider';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './transitions.css';
@@ -58,6 +57,7 @@ import UpdatePrompt from './components/UpdatePrompt';
 import WhatsNewModal from './components/WhatsNewModal';
 import RouteLoadingBar from './components/RouteLoadingBar';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
+import { PlaybackPreferencesProvider } from './context/PlaybackPreferencesContext';
 import PlayerScreenHost from './components/PlayerScreenHost';
 import TutorialHost from './components/TutorialHost';
 import TutorialPromptModal from './components/TutorialPromptModal';
@@ -192,9 +192,9 @@ const AppContent: React.FC = () => {
                             if (episode.title && episode.title.trim()) {
                                 videoTitle = episode.title;
                             } else if (episode.title_serie) {
-                                videoTitle = `${episode.title_serie} - Épisode ${episode.episode_number || episode.episode_numero || ''}`;
+                                videoTitle = `${episode.title_serie} - Épisode ${episode.episode_numero || ''}`;
                             } else {
-                                videoTitle = `Épisode ${episode.episode_number || episode.episode_numero || ''}`;
+                                videoTitle = `Épisode ${episode.episode_numero || ''}`;
                             }
                         }
                     }
@@ -615,13 +615,13 @@ const App: React.FC = () => {
         <BrowserRouter>
             <AppProvider>
                 <QueryProvider>
-                    <ThemeProvider>
+                    <PlaybackPreferencesProvider>
                         <MiniPlayerProvider>
                             <TutorialProvider>
                                 <AppContent />
                             </TutorialProvider>
                         </MiniPlayerProvider>
-                    </ThemeProvider>
+                    </PlaybackPreferencesProvider>
                 </QueryProvider>
             </AppProvider>
         </BrowserRouter>

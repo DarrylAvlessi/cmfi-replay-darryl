@@ -260,6 +260,7 @@ export interface ContinueWatchingItem {
     episodeTitle?: string;
     uid_episode?: string;
     episodeId?: string;
+    lastWatched?: string;
     dateDernierUpdate: Date | Timestamp;
 }
 

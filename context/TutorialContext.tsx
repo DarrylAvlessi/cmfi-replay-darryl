@@ -175,10 +175,11 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const onStepBeforeShow = useCallback(
     (action: string) => {
       if (action === 'openSidebar') openSidebar();
+      if (action === 'closeSidebar') closeSidebar();
       if (action === 'profileHistoryTab') setProfileTab('history');
       if (action === 'profileAccountTab') setProfileTab('account');
     },
-    [openSidebar, setProfileTab]
+    [openSidebar, closeSidebar, setProfileTab]
   );
 
   const advanceTourStep = useCallback(() => {

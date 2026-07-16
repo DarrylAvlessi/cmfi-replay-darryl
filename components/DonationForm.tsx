@@ -128,7 +128,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
             card: cardNumberElement,
             billing_details: {
               name:
-                userProfile?.displayName ||
+                userProfile?.display_name ||
                 user?.displayName ||
                 undefined,
               email: user?.email || undefined,

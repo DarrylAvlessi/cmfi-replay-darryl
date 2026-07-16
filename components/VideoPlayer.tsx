@@ -35,7 +35,6 @@ interface VideoPlayerProps {
     showAutoplayToggle?: boolean;
     hideControls?: boolean;
     onTimeUpdate?: (time: number) => void;
-    onPipTrigger?: () => void;
     videoRef?: React.RefObject<HTMLVideoElement>;
 }
 
@@ -53,7 +52,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     showAutoplayToggle = false,
     hideControls = false,
     onTimeUpdate,
-    onPipTrigger,
     videoRef: externalVideoRef,
 }) => {
     const {
@@ -122,7 +120,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         showAutoplayToggle,
         hideControls,
         onTimeUpdate,
-        onPipTrigger,
         videoRef: externalVideoRef,
     });
 

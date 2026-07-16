@@ -92,7 +92,7 @@ const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onBack }) => {
 
     return (
         <div className="min-h-screen bg-white dark:bg-black">
-            <Header title={t('preferencesScreenTitle')} onBack={onBack} />
+            <Header title={t('preferencesScreenTitle')} onBack={onBack} isSidebarOpen={false} onToggleSidebar={() => {}} />
             <div className="px-4 py-6 max-w-2xl mx-auto">
                 {/* Titre de la page avec description */}
                 <div className="mb-8">

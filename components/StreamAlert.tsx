@@ -70,7 +70,7 @@ interface AlertItemProps {
 const AlertItem: React.FC<AlertItemProps> = ({ alert, onRemove }) => {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));

@@ -215,7 +215,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
     // Sidebar navigation items
     const navItems = useMemo(() => {
-        const items = [
+        const items: Array<{ id: string; label: string; icon: string }> = [
             { id: 'overview' as const, label: t('overview') || 'Vue d\'ensemble', icon: 'User' },
             { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
             { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
@@ -539,7 +539,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                             if (item.id === 'guides') {
                                                 navigateRouter('/docs');
                                             } else {
-                                                setActiveTab(item.id);
+                                                setActiveTab(item.id as typeof activeTab);
                                             }
                                         }}
                                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${

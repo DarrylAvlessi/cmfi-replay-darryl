@@ -101,7 +101,7 @@ const RedeemVoucherScreen: React.FC = () => {
         </div>
 
         {/* Carte principale */}
-        <div className="bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden" data-tour="voucher-form">
           <div className="p-6 md:p-10">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {t('redeemVoucherTitle')}

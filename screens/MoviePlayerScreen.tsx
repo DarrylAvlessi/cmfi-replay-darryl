@@ -21,6 +21,7 @@ import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
 import { useMiniPlayerContext } from '../context/MiniPlayerContext';
+import { useTutorial } from '../context/TutorialContext';
 
 // --- Main Screen Component ---
 interface PlayableItem {
@@ -54,7 +55,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
     const getAdStateKey = () => `ad_shown_movie_${item.id}`;
     const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
-    const [showAd, setShowAd] = useState(!wasAdShown);
+    const { activeTourId } = useTutorial();
+    const [showAd, setShowAd] = useState(!wasAdShown && activeTourId !== 'player' && activeTourId !== 'app-tour');
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
@@ -395,14 +397,10 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     }, [userProfile?.uid, item?.id]);
 
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
-    const { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
+    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
     const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
 
     const effectiveMini = isMini || forceMini;
-
-    const handlePipTrigger = useCallback(() => {
-      openMiniPlayer();
-    }, [openMiniPlayer]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const videoTimeRef = useRef(0);
@@ -504,10 +502,9 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             initialPosition={initialPlaybackPosition}
                                             videoUid={item.id}
                                             isEpisode={false}
-                                             hideControls={effectiveMini}
-                                             onTimeUpdate={handleTimeUpdate}
-                                            onPipTrigger={handlePipTrigger}
-                                            videoRef={videoRef}
+                                              hideControls={effectiveMini}
+                                              onTimeUpdate={handleTimeUpdate}
+                                              videoRef={videoRef}
                                         />
                                    )}
                                   </div>

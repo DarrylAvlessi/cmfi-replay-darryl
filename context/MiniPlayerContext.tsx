@@ -1,15 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { MediaContent } from '../types';
 import { EpisodeSerie } from '../lib/db';
-
-export interface OverlayVideoData {
-  src: string;
-  poster: string;
-  title: string;
-  videoUid: string;
-  currentTime: number;
-  isPlaying: boolean;
-}
 
 export interface PlayerScreenData {
   type: 'episode' | 'movie';
@@ -20,51 +11,43 @@ export interface PlayerScreenData {
   onReturnHome: () => void;
 }
 
-type PlayerDataType = 'episode' | 'movie';
-
 interface MiniPlayerContextType {
-  overlayData: OverlayVideoData | null;
-  isOverlayVisible: boolean;
-  showOverlay: (data: OverlayVideoData) => void;
-  hideOverlay: () => void;
-  consumeRestoreData: () => OverlayVideoData | null;
-
   playerData: PlayerScreenData | null;
   setPlayerData: (data: PlayerScreenData | null) => void;
+  isCollapsed: boolean;
+  collapse: () => void;
+  restore: () => void;
+  fullyClose: () => void;
 }
 
 const MiniPlayerContext = createContext<MiniPlayerContextType | null>(null);
 
 export function MiniPlayerProvider({ children }: { children: React.ReactNode }) {
-  const [overlayData, setOverlayData] = useState<OverlayVideoData | null>(null);
   const [playerData, setPlayerData] = useState<PlayerScreenData | null>(null);
-  const restoreRef = useRef<OverlayVideoData | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const showOverlay = useCallback((data: OverlayVideoData) => {
-    restoreRef.current = data;
-    setOverlayData(data);
+  const collapse = useCallback(() => {
+    setIsCollapsed(true);
   }, []);
 
-  const hideOverlay = useCallback(() => {
-    setOverlayData(null);
+  const restore = useCallback(() => {
+    setIsCollapsed(false);
   }, []);
 
-  const consumeRestoreData = useCallback(() => {
-    const data = restoreRef.current;
-    restoreRef.current = null;
-    return data;
+  const fullyClose = useCallback(() => {
+    setIsCollapsed(false);
+    setPlayerData(null);
   }, []);
 
   return (
     <MiniPlayerContext.Provider
       value={{
-        overlayData,
-        isOverlayVisible: overlayData !== null,
-        showOverlay,
-        hideOverlay,
-        consumeRestoreData,
         playerData,
         setPlayerData,
+        isCollapsed,
+        collapse,
+        restore,
+        fullyClose,
       }}
     >
       {children}

@@ -173,7 +173,7 @@ export const userService = {
 
                 const batchUsers = querySnapshot.docs.map(doc => ({
                     uid: doc.id,
-                    ...doc.data()
+                    ...(doc.data() as Record<string, unknown>)
                 } as UserProfile));
 
                 allUsers.push(...batchUsers);
@@ -311,10 +311,11 @@ export const userService = {
                     let activityTimestamp = 0;
 
                     if (user.lastSeen) {
-                        if (user.lastSeen instanceof Date) {
-                            activityTimestamp = user.lastSeen.getTime();
-                        } else if (user.lastSeen instanceof Timestamp) {
-                            activityTimestamp = user.lastSeen.toMillis();
+                        const lastSeen: unknown = user.lastSeen;
+                        if (lastSeen instanceof Date) {
+                            activityTimestamp = lastSeen.getTime();
+                        } else if (lastSeen instanceof Timestamp) {
+                            activityTimestamp = lastSeen.toMillis();
                         } else if (typeof user.lastSeen === 'number') {
                             activityTimestamp = user.lastSeen;
                         } else if (typeof user.lastSeen === 'object' && 'toMillis' in user.lastSeen) {

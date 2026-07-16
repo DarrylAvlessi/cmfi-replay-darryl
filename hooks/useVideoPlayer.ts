@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAppContext } from '../context/AppContext';
+import { usePlaybackPrefs } from '../context/PlaybackPreferencesContext';
 import { statsVuesService } from '../lib/db';
 
 const SPEED_PRESETS = [1, 1.25, 1.5, 2, 3];
@@ -33,7 +34,6 @@ interface UseVideoPlayerProps {
   showAutoplayToggle?: boolean;
   hideControls?: boolean;
   onTimeUpdate?: (time: number) => void;
-  onPipTrigger?: () => void;
   videoRef?: React.RefObject<HTMLVideoElement>;
 }
 
@@ -51,7 +51,6 @@ export function useVideoPlayer({
   showAutoplayToggle: _showAutoplayToggle,
   hideControls: _hideControls,
   onTimeUpdate,
-  onPipTrigger,
   videoRef: externalVideoRef,
 }: UseVideoPlayerProps) {
   const { t, userProfile } = useAppContext();
@@ -68,12 +67,10 @@ export function useVideoPlayer({
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
+  const { volume, setVolume, playbackRate, setPlaybackRate, isMuted, setIsMuted } = usePlaybackPrefs();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [autoplayEnabled, setAutoplayEnabled] = useState(externalAutoplayEnabled ?? true);
-  const [playbackRate, setPlaybackRate] = useState(1);
   const [buffered, setBuffered] = useState(0);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const wasPausedBeforeTabSwitch = useRef(false);
@@ -226,10 +223,6 @@ export function useVideoPlayer({
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
     } else if (document.pictureInPictureEnabled) {
-      if (!document.hidden && onPipTrigger) {
-        onPipTrigger();
-        return;
-      }
       await videoRef.current.requestPictureInPicture();
     }
   };
@@ -273,8 +266,9 @@ export function useVideoPlayer({
     if (!document.fullscreenElement) {
       container.requestFullscreen()
         .then(() => {
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
+          const orientation = (screen as any).orientation;
+          if (orientation && orientation.lock) {
+            orientation.lock('landscape').catch(() => {});
           }
         })
         .catch((err: any) => console.error(err));
@@ -662,6 +656,15 @@ export function useVideoPlayer({
     const handleCanPlay = () => {
       setIsInitialLoading(false);
       setIsBuffering(false);
+      if (video.playbackRate !== playbackRate) {
+        video.playbackRate = playbackRate;
+      }
+      if (video.volume !== volume) {
+        video.volume = volume;
+      }
+      if (video.muted !== isMuted) {
+        video.muted = isMuted;
+      }
     };
 
     const handleWaiting = () => {

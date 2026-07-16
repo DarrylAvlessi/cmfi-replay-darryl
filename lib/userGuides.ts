@@ -1,4 +1,4 @@
-export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile' | 'full-app';
+export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile' | 'bookmarks-mgmt' | 'donations' | 'full-app';
 
 export interface GuideStep {
   en: string;
@@ -145,6 +145,58 @@ export const USER_GUIDES: UserGuide[] = [
     ],
   },
   {
+    id: 'bookmarks-mgmt',
+    category: 'bookmarks-mgmt',
+    tourId: 'bookmarks-mgmt',
+    title: {
+      en: 'Favorites & Bookmarks',
+      fr: 'Favoris et signets',
+    },
+    summary: {
+      en: 'Save content to your favorites, browse and filter your list, and remove items.',
+      fr: 'Sauvegardez du contenu dans vos favoris, parcourez et filtrez votre liste, et retirez des éléments.',
+    },
+    readMinutes: 2,
+    steps: [
+      {
+        en: 'On any content detail page, tap the My List button to save it to your favorites.',
+        fr: 'Sur n\'importe quelle page de détail, appuyez sur Ma liste pour sauvegarder dans vos favoris.',
+      },
+      {
+        en: 'Open My Favorites from your profile to see everything you saved. Use tabs to filter by type.',
+        fr: 'Ouvrez Mes favoris depuis votre profil pour voir tout ce que vous avez sauvegardé. Utilisez les onglets pour filtrer.',
+      },
+      {
+        en: 'Tap the trash icon on any saved item to remove it from your list.',
+        fr: 'Appuyez sur l\'icône poubelle sur un élément pour le retirer de votre liste.',
+      },
+    ],
+  },
+  {
+    id: 'donations',
+    category: 'donations',
+    tourId: 'donations',
+    title: {
+      en: 'Donations',
+      fr: 'Dons',
+    },
+    summary: {
+      en: 'Support CMFI Replay with a one-time donation via card or mobile money.',
+      fr: 'Soutenez CMFI Replay avec un don unique par carte ou mobile money.',
+    },
+    readMinutes: 2,
+    steps: [
+      {
+        en: 'On the Donate page, switch between card (Stripe) and mobile money (FedaPay) depending on your preference.',
+        fr: 'Sur la page Don, basculez entre carte (Stripe) et mobile money (FedaPay) selon votre préférence.',
+      },
+      {
+        en: 'Enter your donation amount and payment details. All transactions are secure and encrypted.',
+        fr: 'Saisissez le montant de votre don et vos coordonnées de paiement. Toutes les transactions sont sécurisées.',
+      },
+    ],
+  },
+  {
     id: 'app-tour',
     category: 'full-app',
     tourId: 'app-tour',
@@ -156,7 +208,7 @@ export const USER_GUIDES: UserGuide[] = [
       en: 'A complete walkthrough of CMFI Replay — from the home page to search, profile, and the video player. Recommended for new users.',
       fr: 'Une visite complète de CMFI Replay — de la page d\'accueil à la recherche, au profil et au lecteur vidéo. Recommandé pour les nouveaux utilisateurs.',
     },
-    readMinutes: 10,
+    readMinutes: 8,
     steps: [
       {
         en: 'The home page highlights featured documentaries and productions. Use the Play button to start watching instantly.',
@@ -167,28 +219,16 @@ export const USER_GUIDES: UserGuide[] = [
         fr: 'Sur mobile, utilisez la barre de navigation en bas pour passer entre Accueil, Recherche et Profil.',
       },
       {
-        en: 'Browse content categories: Documentaries, Productions, and Podcasts from the menu or navigation bar.',
-        fr: 'Parcourez les catégories : Documentaires, Productions et Podcasts depuis le menu ou la barre de navigation.',
-      },
-      {
-        en: 'Scroll down on the home page to find Continue Watching, Most Liked, and category sections.',
-        fr: 'Faites défiler la page d\'accueil pour trouver Reprendre, Les plus aimés et les sections par catégorie.',
+        en: 'Tap your avatar to access your profile, bookmarks, watch history, and settings.',
+        fr: 'Appuyez sur votre avatar pour accéder à votre profil, vos favoris, votre historique et vos paramètres.',
       },
       {
         en: 'Open the Search tab and type keywords to find documentaries, productions, podcasts, seasons, and episodes.',
         fr: 'Ouvrez l\'onglet Recherche et saisissez des mots-clés pour trouver documentaires, productions, podcasts, saisons et épisodes.',
       },
       {
-        en: 'Use filter chips to narrow results by type: Documentaries, Productions, Podcasts, Seasons, or Episodes.',
-        fr: 'Utilisez les filtres pour affiner par type : Documentaires, Productions, Podcasts, Saisons ou Épisodes.',
-      },
-      {
         en: 'Open Profile to see your Continue Watching history and pick up where you left off.',
         fr: 'Ouvrez Profil pour voir votre historique Reprendre et continuer où vous vous êtes arrêté.',
-      },
-      {
-        en: 'Access Account Settings to edit your profile, change your password, and manage your account.',
-        fr: 'Accédez aux Paramètres du compte pour modifier votre profil, changer votre mot de passe et gérer votre compte.',
       },
       {
         en: 'In Preferences, switch between light and dark theme and choose English or French.',
@@ -199,16 +239,12 @@ export const USER_GUIDES: UserGuide[] = [
         fr: 'Sur une page de détail, appuyez sur Ma liste pour sauvegarder dans vos favoris.',
       },
       {
-        en: 'Use the Suggest button (pencil icon) to propose a better title for any video.',
-        fr: 'Utilisez le bouton Suggérer (icône crayon) pour proposer un meilleur titre.',
-      },
-      {
         en: 'Press Play to open the full video player with playback controls: play/pause, volume, speed, picture-in-picture, and fullscreen.',
         fr: 'Appuyez sur Lire pour ouvrir le lecteur avec les contrôles : lecture, volume, vitesse, incrustation et plein écran.',
       },
       {
-        en: 'When you navigate away during playback, the video continues in a mini player at the bottom of the screen.',
-        fr: 'En quittant la lecture, la vidéo continue dans un mini lecteur en bas de l\'écran.',
+        en: 'Visit My Favorites to see all content you saved. Use tabs to filter between documentaries and productions.',
+        fr: 'Consultez Mes favoris pour voir tout le contenu sauvegardé. Utilisez les onglets pour filtrer.',
       },
     ],
   },
@@ -221,6 +257,8 @@ export const GUIDE_CATEGORIES: { id: GuideCategory | 'all'; labelKey: string }[]
   { id: 'player', labelKey: 'guideCategoryPlayer' },
   { id: 'search', labelKey: 'guideCategorySearch' },
   { id: 'profile', labelKey: 'guideCategoryProfile' },
+  { id: 'bookmarks-mgmt', labelKey: 'guideCategoryBookmarks' },
+  { id: 'donations', labelKey: 'guideCategoryDonations' },
 ];
 
 export function getGuideById(id: string): UserGuide | undefined {

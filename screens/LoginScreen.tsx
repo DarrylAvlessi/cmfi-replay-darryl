@@ -158,25 +158,27 @@ const LoginScreen: React.FC = () => {
                 </div>
                 <div className="mt-8 px-4 sm:px-0">
                     <div className="space-y-6">
-                        <SocialLoginButton
-                            onClick={handleGoogleSignIn}
-                            disabled={googleLoading}
-                        />
+                        <div >
+                            <SocialLoginButton
+                                onClick={handleGoogleSignIn}
+                                disabled={googleLoading}
+                            />
+                        </div>
                         <OrSeparator />
                         {error && (
                             <div className="text-red-500 text-sm text-center mb-4">
                                 {error}
                             </div>
                         )}
-                        <form className="space-y-8" onSubmit={handleAuth}>
-                            <InputField label={t('email')} id="email-login" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
-                            <InputField label={t('password')} id="password-login" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+                        <form className="space-y-8" onSubmit={handleAuth} >
+                            <InputField  label={t('email')} id="email-login" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
+                            <InputField  label={t('password')} id="password-login" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
 
                             <div className="text-sm text-right -mt-4">
-                                <button type="button" onClick={() => navigate('/forgot-password')} className="font-medium text-amber-600 hover:text-amber-500">{t('forgotPassword')}</button>
+                                <button type="button" onClick={() => navigate('/forgot-password')} className="font-medium text-amber-600 hover:text-amber-500" >{t('forgotPassword')}</button>
                             </div>
 
-                            <div className="pt-2">
+                            <div className="pt-2" >
                                 <AuthButton type="submit" disabled={authLoading}>
                                     {authLoading ? t('loading') || 'Chargement...' : t('login')}
                                 </AuthButton>
@@ -185,7 +187,7 @@ const LoginScreen: React.FC = () => {
                         <div className="mt-6 text-center text-sm">
                             <p className="text-gray-500 dark:text-gray-400">
                                 {t('dontHaveAccount')}{' '}
-                                <button onClick={() => navigate('/register')} className="font-medium text-amber-600 hover:text-amber-500">
+                                <button onClick={() => navigate('/register')} className="font-medium text-amber-600 hover:text-amber-500" >
                                     {t('signup')}
                                 </button>
                             </p>

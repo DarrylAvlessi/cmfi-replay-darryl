@@ -234,7 +234,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
     return (
         <div className="min-h-screen bg-white dark:bg-black">
-            <div className="p-4 md:p-6 lg:p-8 space-y-6">
+            <div className="p-4 md:p-6 lg:p-8 space-y-6" data-tour="bookmarks-list">
                 {/* En-tête avec titre */}
                 <div className="pt-2">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">

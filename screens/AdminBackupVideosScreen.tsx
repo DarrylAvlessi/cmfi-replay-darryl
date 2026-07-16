@@ -269,7 +269,7 @@ const AppVideosTab: React.FC = () => {
             // Charger seulement les séries et saisons, pas les épisodes (chargement lazy)
             const data: Record<string, { seasons: any[]; episodes: Record<string, any[]> }> = {};
             
-            for (const serie of allSeries) {
+            for (const serie of allSeries as any[]) {
                 try {
                     // Charger les saisons de cette série directement depuis Firestore
                     // On doit récupérer les IDs Firestore pour pouvoir les mettre à jour

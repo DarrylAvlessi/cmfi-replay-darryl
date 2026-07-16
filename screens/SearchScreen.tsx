@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { SearchIcon } from '../components/icons';
+import { HelpIcon } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
+import { useTutorial } from '../context/TutorialContext';
 import { searchService, SearchResult } from '../lib/db';
 import { Movie, Serie, SeasonSerie, EpisodeSerie } from '../lib/db';
 
@@ -16,6 +18,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'movie' | 'serie' | 'podcast' | 'season' | 'episode'>('all');
   const { t } = useAppContext();
+  const { startTour } = useTutorial();
   const [searchParams] = useSearchParams();
 
   // Lire le paramètre ?q= de l'URL au montage et à chaque changement d'URL
@@ -122,8 +125,15 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
     <div className="min-h-screen bg-white dark:bg-black pb-20">
 
       {/* Titre de la page */}
-      <div className="px-6 py-4">
+      <div className="px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('searchScreenTitle')}</h1>
+        <button
+          onClick={() => startTour('search')}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-amber-500 hover:text-white transition-colors"
+          aria-label={t('startTour')}
+        >
+          <HelpIcon className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Barre de recherche */}

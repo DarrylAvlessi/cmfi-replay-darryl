@@ -18,10 +18,10 @@ import PromotionPlayer from '../components/PromotionPlayer';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
-import { usePlayer } from '../context/PlayerContext';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
 import { useMiniPlayerContext } from '../context/MiniPlayerContext';
+import { useTutorial } from '../context/TutorialContext';
 
 // --- Main Screen Component ---
 interface EpisodePlayerScreenProps {
@@ -49,16 +49,13 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
     const getAdStateKey = () => `ad_shown_${episode.uid_episode}`;
     const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
-    const [showAd, setShowAd] = useState(!wasAdShown);
+    const { activeTourId } = useTutorial();
+    const [showAd, setShowAd] = useState(!wasAdShown && activeTourId !== 'player' && activeTourId !== 'app-tour');
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
-    const { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
+    const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
     const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
 
     const effectiveMini = isMini || forceMini;
-
-    const handlePipTrigger = useCallback(() => {
-      openMiniPlayer();
-    }, [openMiniPlayer]);
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
@@ -533,7 +530,6 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                               showAutoplayToggle={true}
                                               hideControls={effectiveMini}
                                               onTimeUpdate={handleTimeUpdate}
-                                              onPipTrigger={handlePipTrigger}
                                               videoRef={videoRef}
                                           />
                                       )}

@@ -161,21 +161,23 @@ const RegisterScreen: React.FC = () => {
                 </div>
                 <div className="mt-8 px-4 sm:px-0">
                     <div className="space-y-6">
-                        <SocialLoginButton
-                            onClick={handleGoogleSignIn}
-                            disabled={googleLoading}
-                        />
+                        <div >
+                            <SocialLoginButton
+                                onClick={handleGoogleSignIn}
+                                disabled={googleLoading}
+                            />
+                        </div>
                         <OrSeparator />
                         {error && (
                             <div className="text-red-500 text-sm text-center mb-4">
                                 {error}
                             </div>
                         )}
-                        <form className="space-y-8" onSubmit={handleAuth}>
-                            <InputField label={t('fullName')} id="full-name" name="full-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Howard Thurman" />
-                            <InputField label={t('email')} id="email-signup" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
-                            <InputField label={t('password')} id="password-signup" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-                            <div className="pt-2">
+                        <form className="space-y-8" onSubmit={handleAuth} >
+                            <InputField  label={t('fullName')} id="full-name" name="full-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Howard Thurman" />
+                            <InputField  label={t('email')} id="email-signup" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
+                            <InputField  label={t('password')} id="password-signup" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+                            <div className="pt-2" >
                                 <AuthButton type="submit" disabled={authLoading}>
                                     {authLoading ? t('loading') || 'Chargement...' : t('getStarted')}
                                 </AuthButton>
@@ -184,7 +186,7 @@ const RegisterScreen: React.FC = () => {
                         <div className="mt-6 text-center text-sm">
                             <p className="text-gray-500 dark:text-gray-400">
                                 {t('alreadyHaveAccount')}{' '}
-                                <button onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500">
+                                <button onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500" >
                                     {t('login')}
                                 </button>
                             </p>

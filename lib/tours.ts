@@ -4,6 +4,7 @@ export type TourShowOn = 'all' | 'mobile' | 'desktop';
 
 export type TourBeforeShow =
   | 'openSidebar'
+  | 'closeSidebar'
   | 'profileHistoryTab'
   | 'profileAccountTab';
 
@@ -92,6 +93,7 @@ export const TOURS: TourDefinition[] = [
         id: 'header-avatar',
         element: '[data-tour="header-avatar"]',
         route: '/home',
+        beforeShow: 'closeSidebar',
         title: {
           en: 'Profile Menu',
           fr: 'Menu du profil',
@@ -278,6 +280,82 @@ export const TOURS: TourDefinition[] = [
     ],
   },
   {
+    id: 'bookmarks-mgmt',
+    steps: [
+      {
+        id: 'bookmark-add',
+        element: '[data-tour="bookmark-btn"]',
+        route: (ctx) => (ctx.demoVideoUid ? `/documentary/${ctx.demoVideoUid}` : '/home'),
+        condition: (ctx) => !!ctx.demoVideoUid,
+        title: {
+          en: 'Save to My List',
+          fr: 'Sauvegarder dans Ma liste',
+        },
+        description: {
+          en: 'Tap My List on any content detail page to save it to your favorites for quick access later.',
+          fr: 'Appuyez sur Ma liste sur une page de détail pour sauvegarder le contenu dans vos favoris.',
+        },
+      },
+      {
+        id: 'bookmarks-list',
+        element: '[data-tour="bookmarks-list"]',
+        route: '/bookmarks',
+        title: {
+          en: 'Browse Your Favorites',
+          fr: 'Parcourir vos favoris',
+        },
+        description: {
+          en: 'View all saved content here. Use the tabs to filter between documentaries and productions.',
+          fr: 'Consultez tout le contenu sauvegardé ici. Utilisez les onglets pour filtrer entre documentaires et productions.',
+        },
+      },
+      {
+        id: 'bookmark-remove',
+        element: '[data-tour="bookmarks-list"]',
+        route: '/bookmarks',
+        title: {
+          en: 'Remove from Favorites',
+          fr: 'Retirer des favoris',
+        },
+        description: {
+          en: 'Tap the trash icon on any item to remove it from your list.',
+          fr: 'Appuyez sur l\'icône poubelle sur un élément pour le retirer de votre liste.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'donations',
+    steps: [
+      {
+        id: 'donate-method',
+        element: '[data-tour="donate-toggle"]',
+        route: '/donate',
+        title: {
+          en: 'Choose Payment Method',
+          fr: 'Choisir le moyen de paiement',
+        },
+        description: {
+          en: 'Switch between card (Stripe) and mobile money (FedaPay) depending on your preference.',
+          fr: 'Basculez entre carte (Stripe) et mobile money (FedaPay) selon votre préférence.',
+        },
+      },
+      {
+        id: 'donate-overview',
+        element: '[data-tour="donate-form"]',
+        route: '/donate',
+        title: {
+          en: 'Complete Your Donation',
+          fr: 'Finaliser votre don',
+        },
+        description: {
+          en: 'Enter your donation amount and payment details. All transactions are secure and encrypted.',
+          fr: 'Saisissez le montant de votre don et vos coordonnées de paiement. Toutes les transactions sont sécurisées.',
+        },
+      },
+    ],
+  },
+  {
     id: 'app-tour',
     steps: [
       {
@@ -308,39 +386,10 @@ export const TOURS: TourDefinition[] = [
         },
       },
       {
-        id: 'mobile-menu-btn',
-        element: '[data-tour="mobile-menu-btn"]',
-        route: '/home',
-        showOn: 'mobile',
-        title: {
-          en: 'Menu',
-          fr: 'Menu',
-        },
-        description: {
-          en: 'Tap the menu icon to open categories: Documentaries, Productions, and Podcasts.',
-          fr: 'Appuyez sur l\'icône menu pour ouvrir les catégories : Documentaires, Productions et Podcasts.',
-        },
-      },
-      {
-        id: 'sidebar-categories-mobile',
-        element: '[data-tour="sidebar-categories"]',
-        route: '/home',
-        showOn: 'mobile',
-        beforeShow: 'openSidebar',
-        pauseAfterThisStep: true,
-        title: {
-          en: 'Browse Categories',
-          fr: 'Parcourir les catégories',
-        },
-        description: {
-          en: 'Explore Documentaries, Productions, Podcasts, and more from the sidebar menu.',
-          fr: 'Explorez Documentaires, Productions, Podcasts et plus depuis le menu latéral.',
-        },
-      },
-      {
         id: 'header-avatar',
         element: '[data-tour="header-avatar"]',
         route: '/home',
+        beforeShow: 'closeSidebar',
         title: {
           en: 'Profile Menu',
           fr: 'Menu du profil',
@@ -348,21 +397,6 @@ export const TOURS: TourDefinition[] = [
         description: {
           en: 'Tap your avatar to access your profile, bookmarks, watch history, and settings.',
           fr: 'Appuyez sur votre avatar pour accéder à votre profil, vos favoris, votre historique et vos paramètres.',
-        },
-      },
-      {
-        id: 'sidebar-categories',
-        element: '[data-tour="sidebar-categories"]',
-        route: '/home',
-        showOn: 'desktop',
-        pauseAfterThisStep: true,
-        title: {
-          en: 'Browse Categories',
-          fr: 'Parcourir les catégories',
-        },
-        description: {
-          en: 'Use the top navigation to browse Documentaries, Productions, and Podcasts.',
-          fr: 'Utilisez la navigation en haut pour parcourir Documentaires, Productions et Podcasts.',
         },
       },
       {
@@ -379,19 +413,6 @@ export const TOURS: TourDefinition[] = [
         },
       },
       {
-        id: 'search-filters',
-        element: '[data-tour="search-filters"]',
-        route: '/search',
-        title: {
-          en: 'Filter Results',
-          fr: 'Filtrer les résultats',
-        },
-        description: {
-          en: 'Use filters to narrow results by content type.',
-          fr: 'Utilisez les filtres pour affiner les résultats par type de contenu.',
-        },
-      },
-      {
         id: 'profile-history',
         element: '[data-tour="profile-history"]',
         route: '/profile',
@@ -403,20 +424,6 @@ export const TOURS: TourDefinition[] = [
         description: {
           en: 'Your watch history appears here so you can pick up where you left off.',
           fr: 'Votre historique de visionnage apparaît ici pour reprendre là où vous vous êtes arrêté.',
-        },
-      },
-      {
-        id: 'profile-settings',
-        element: '[data-tour="profile-settings"]',
-        route: '/profile',
-        beforeShow: 'profileAccountTab',
-        title: {
-          en: 'Account Settings',
-          fr: 'Paramètres du compte',
-        },
-        description: {
-          en: 'Edit your profile, change your password, and manage your account from here.',
-          fr: 'Modifiez votre profil, changez votre mot de passe et gérez votre compte depuis ici.',
         },
       },
       {
@@ -447,23 +454,9 @@ export const TOURS: TourDefinition[] = [
         },
       },
       {
-        id: 'suggest-title',
-        element: '[data-tour="suggest-title"]',
-        route: (ctx) => (ctx.demoVideoUid ? `/documentary/${ctx.demoVideoUid}` : '/home'),
-        condition: (ctx) => !!ctx.demoVideoUid,
-        title: {
-          en: 'Suggest a Title',
-          fr: 'Suggérer un titre',
-        },
-        description: {
-          en: 'Think a title could be better? Tap the pencil icon to suggest an improvement.',
-          fr: 'Vous pensez qu\'un titre pourrait être meilleur ? Appuyez sur l\'icône crayon pour suggérer une amélioration.',
-        },
-      },
-      {
         id: 'detail-play-btn',
         element: '[data-tour="detail-play-btn"]',
-        route: (ctx) => (ctx.demoVideoUid ? `/documentary/${ctx.demoVideoUid}` : '/home'),
+        route: (ctx) => (ctx.demoVideoUid ? `/watch/${ctx.demoVideoUid}` : '/home'),
         condition: (ctx) => !!ctx.demoVideoUid,
         title: {
           en: 'Play Button',
@@ -475,31 +468,16 @@ export const TOURS: TourDefinition[] = [
         },
       },
       {
-        id: 'player-controls',
-        element: '[data-tour="player-controls"]',
-        route: (ctx) => (ctx.demoVideoUid ? `/watch/${ctx.demoVideoUid}` : '/home'),
-        condition: (ctx) => !!ctx.demoVideoUid,
+        id: 'bookmarks-list',
+        element: '[data-tour="bookmarks-list"]',
+        route: '/bookmarks',
         title: {
-          en: 'Playback Controls',
-          fr: 'Contrôles de lecture',
+          en: 'My Favorites',
+          fr: 'Mes favoris',
         },
         description: {
-          en: 'Use play/pause, volume, speed, picture-in-picture, and fullscreen while watching.',
-          fr: 'Utilisez lecture/pause, volume, vitesse, image dans l\'image et plein écran pendant la lecture.',
-        },
-      },
-      {
-        id: 'mini-player',
-        element: '[data-tour="mini-player"]',
-        route: '/home',
-        condition: (ctx) => !!ctx.demoVideoUid,
-        title: {
-          en: 'Mini Player',
-          fr: 'Mini lecteur',
-        },
-        description: {
-          en: 'When you navigate away during playback, the video continues in a mini player. Tap it to return to full screen.',
-          fr: 'Lorsque vous quittez la page de lecture, la vidéo continue dans un mini lecteur. Appuyez dessus pour revenir en plein écran.',
+          en: 'View all content you have saved. Use the tabs to filter between documentaries and productions.',
+          fr: 'Consultez tout le contenu sauvegardé. Utilisez les onglets pour filtrer entre documentaires et productions.',
         },
       },
     ],

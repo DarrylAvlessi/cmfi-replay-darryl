@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { driver, DriveStep, Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -58,11 +58,12 @@ const TutorialHost: React.FC = () => {
   const { language, t } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
-  const [showContinuePrompt, setShowContinuePrompt] = useState(false);
+  
     const driverRef = useRef<Driver | null>(null);
   const tourNavTokenRef = useRef(0);
   const prevNavTokenRef = useRef(0);
   const prevPathRef = useRef(location.pathname);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const destroyDriver = useCallback(() => {
     if (driverRef.current) {
@@ -159,11 +160,10 @@ const TutorialHost: React.FC = () => {
           nextBtnText: isLast ? t('tourComplete') : t('nextStep'),
           prevBtnText: t('prevStep'),
           progressText: `${stepNumber} / ${totalSteps}`,
+          disableButtons: [],
           onNextClick: () => {
             destroyDriver();
-            if (step.pauseAfterThisStep) {
-              setShowContinuePrompt(true);
-            } else if (isLast) {
+            if (isLast) {
               finishTour(activeTourId);
             } else {
               advanceTourStep();
@@ -204,12 +204,22 @@ const TutorialHost: React.FC = () => {
 
       driverRef.current = driverObj;
       driverObj.drive();
+
+      refreshTimerRef.current = setTimeout(() => {
+        if (driverRef.current?.isActive()) {
+          driverRef.current.refresh();
+        }
+      }, 2500);
     };
 
     runStep();
 
     return () => {
       cancelled = true;
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
       destroyDriver();
     };
   }, [
@@ -228,31 +238,7 @@ const TutorialHost: React.FC = () => {
     t,
   ]);
 
-  const handleContinueTour = () => {
-    setShowContinuePrompt(false);
-    advanceTourStep();
-  };
-
-  const handleStopTour = () => {
-    setShowContinuePrompt(false);
-    stopTour();
-  };
-
-  return showContinuePrompt ? (
-    <div className="tutorial-continue-overlay">
-      <div className="tutorial-continue-modal">
-        <p className="tutorial-continue-text">{t('continueTourPrompt')}</p>
-        <div className="tutorial-continue-buttons">
-          <button onClick={handleContinueTour} className="tutorial-btn tutorial-btn-primary">
-            {t('continueTour')}
-          </button>
-          <button onClick={handleStopTour} className="tutorial-btn tutorial-btn-secondary">
-            {t('stopTour')}
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
+  return null;
 };
 
 export default TutorialHost;
