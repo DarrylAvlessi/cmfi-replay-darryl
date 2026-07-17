@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Ad, adService } from '../lib/db';
 import { ForwardIcon } from './icons';
 import { useAppContext } from '../context/AppContext';
+import VideoLoadingOverlay from './player/VideoLoadingOverlay';
 
 interface PromotionPlayerProps {
   onPromotionEnd: () => void;
@@ -97,7 +98,6 @@ const PromotionPlayer: React.FC<PromotionPlayerProps> = ({ onPromotionEnd, onSki
   const handleSkip = () => {
     if (canSkip && onSkip) {
       onSkip();
-      onPromotionEnd();
     }
   };
 
@@ -112,8 +112,8 @@ const PromotionPlayer: React.FC<PromotionPlayerProps> = ({ onPromotionEnd, onSki
 
   if (loading) {
     return (
-      <div className="absolute inset-0 bg-black flex items-center justify-center z-50">
-        <div className="text-white text-lg">{t('adLoading') || 'Chargement de la publicité...'}</div>
+      <div className="absolute inset-0 bg-black z-50">
+        <VideoLoadingOverlay isInitialLoading={true} />
       </div>
     );
   }

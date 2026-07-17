@@ -481,17 +481,29 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
         );
     }, []);
 
-    const handlePlay = useCallback(() => {
+    const handlePlay = useCallback(async () => {
         let episodeToPlay: Episode | EpisodeSerie | undefined;
 
         if (type === MediaType.Series || type === MediaType.Podcast) {
-            // Prioriser les données Firestore
             if (firestoreSeasons.length > 0) {
                 const firstSeason = firestoreSeasons[0];
-                const episodes = seasonEpisodes[firstSeason.uid_season] || [];
-                episodeToPlay = episodes[0]; // Premier épisode de la première saison
+                const cached = seasonEpisodes[firstSeason.uid_season];
+                if (cached && cached.length > 0) {
+                    episodeToPlay = cached[0];
+                } else {
+                    const fresh = await episodeSerieService.getEpisodesBySeason(firstSeason.uid_season);
+                    if (fresh.length > 0) {
+                        episodeToPlay = fresh[0];
+                        setSeasonEpisodes(prev => ({ ...prev, [firstSeason.uid_season]: fresh }));
+                    }
+                }
             } else if (seasons && seasons.length > 0) {
-                episodeToPlay = seasons[0].episodes[0]; // Fallback vers les données mockées
+                episodeToPlay = seasons[0].episodes[0];
+            } else {
+                const fresh = await episodeSerieService.getEpisodesBySerie(item.id);
+                if (fresh.length > 0) {
+                    episodeToPlay = fresh[0];
+                }
             }
         }
 

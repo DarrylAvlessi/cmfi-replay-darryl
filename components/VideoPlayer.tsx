@@ -160,6 +160,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 className="w-full h-full"
                 onClick={handleVideoClick}
                 onError={handleVideoError}
+                playsInline
+                preload="metadata"
             />
             <VideoFeedbackOverlay
                 seekFeedback={seekFeedback}

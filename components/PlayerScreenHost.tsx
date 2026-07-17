@@ -6,7 +6,7 @@ import EpisodePlayerScreen from '../screens/EpisodePlayerScreen';
 import MoviePlayerScreen from '../screens/MoviePlayerScreen';
 
 const PlayerScreenHost: React.FC = () => {
-  const { playerData, setPlayerData, isCollapsed, collapse, restore, fullyClose } = useMiniPlayerContext();
+  const { playerData, setPlayerData, isCollapsed, restore, fullyClose } = useMiniPlayerContext();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -42,11 +42,7 @@ const PlayerScreenHost: React.FC = () => {
   };
 
   const handleClose = () => {
-    if (forceMini) {
-      collapse();
-    } else {
-      fullyClose();
-    }
+    fullyClose();
   };
 
   const handleCollapsedBarClick = () => {

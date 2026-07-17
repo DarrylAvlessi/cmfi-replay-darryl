@@ -3,7 +3,6 @@ import { db } from '../lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { appSettingsService } from '../lib/db';
 import { ActiveTab } from '../types';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 import { APP_VERSION } from '../lib/version';
 import { RELEASE_NOTES, ReleaseNoteItem, isVersionNewerThan } from '../lib/releaseNotes';
 import { UserProfile } from '../lib/db';
@@ -93,8 +92,6 @@ export function useUIState(userProfile: UserProfile | null, user: any) {
         setIsSidebarCollapsed(!isSidebarCollapsed);
     };
 
-    const [swUpdateDismissed, setSwUpdateDismissed] = useState(false);
-
     const [showWhatsNew, setShowWhatsNew] = useState(false);
     const [newReleaseNotes, setNewReleaseNotes] = useState<ReleaseNoteItem[]>([]);
     const [lastSeenVersion, setLastSeenVersion] = useState<string | null>(null);
@@ -121,38 +118,12 @@ export function useUIState(userProfile: UserProfile | null, user: any) {
         setShowWhatsNew(false);
     }, []);
 
-    const {
-        needRefresh: [needRefresh, setNeedRefresh],
-        updateServiceWorker,
-    } = useRegisterSW({
-        onNeedRefresh() {
-            setSwUpdateDismissed(false);
-        },
-        onRegistered(registration) {
-            if (registration) {
-                setTimeout(() => { registration.update(); }, 1000);
-            }
-        },
-    });
-
-    const swUpdateAvailable = needRefresh;
-
-    const applyUpdate = useCallback(() => {
-        updateServiceWorker();
-    }, [updateServiceWorker]);
-
-    const dismissUpdate = useCallback(() => {
-        setSwUpdateDismissed(true);
-    }, []);
-
     return {
         isSidebarCollapsed, setIsSidebarCollapsed,
         toggleSidebarCollapse,
         activeTab, setActiveTab,
         autoplay, setAutoplay,
         homeViewMode, setHomeViewMode,
-        swUpdateAvailable, swUpdateDismissed,
-        applyUpdate, dismissUpdate,
         showWhatsNew, markWhatsNewSeen,
         newReleaseNotes, lastSeenVersion,
     };

@@ -37,10 +37,6 @@ interface AppContextType {
     setActiveTab: (tab: ActiveTab) => void;
     homeViewMode: HomeViewMode;
     setHomeViewMode: (mode: HomeViewMode) => void;
-    swUpdateAvailable: boolean;
-    swUpdateDismissed: boolean;
-    applyUpdate: () => void;
-    dismissUpdate: () => void;
     showWhatsNew: boolean;
     markWhatsNewSeen: () => void;
     newReleaseNotes: ReleaseNoteItem[];
@@ -86,10 +82,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab: uiState.setActiveTab,
         homeViewMode: uiState.homeViewMode,
         setHomeViewMode: uiState.setHomeViewMode,
-        swUpdateAvailable: uiState.swUpdateAvailable,
-        swUpdateDismissed: uiState.swUpdateDismissed,
-        applyUpdate: uiState.applyUpdate,
-        dismissUpdate: uiState.dismissUpdate,
         showWhatsNew: uiState.showWhatsNew,
         markWhatsNewSeen: uiState.markWhatsNewSeen,
         newReleaseNotes: uiState.newReleaseNotes,
@@ -119,10 +111,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         uiState.setActiveTab,
         uiState.homeViewMode,
         uiState.setHomeViewMode,
-        uiState.swUpdateAvailable,
-        uiState.swUpdateDismissed,
-        uiState.applyUpdate,
-        uiState.dismissUpdate,
         uiState.showWhatsNew,
         uiState.markWhatsNewSeen,
         uiState.newReleaseNotes,

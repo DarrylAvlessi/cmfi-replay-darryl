@@ -20,7 +20,7 @@ interface SeekBarProps {
   src?: string;
 }
 
-const SeekBar: React.FC<SeekBarProps> = ({
+const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   duration,
   progress,
   buffered,
@@ -38,7 +38,8 @@ const SeekBar: React.FC<SeekBarProps> = ({
   formatTime,
   previewVideoRef,
   src,
-}) => (
+}) {
+  return (
   <div className="px-2 sm:px-4 pt-2 pb-0.5">
     <div
       className="relative w-full h-1.5 hover:h-2.5 transition-all duration-200 bg-black/30 rounded-full cursor-pointer group"
@@ -99,6 +100,7 @@ const SeekBar: React.FC<SeekBarProps> = ({
       />
     </div>
   </div>
-);
+  );
+});
 
 export default SeekBar;

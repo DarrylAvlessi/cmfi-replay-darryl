@@ -53,7 +53,6 @@ import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
-import UpdatePrompt from './components/UpdatePrompt';
 import WhatsNewModal from './components/WhatsNewModal';
 import RouteLoadingBar from './components/RouteLoadingBar';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
@@ -601,7 +600,6 @@ const AppContent: React.FC = () => {
                 />
             )}
 
-            <UpdatePrompt />
             <WhatsNewModal />
             <TutorialHost />
             <TutorialPromptModal />

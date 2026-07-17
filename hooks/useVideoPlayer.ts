@@ -49,7 +49,7 @@ export function useVideoPlayer({
   episodeRef,
   autoplayEnabled: externalAutoplayEnabled,
   showAutoplayToggle: _showAutoplayToggle,
-  hideControls: _hideControls,
+  hideControls,
   onTimeUpdate,
   videoRef: externalVideoRef,
 }: UseVideoPlayerProps) {
@@ -88,8 +88,11 @@ export function useVideoPlayer({
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isLongPressing, setIsLongPressing] = useState(false);
   const speedBeforeLongPressRef = useRef(1);
+  const isSpeedBoostedRef = useRef(false);
   const [playPauseFeedback, setPlayPauseFeedback] = useState<'play' | 'pause' | null>(null);
   const playPauseFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initialAutoplayHandledRef = useRef(false);
+  const autoplayFallbackRef = useRef(false);
 
   // --- Device detection ---
   const isTouchDevice = useRef(
@@ -116,6 +119,7 @@ export function useVideoPlayer({
 
   // --- Helper: reset controls timeout ---
   const resetControlsTimeout = () => {
+    if (hideControls) return;
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -183,8 +187,10 @@ export function useVideoPlayer({
 
   const toggleMute = () => {
     resetControlsTimeout();
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
+    const video = videoRef.current;
+    if (video) {
+      video.muted = !video.muted;
+      setIsMuted(video.muted);
     }
   };
 
@@ -194,7 +200,8 @@ export function useVideoPlayer({
     if (!v) return;
     const val = parseFloat(e.target.value);
     v.volume = val;
-    if (v.muted && val > 0) v.muted = false;
+    setVolume(val);
+    if (v.muted && val > 0) { v.muted = false; setIsMuted(false); }
   };
 
   const handleVolumeSliderInput = (e: React.FormEvent<HTMLInputElement>) => {
@@ -203,7 +210,8 @@ export function useVideoPlayer({
     if (!v) return;
     const val = parseFloat(e.currentTarget.value);
     v.volume = val;
-    if (v.muted && val > 0) v.muted = false;
+    setVolume(val);
+    if (v.muted && val > 0) { v.muted = false; setIsMuted(false); }
   };
 
   const handleVolumeSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -214,7 +222,8 @@ export function useVideoPlayer({
     const x = (e.clientX - rect.left) / rect.width;
     const clamped = Math.max(0, Math.min(1, x));
     v.volume = clamped;
-    if (v.muted && clamped > 0) v.muted = false;
+    setVolume(clamped);
+    if (v.muted && clamped > 0) { v.muted = false; setIsMuted(false); }
   };
 
   const togglePip = async () => {
@@ -341,6 +350,7 @@ export function useVideoPlayer({
   };
 
   const handleMouseMove = () => {
+    if (hideControls) return;
     if (!isPlaying) {
       setShowControls(true);
     } else {
@@ -349,13 +359,9 @@ export function useVideoPlayer({
   };
 
   const handleMouseLeave = () => {
+    if (hideControls) return;
     if (isPlaying) {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-      controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-      }, 1000);
+      setShowControls(false);
     }
   };
 
@@ -440,6 +446,7 @@ export function useVideoPlayer({
         speedBeforeLongPressRef.current = videoRef.current.playbackRate;
         videoRef.current.playbackRate = 2;
         setPlaybackRate(2);
+        isSpeedBoostedRef.current = true;
       }
     }, LONG_PRESS_DELAY);
   };
@@ -472,6 +479,7 @@ export function useVideoPlayer({
       if (videoRef.current) {
         videoRef.current.playbackRate = speedBeforeLongPressRef.current;
         setPlaybackRate(speedBeforeLongPressRef.current);
+        isSpeedBoostedRef.current = false;
       }
       e.preventDefault();
       return;
@@ -493,6 +501,8 @@ export function useVideoPlayer({
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
+      // Revert the play/pause toggle from the first click
+      togglePlay();
       const isLeft = x < rect.width / 2;
       if (isLeft) {
         handleRewind();
@@ -503,10 +513,10 @@ export function useVideoPlayer({
       }
       ignoreClickUntilRef.current = Date.now() + DOUBLE_CLICK_IGNORE_MS;
     } else {
+      togglePlay();
       clickTimerRef.current = setTimeout(() => {
         clickTimerRef.current = null;
-        togglePlay();
-      }, CLICK_DELAY_MS);
+      }, DOUBLE_TAP_DELAY_MS);
     }
   };
 
@@ -577,12 +587,12 @@ export function useVideoPlayer({
 
   // Set initial position
   useEffect(() => {
-    if (videoRef.current && initialPosition > 0) {
+    if (videoRef.current && initialPosition > 0 && duration > 0) {
       videoRef.current.currentTime = initialPosition;
       setProgress((initialPosition / duration) * 100);
       setCurrentTime(initialPosition);
     }
-  }, [initialPosition]);
+  }, [initialPosition, duration]);
 
   // Save progress every 10s
   useEffect(() => {
@@ -617,23 +627,7 @@ export function useVideoPlayer({
     };
   }, [userProfile?.uid, videoUid, isEpisode, episodeRef]);
 
-  // Controls auto-hide
-  useEffect(() => {
-    if (isPlaying) {
-      const timer = setTimeout(() => {
-        setShowControls(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowControls(true);
-    }
-
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-    };
-  }, [isPlaying, progress, currentTime]);
+  // Controls auto-hide when playing (handled by resetControlsTimeout / handleMouseMove)
 
   // Video event listeners
   useEffect(() => {
@@ -661,9 +655,6 @@ export function useVideoPlayer({
       }
       if (video.volume !== volume) {
         video.volume = volume;
-      }
-      if (video.muted !== isMuted) {
-        video.muted = isMuted;
       }
     };
 
@@ -744,16 +735,58 @@ export function useVideoPlayer({
   // Autoplay logic when initial loading completes
   useEffect(() => {
     if (!isInitialLoading && videoRef.current) {
-      const wasPausedInStorage =
-        sessionStorage.getItem(`video_paused_${videoUid}`) === 'true';
-      if (!wasPausedBeforeTabSwitch.current && !wasPausedInStorage && autoplayEnabled) {
-        setIsPlaying(true);
-        videoRef.current.play().catch(() => setIsPlaying(false));
-      } else if (wasPausedInStorage) {
-        sessionStorage.removeItem(`video_paused_${videoUid}`);
+      if (!initialAutoplayHandledRef.current) {
+        initialAutoplayHandledRef.current = true;
+        const wasPausedInStorage =
+          sessionStorage.getItem(`video_paused_${videoUid}`) === 'true';
+        if (!wasPausedBeforeTabSwitch.current && !wasPausedInStorage && autoplayEnabled) {
+          setIsPlaying(true);
+          const video = videoRef.current;
+          // Try unmuted autoplay first — succeeds if MEI is high enough
+          video.play()
+            .then(() => {
+              if (video.muted !== isMuted) {
+                video.muted = isMuted;
+              }
+            })
+            .catch(() => {
+              // Blocked — fall back to muted autoplay
+              autoplayFallbackRef.current = true;
+              video.muted = true;
+              video.play().catch(() => setIsPlaying(false));
+            });
+          return;
+        }
+        if (wasPausedInStorage) {
+          sessionStorage.removeItem(`video_paused_${videoUid}`);
+        }
+      }
+      // Sync user's mute preference (runs on every change of isMuted)
+      if (videoRef.current.muted !== isMuted) {
+        if (isMuted) {
+          videoRef.current.muted = true;
+        } else if (!autoplayFallbackRef.current) {
+          videoRef.current.muted = false;
+        }
       }
     }
-  }, [isInitialLoading]);
+  }, [isInitialLoading, videoUid, isMuted]);
+
+  // Force controls hidden when hideControls is true
+  useEffect(() => {
+    if (hideControls) {
+      setShowControls(false);
+    }
+  }, [hideControls]);
+
+  // Restore playback speed when pausing after a long-press boost
+  useEffect(() => {
+    if (!isPlaying && isSpeedBoostedRef.current && videoRef.current) {
+      videoRef.current.playbackRate = speedBeforeLongPressRef.current;
+      setPlaybackRate(speedBeforeLongPressRef.current);
+      isSpeedBoostedRef.current = false;
+    }
+  }, [isPlaying]);
 
   // Set unavailable on src change
   useEffect(() => {
@@ -792,7 +825,6 @@ export function useVideoPlayer({
     try {
       video.pause();
       video.load();
-      video.play().catch(() => {});
     } catch {}
   }, [src]);
 

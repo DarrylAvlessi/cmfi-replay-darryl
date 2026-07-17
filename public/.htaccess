@@ -52,6 +52,11 @@
     # Sécurité : par défaut, on ne cache pas (sera surchargé par les types ci-dessous)
     ExpiresDefault "access plus 0 seconds"
 
+    # Service Worker — NE JAMAIS CACHER (doit toujours vérifier les mises à jour)
+    <FilesMatch "^(sw\.js|workbox-.*\.js)$">
+        ExpiresDefault "access plus 0 seconds"
+    </FilesMatch>
+
     # Vos assets ont un hash unique généré par Vite (ex: index-C7a8b9.js)
     # On peut donc les cacher sans risque, car si le code change, le nom change !
     ExpiresByType image/jpeg "access plus 1 month"
@@ -64,6 +69,15 @@
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
 </IfModule>
+
+# Service Worker — headers anti-cache supplémentaires (quel que soit mod_expires)
+<FilesMatch "^(sw\.js|workbox-.*\.js)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </IfModule>
+</FilesMatch>
 
 # Empêcher le listing des répertoires
 Options -Indexes

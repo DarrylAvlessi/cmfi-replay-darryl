@@ -68,28 +68,32 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
                 }
 
                 if (episodeData) {
-                    const [season, serie] = await Promise.all([
-                        seasonSerieService.getSeasonByUid(episodeData.uid_season),
-                        episodeData.uid_season ? serieService.getSerieByUid(episodeData.uid_season) : Promise.resolve(null),
-                    ]);
-
+                    const season = await seasonSerieService.getSeasonByUid(episodeData.uid_season);
                     if (ignore) return;
-
-                    if (season && serie) {
-                        setMedia({
-                            id: serie.uid_serie,
-                            title: serie.title_serie,
-                            description: serie.overview_serie || '',
-                            imageUrl: serie.image_path || '',
-                            type: serie.serie_type === 'podcast' ? MediaType.Podcast : MediaType.Series,
-                            duration: serie.runtime_h_m || '',
-                            theme: '',
-                            languages: Array.isArray(serie.lang) ? serie.lang : [serie.lang || 'fr'],
-                        });
-                        setEpisode(episodeData);
-                        setLoading(false);
+                    if (!season) {
+                        navigate('/home');
                         return;
                     }
+                    const serie = await serieService.getSerieByUid(season.uid_serie);
+                    if (ignore) return;
+                    if (!serie) {
+                        navigate('/home');
+                        return;
+                    }
+
+                    setMedia({
+                        id: serie.uid_serie,
+                        title: serie.title_serie,
+                        description: serie.overview_serie || '',
+                        imageUrl: serie.image_path || '',
+                        type: serie.serie_type === 'podcast' ? MediaType.Podcast : MediaType.Series,
+                        duration: serie.runtime_h_m || '',
+                        theme: '',
+                        languages: Array.isArray(serie.lang) ? serie.lang : [serie.lang || 'fr'],
+                    });
+                    setEpisode(episodeData);
+                    setLoading(false);
+                    return;
                 }
 
                 navigate('/home');

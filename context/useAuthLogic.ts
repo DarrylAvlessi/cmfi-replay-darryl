@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -15,13 +15,17 @@ export function useAuthLogic({ language }: UseAuthLogicParams) {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+    const profileSnapshotRef = useRef<string | null>(null);
+    const lastPresenceRef = useRef<{ uid: string; status: string } | null>(null);
 
     const updateUserPresence = useCallback(async (uid: string, status: 'online' | 'offline' | 'idle' | 'away') => {
+        if (lastPresenceRef.current?.uid === uid && lastPresenceRef.current?.status === status) return;
         try {
             await userService.updateUserProfile(uid, {
                 presence: status,
                 lastSeen: new Date()
             });
+            lastPresenceRef.current = { uid, status };
         } catch (error) {
             console.error('Erreur lors de la mise à jour du statut de présence:', error);
         }
@@ -90,7 +94,7 @@ export function useAuthLogic({ language }: UseAuthLogicParams) {
             window.removeEventListener('beforeunload', handleBeforeUnload);
             window.removeEventListener('pagehide', handlePageHide);
         };
-    }, [user, userProfile?.presence, updateUserPresence]);
+    }, [user, updateUserPresence]);
 
     useEffect(() => {
         const currentUser = auth.currentUser;
@@ -143,6 +147,9 @@ export function useAuthLogic({ language }: UseAuthLogicParams) {
                     unsubscribeProfile = onSnapshot(userProfileRef, (snapshot) => {
                         if (snapshot.exists()) {
                             const updatedProfile = snapshot.data() as UserProfile;
+                            const profileJson = JSON.stringify(updatedProfile);
+                            if (profileSnapshotRef.current === profileJson) return;
+                            profileSnapshotRef.current = profileJson;
                             console.log('🔄 Profil mis à jour en temps réel - isAdmin:', updatedProfile.isAdmin, 'Type:', typeof updatedProfile.isAdmin);
                             setUserProfile(updatedProfile);
                         }
