@@ -79,6 +79,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         hoverPos,
         previewHoverTime,
         seekFeedback,
+        seekFeedbackStep,
+        volumeFeedback,
         playPauseFeedback,
         isLongPressing,
         unavailable,
@@ -92,8 +94,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         handleVolumeSliderChange,
         handleVolumeSliderInput,
         handleVolumeSeek,
-        handleSeek,
-        handleSliderChange,
         handleSliderInput,
         handleSliderMouseDown,
         handleSliderMouseUp,
@@ -165,6 +165,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             />
             <VideoFeedbackOverlay
                 seekFeedback={seekFeedback}
+                seekStep={seekFeedbackStep}
+                volumeFeedback={volumeFeedback}
+                volume={volume}
+                isMuted={isMuted}
                 isLongPressing={isLongPressing}
                 playPauseFeedback={playPauseFeedback}
                 isLoading={isInitialLoading || isBuffering}
@@ -186,8 +190,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         previewHoverTime={previewHoverTime}
                         showPreview={showPreview}
                         isScrubbing={isScrubbing}
-                        onSeek={handleSeek}
-                        onSliderChange={handleSliderChange}
                         onSliderInput={handleSliderInput}
                         onSliderMouseDown={handleSliderMouseDown}
                         onSliderMouseUp={handleSliderMouseUp}

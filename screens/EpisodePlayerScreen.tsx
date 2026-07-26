@@ -1,7 +1,7 @@
 // screens/EpisodePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MediaContent } from '../types';
 import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/db';
 import {
@@ -20,7 +20,7 @@ import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
-import { useMiniPlayerContext } from '../context/MiniPlayerContext';
+
 import { useTutorial } from '../context/TutorialContext';
 
 // --- Main Screen Component ---
@@ -46,12 +46,20 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
-    // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
-    const getAdStateKey = () => `ad_shown_${episode.uid_episode}`;
-    const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
     const { activeTourId } = useTutorial();
-    const [showAd, setShowAd] = useState(!wasAdShown && activeTourId !== 'player' && activeTourId !== 'app-tour');
+    const [showAd, setShowAd] = useState(() => {
+      const key = `ad_shown_${episode.uid_episode}`;
+      return sessionStorage.getItem(key) !== 'true' && activeTourId !== 'player' && activeTourId !== 'app-tour';
+    });
     const [initialPlaybackPosition, setInitialPlaybackPosition] = useState(0);
+
+    // Reset ad state when episode changes
+    useEffect(() => {
+      if (!episode?.uid_episode) return;
+      const key = `ad_shown_${episode.uid_episode}`;
+      setShowAd(sessionStorage.getItem(key) !== 'true' && activeTourId !== 'player' && activeTourId !== 'app-tour');
+    }, [episode.uid_episode, activeTourId]);
+
     const { isMini, sentinelRef, closeMiniPlayer } = useMiniPlayer({ enabled: !showAd && !forceMini });
     const { position: dragPosition, isDragging, handlePointerDown, handlePointerMove, handlePointerUp, hasDraggedRef } = useDraggable();
 
@@ -394,73 +402,63 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
         </button>
     );
 
-    // Créer des callbacks mémorisés pour la publicité
     const videoRef = useRef<HTMLVideoElement>(null);
-    const videoTimeRef = useRef(0);
-    const videoIsPlayingRef = useRef(false);
-
-    const handleTimeUpdate = useCallback((time: number) => {
-        videoTimeRef.current = time;
-    }, []);
 
     const handlePlayingStateChange = useCallback((playing: boolean) => {
         setVideoIsPlaying(playing);
-        videoIsPlayingRef.current = playing;
     }, []);
 
     const handleAdEnd = useCallback(() => {
         setShowAd(false);
-        sessionStorage.setItem(getAdStateKey(), 'true');
-    }, []);
+        sessionStorage.setItem(`ad_shown_${episode.uid_episode}`, 'true');
+    }, [episode.uid_episode]);
 
     const handleAdSkip = useCallback(() => {
         setShowAd(false);
-        sessionStorage.setItem(getAdStateKey(), 'true');
-    }, []);
+        sessionStorage.setItem(`ad_shown_${episode.uid_episode}`, 'true');
+    }, [episode.uid_episode]);
 
     return (
         <div className={forceMini ? '' : 'bg-white dark:bg-black min-h-screen animate-fadeIn'}>
-            {!forceMini && (
-            <header className="absolute top-4 left-4 z-30">
-                <button
-                    onClick={onBack}
-                    className="group p-3 rounded-full text-white bg-black/70 hover:bg-black/90 backdrop-blur-md transition-all duration-300 hover:scale-110 shadow-xl border border-white/10"
-                    aria-label="Go back"
-                >
-                    <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
-                </button>
-            </header>
-            )}
+            <div className="container mx-auto px-4 md:px-6 lg:px-8 py-1 md:py-4 lg:py-8 pt-4 md:pt-6">
 
-            <div className="container mx-auto px-4 md:px-6 lg:px-8 py-1 md:py-4 lg:py-8 pt-16 md:pt-20">
+                {!forceMini && (
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={onBack}
+                        className="shrink-0 group p-3 rounded-full text-white bg-black/70 hover:bg-black/90 backdrop-blur-md transition-all duration-300 hover:scale-110 shadow-xl border border-white/10"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
+                    </button>
+                    {currentSeason && serieUid && (
+                        <div className="flex items-center gap-2 min-w-0 text-sm md:text-base">
+                            <button
+                                onClick={() => navigate(`/serie/${serieUid}`)}
+                                className="truncate text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold transition-colors duration-200 hover:underline"
+                            >
+                                {item.title}
+                            </button>
+                            <span className="shrink-0 text-gray-500 dark:text-gray-400">•</span>
+                            <span className="shrink-0 text-gray-700 dark:text-gray-300 font-medium">
+                                {t('season')} {currentSeason.season_number}
+                                {currentSeason.title_season && (
+                                    <span className="ml-2 text-gray-600 dark:text-gray-400">
+                                        - {currentSeason.title_season}
+                                    </span>
+                                )}
+                            </span>
+                        </div>
+                    )}
+                </div>
+                )}
 
                 {/* Conteneur principal avec grille pour la mise en page */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                     {/* Colonne de gauche - Lecteur vidéo et métadonnées */}
                     <div className="lg:col-span-2 space-y-2 md:space-y-4">
-                        {/* Titre de la saison avec lien vers la série */}
-                        {!forceMini && currentSeason && serieUid && (
-                            <div className="flex items-center gap-2 text-sm md:text-base">
-                                <button
-                                    onClick={() => navigate(`/serie/${serieUid}`)}
-                                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold transition-colors duration-200 hover:underline"
-                                >
-                                    {item.title}
-                                </button>
-                                <span className="text-gray-500 dark:text-gray-400">•</span>
-                                <span className="text-gray-700 dark:text-gray-300 font-medium">
-                                    {t('season')} {currentSeason.season_number}
-                                    {currentSeason.title_season && (
-                                        <span className="ml-2 text-gray-600 dark:text-gray-400">
-                                            - {currentSeason.title_season}
-                                        </span>
-                                    )}
-                                </span>
-                            </div>
-                        )}
-                        
                         <div>
-                             <div ref={!forceMini ? sentinelRef : undefined} className="h-px" aria-hidden="true" />
+                             <div ref={sentinelRef} className="h-px" aria-hidden="true" />
                              {effectiveMini && <div className="w-full aspect-video" aria-hidden="true" />}
                                <div
                                    className={
@@ -529,7 +527,6 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                               isEpisode={true}
                                               showAutoplayToggle={true}
                                               hideControls={effectiveMini}
-                                              onTimeUpdate={handleTimeUpdate}
                                               videoRef={videoRef}
                                           />
                                       )}
@@ -540,7 +537,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                          {!forceMini && (
                          <div className="space-y-2 md:space-y-4">
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
+                                <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight truncate">
                                     {displayEpisode.title}
                                 </h1>
                                 <div className="flex items-center space-x-2 md:space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1 md:mt-0">
@@ -634,18 +631,9 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                     return episodeANumber - episodeBNumber;
                                 }) // Trier par numéro d'épisode
                                 .map(otherEpisode => (
-                                    <div
+                                    <Link
                                         key={otherEpisode.uid_episode}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            console.log('🔍 Clic sur épisode:', otherEpisode.uid_episode, otherEpisode.title);
-                                            if (otherEpisode.uid_episode) {
-                                                onNavigateEpisode(otherEpisode);
-                                            } else {
-                                                console.error('Épisode sans uid_episode:', otherEpisode);
-                                            }
-                                        }}
+                                        to={`/watch/${otherEpisode.uid_episode}`}
                                         className="group relative bg-gray-100/50 dark:bg-black/40 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
                                     >
                                         <div className="relative aspect-video bg-gray-300 dark:bg-gray-700">
@@ -674,7 +662,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                                 {episodeSerieService.getEpisodeNumberForSeason(otherEpisode, currentSeason?.uid_season || '')}. {otherEpisode.title}
                                             </h4>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                         </div>
                     </div>

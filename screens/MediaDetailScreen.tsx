@@ -3,7 +3,7 @@
 
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MediaContent, MediaType, Episode } from '../types';
 
 import { PlayIcon, PlusIcon, ArrowLeftIcon, HomeIcon, ChevronDownIcon, LikeIcon, CommentIcon, CheckIcon, ShareIcon, PencilIcon, EllipsisVerticalIcon, XMarkIcon, InfoIcon } from '../components/icons';
@@ -74,6 +74,16 @@ const EpisodeListItem = React.memo<{
     const [showDetails, setShowDetails] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const episodeHref = isEpisodeSerie && 'uid_episode' in episode
+        ? `/watch/${(episode as EpisodeSerie).uid_episode}`
+        : undefined;
+
+    const handleEpisodeClick = (e: React.MouseEvent) => {
+        if (episodeHref && (e.ctrlKey || e.metaKey || e.button === 1)) return;
+        e.preventDefault();
+        onClick();
+    };
+
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -84,9 +94,15 @@ const EpisodeListItem = React.memo<{
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const Tag = episodeHref ? 'a' : 'div';
+
     return (
         <div className={`group flex gap-3 md:gap-4 p-2 rounded-xl transition-colors hover:bg-gray-100 dark:hover:bg-white/[0.04] ${isPlaying ? 'ring-1 ring-amber-500' : ''}`}>
-            <div onClick={onClick} className="flex-1 flex gap-3 md:gap-4 min-w-0 cursor-pointer">
+            <Tag
+                href={episodeHref}
+                onClick={handleEpisodeClick}
+                className="flex-1 flex gap-3 md:gap-4 min-w-0 cursor-pointer"
+            >
                 <div className="relative w-32 sm:w-36 md:w-44 shrink-0 aspect-video bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden self-start">
                     <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" loading="lazy" />
                     {!isPlaying && (
@@ -116,7 +132,7 @@ const EpisodeListItem = React.memo<{
                         </span>
                     )}
                 </div>
-            </div>
+            </Tag>
 
             <div ref={menuRef} className="relative self-start pt-1 shrink-0">
                 <button

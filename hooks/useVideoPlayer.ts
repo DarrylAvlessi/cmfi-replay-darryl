@@ -63,7 +63,10 @@ export function useVideoPlayer({
   // --- State ---
   const [isPlaying, setIsPlaying] = useState(false);
   const [seekFeedback, setSeekFeedback] = useState<null | 'rewind' | 'forward'>(null);
+  const [seekFeedbackStep, setSeekFeedbackStep] = useState(SEEK_STEP_SEC);
   const seekFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [volumeFeedback, setVolumeFeedback] = useState<'up' | 'down' | 'mute' | null>(null);
+  const volumeFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -130,8 +133,9 @@ export function useVideoPlayer({
   };
 
   // --- Feedback helpers ---
-  const showSeekFeedback = (type: 'rewind' | 'forward') => {
+  const showSeekFeedback = (type: 'rewind' | 'forward', step?: number) => {
     setSeekFeedback(type);
+    setSeekFeedbackStep(step ?? SEEK_STEP_SEC);
     if (seekFeedbackTimeoutRef.current) {
       clearTimeout(seekFeedbackTimeoutRef.current);
     }
@@ -151,6 +155,16 @@ export function useVideoPlayer({
     }, PLAY_PAUSE_FEEDBACK_MS);
   };
 
+  const showVolumeFeedback = (type: 'up' | 'down' | 'mute') => {
+    setVolumeFeedback(type);
+    if (volumeFeedbackTimeoutRef.current) {
+      clearTimeout(volumeFeedbackTimeoutRef.current);
+    }
+    volumeFeedbackTimeoutRef.current = setTimeout(() => {
+      setVolumeFeedback(null);
+    }, FEEDBACK_DURATION_MS);
+  };
+
   // --- Handlers ---
   const togglePlay = () => {
     const wasPlaying = !videoRef.current?.paused;
@@ -165,24 +179,15 @@ export function useVideoPlayer({
     }
   };
 
-  const handleRewind = () => {
+  const seekBy = (stepSec: number, feedback: 'rewind' | 'forward') => {
     resetControlsTimeout();
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime -= SEEK_STEP_SEC;
+    video.currentTime = Math.max(0, Math.min(video.duration || Infinity, video.currentTime + stepSec));
     setCurrentTime(video.currentTime);
     if (video.duration) setProgress((video.currentTime / video.duration) * 100);
     updateBuffered();
-  };
-
-  const handleFastForward = () => {
-    resetControlsTimeout();
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime += SEEK_STEP_SEC;
-    setCurrentTime(video.currentTime);
-    if (video.duration) setProgress((video.currentTime / video.duration) * 100);
-    updateBuffered();
+    showSeekFeedback(feedback, Math.abs(stepSec));
   };
 
   const toggleMute = () => {
@@ -286,25 +291,6 @@ export function useVideoPlayer({
     }
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    resetControlsTimeout();
-    const video = videoRef.current;
-    if (!video) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    video.currentTime = pos * video.duration;
-  };
-
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const video = videoRef.current;
-    if (!video || !video.duration) return;
-    const pct = parseFloat(e.target.value);
-    setProgress(pct);
-    const nextTime = (pct / 100) * video.duration;
-    video.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  };
-
   const handleSliderInput = (e: React.FormEvent<HTMLInputElement>) => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
@@ -334,7 +320,7 @@ export function useVideoPlayer({
   const handleSliderMouseUp = () => {
     setIsScrubbing(false);
     if (wasPlayingRef.current && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {});
     }
   };
 
@@ -401,11 +387,9 @@ export function useVideoPlayer({
       }
       const isLeft = x < rect.width / 2;
       if (isLeft) {
-        handleRewind();
-        showSeekFeedback('rewind');
+        seekBy(-SEEK_STEP_SEC, 'rewind');
       } else {
-        handleFastForward();
-        showSeekFeedback('forward');
+        seekBy(SEEK_STEP_SEC, 'forward');
       }
       lastTapRef.current = null;
       ignoreClickUntilRef.current = now + DOUBLE_CLICK_IGNORE_MS;
@@ -505,11 +489,9 @@ export function useVideoPlayer({
       togglePlay();
       const isLeft = x < rect.width / 2;
       if (isLeft) {
-        handleRewind();
-        showSeekFeedback('rewind');
+        seekBy(-SEEK_STEP_SEC, 'rewind');
       } else {
-        handleFastForward();
-        showSeekFeedback('forward');
+        seekBy(SEEK_STEP_SEC, 'forward');
       }
       ignoreClickUntilRef.current = Date.now() + DOUBLE_CLICK_IGNORE_MS;
     } else {
@@ -896,16 +878,44 @@ export function useVideoPlayer({
 
       const v = videoRef.current;
       if (!v) return;
+
+      // Only respond to keyboard shortcuts when the player is hovered or focused
+      const hasFocus =
+        containerRef.current?.contains(document.activeElement) ||
+        containerRef.current?.matches(':hover');
+      if (!hasFocus) return;
+
       if (e.code === 'Space') {
         e.preventDefault();
         togglePlay();
       } else if (e.code === 'ArrowLeft') {
-        v.currentTime = Math.max(0, v.currentTime - KEYBOARD_SEEK_STEP_SEC);
+        seekBy(-KEYBOARD_SEEK_STEP_SEC, 'rewind');
       } else if (e.code === 'ArrowRight') {
-        v.currentTime = Math.min(
-          v.duration || v.currentTime + KEYBOARD_SEEK_STEP_SEC,
-          v.currentTime + KEYBOARD_SEEK_STEP_SEC,
-        );
+        seekBy(KEYBOARD_SEEK_STEP_SEC, 'forward');
+      } else if (e.code === 'KeyM') {
+        e.preventDefault();
+        toggleMute();
+        showVolumeFeedback(v.muted ? 'mute' : 'up');
+      } else if (e.code === 'KeyF') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        const newVol = Math.min(1, (v.muted ? 0.5 : v.volume) + 0.1);
+        v.volume = newVol;
+        v.muted = false;
+        setVolume(newVol);
+        setIsMuted(false);
+        showVolumeFeedback('up');
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        const newVol = Math.max(0, v.volume - 0.1);
+        v.volume = newVol;
+        const nowMuted = newVol === 0;
+        v.muted = nowMuted;
+        setVolume(newVol);
+        setIsMuted(nowMuted);
+        showVolumeFeedback(nowMuted ? 'mute' : 'down');
       }
     };
     window.addEventListener('keydown', onKey);
@@ -914,6 +924,30 @@ export function useVideoPlayer({
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current);
         clickTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Cleanup all timers on unmount
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+      if (seekFeedbackTimeoutRef.current) {
+        clearTimeout(seekFeedbackTimeoutRef.current);
+      }
+      if (playPauseFeedbackTimeoutRef.current) {
+        clearTimeout(playPauseFeedbackTimeoutRef.current);
+      }
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+      }
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+      if (volumeFeedbackTimeoutRef.current) {
+        clearTimeout(volumeFeedbackTimeoutRef.current);
       }
     };
   }, []);
@@ -949,6 +983,8 @@ export function useVideoPlayer({
     hoverPos,
     previewHoverTime,
     seekFeedback,
+    seekFeedbackStep,
+    volumeFeedback,
     playPauseFeedback,
     isLongPressing,
     unavailable,
@@ -964,8 +1000,6 @@ export function useVideoPlayer({
     handleVolumeSliderChange,
     handleVolumeSliderInput,
     handleVolumeSeek,
-    handleSeek,
-    handleSliderChange,
     handleSliderInput,
     handleSliderMouseDown,
     handleSliderMouseUp,

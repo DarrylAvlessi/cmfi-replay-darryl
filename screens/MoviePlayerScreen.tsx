@@ -20,7 +20,7 @@ import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
-import { useMiniPlayerContext } from '../context/MiniPlayerContext';
+
 import { useTutorial } from '../context/TutorialContext';
 
 // --- Main Screen Component ---
@@ -52,11 +52,18 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
-    // Sauvegarder l'état de la pub dans sessionStorage pour éviter de la relancer
-    const getAdStateKey = () => `ad_shown_movie_${item.id}`;
-    const wasAdShown = sessionStorage.getItem(getAdStateKey()) === 'true';
     const { activeTourId } = useTutorial();
-    const [showAd, setShowAd] = useState(!wasAdShown && activeTourId !== 'player' && activeTourId !== 'app-tour');
+    const [showAd, setShowAd] = useState(() => {
+      const key = `ad_shown_movie_${item.id}`;
+      return sessionStorage.getItem(key) !== 'true' && activeTourId !== 'player' && activeTourId !== 'app-tour';
+    });
+
+    // Reset ad state when item changes
+    useEffect(() => {
+      if (!item?.id) return;
+      const key = `ad_shown_movie_${item.id}`;
+      setShowAd(sessionStorage.getItem(key) !== 'true' && activeTourId !== 'player' && activeTourId !== 'app-tour');
+    }, [item.id, activeTourId]);
 
     const handleAuthRequired = (action: string) => {
         setAuthAction(action);
@@ -355,16 +362,15 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
         </button>
     );
 
-    // Créer des callbacks mémorisés pour la publicité
     const handleAdEnd = useCallback(() => {
         setShowAd(false);
-        sessionStorage.setItem(getAdStateKey(), 'true');
-    }, []);
+        sessionStorage.setItem(`ad_shown_movie_${item.id}`, 'true');
+    }, [item.id]);
 
     const handleAdSkip = useCallback(() => {
         setShowAd(false);
-        sessionStorage.setItem(getAdStateKey(), 'true');
-    }, []);
+        sessionStorage.setItem(`ad_shown_movie_${item.id}`, 'true');
+    }, [item.id]);
 
     // Mettre à jour le titre de la page avec le nom du film
     useEffect(() => {
@@ -403,16 +409,9 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     const effectiveMini = isMini || forceMini;
 
     const videoRef = useRef<HTMLVideoElement>(null);
-    const videoTimeRef = useRef(0);
-    const videoIsPlayingRef = useRef(false);
-
-    const handleTimeUpdate = useCallback((time: number) => {
-      videoTimeRef.current = time;
-    }, []);
 
     const handlePlayingStateChange = useCallback((playing: boolean) => {
       setVideoIsPlaying(playing);
-      videoIsPlayingRef.current = playing;
     }, []);
 
     return (
@@ -503,7 +502,6 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             videoUid={item.id}
                                             isEpisode={false}
                                               hideControls={effectiveMini}
-                                              onTimeUpdate={handleTimeUpdate}
                                               videoRef={videoRef}
                                         />
                                    )}

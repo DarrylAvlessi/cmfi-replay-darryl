@@ -8,8 +8,6 @@ interface SeekBarProps {
   previewHoverTime: number;
   showPreview: boolean;
   isScrubbing: boolean;
-  onSeek: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onSliderChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSliderInput: (e: React.FormEvent<HTMLInputElement>) => void;
   onSliderMouseDown: () => void;
   onSliderMouseUp: () => void;
@@ -28,8 +26,6 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   previewHoverTime,
   showPreview,
   isScrubbing,
-  onSeek,
-  onSliderChange,
   onSliderInput,
   onSliderMouseDown,
   onSliderMouseUp,
@@ -43,7 +39,6 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   <div className="px-2 sm:px-4 pt-2 pb-0.5">
     <div
       className="relative w-full h-1.5 hover:h-2.5 transition-all duration-200 bg-black/30 rounded-full cursor-pointer group"
-      onClick={onSeek}
       onMouseMove={onSeekBarHover}
       onMouseEnter={(e) => { onShowPreview(true); onSeekBarHover(e); }}
       onMouseLeave={() => onShowPreview(false)}
@@ -89,7 +84,6 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
         max={100}
         step={0.1}
         value={progress}
-        onChange={onSliderChange}
         onInput={onSliderInput}
         onMouseDown={onSliderMouseDown}
         onMouseUp={onSliderMouseUp}

@@ -15,6 +15,13 @@ export function useMiniPlayer({ enabled = true }: UseMiniPlayerOptions = {}) {
       return;
     }
 
+    // Check initial visibility in case sentinel is already scrolled out of view
+    const rect = sentinel.getBoundingClientRect();
+    const isOutOfView = rect.bottom < 0 || rect.top > window.innerHeight;
+    if (isOutOfView) {
+      setIsMini(true);
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsMini(!entry.isIntersecting);
@@ -26,14 +33,10 @@ export function useMiniPlayer({ enabled = true }: UseMiniPlayerOptions = {}) {
     return () => observer.disconnect();
   }, [enabled]);
 
-  const openMiniPlayer = useCallback(() => {
-    setIsMini(true);
-  }, []);
-
   const closeMiniPlayer = useCallback(() => {
     setIsMini(false);
     sentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  return { isMini, sentinelRef, openMiniPlayer, closeMiniPlayer };
+  return { isMini, sentinelRef, closeMiniPlayer };
 }
