@@ -114,6 +114,16 @@ const HelpScreen: React.FC = () => {
                     </button>
                 </div>
 
+                <div className="mb-8 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{t('faqScreenShareHelp')}</p>
+                    <button
+                        onClick={() => navigate('/docs/mobile-screen-share-video')}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:opacity-80 transition-opacity whitespace-nowrap"
+                    >
+                        {t('videoPausedLearnMore')}
+                    </button>
+                </div>
+
                 <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
                     <button
                         onClick={() => setActiveTab('submit')}

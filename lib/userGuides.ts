@@ -1,4 +1,4 @@
-export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile' | 'bookmarks-mgmt' | 'donations' | 'full-app';
+export type GuideCategory = 'getting-started' | 'player' | 'search' | 'profile' | 'bookmarks-mgmt' | 'donations' | 'full-app' | 'faq';
 
 export interface GuideStep {
   en: string;
@@ -248,6 +248,38 @@ export const USER_GUIDES: UserGuide[] = [
       },
     ],
   },
+  {
+    id: 'mobile-screen-share-video',
+    category: 'faq',
+    tourId: null,
+    title: {
+      en: 'Why does my video pause when I share my screen on mobile?',
+      fr: 'Pourquoi ma vidéo se met-elle en pause quand je partage mon écran sur mobile ?',
+    },
+    summary: {
+      en: 'Sharing your screen on a phone (e.g. in Google Meet or Zoom) can pause video playback. That\'s normal — here\'s why and what to do.',
+      fr: 'Partager votre écran sur un téléphone (ex. Google Meet ou Zoom) peut mettre la lecture en pause. C\'est normal — voici pourquoi et que faire.',
+    },
+    readMinutes: 2,
+    steps: [
+      {
+        en: 'It is not a bug. On mobile, screen sharing runs at the operating-system level and keeps control of the device\'s audio. When the video app plays sound at the same time, the system pauses the video to avoid a conflict with the call.',
+        fr: 'Ce n\'est pas un bug. Sur mobile, le partage d\'écran fonctionne au niveau du système d\'exploitation et garde le contrôle de l\'audio de l\'appareil. Quand l\'application vidéo lit du son en même temps, le système met la vidéo en pause pour éviter un conflit avec l\'appel.',
+      },
+      {
+        en: 'This is why it happens only while you share your screen, and stops as soon as you end the share — the video is paused by the operating system, not by a fault in the app.',
+        fr: 'C\'est pourquoi cela n\'arrive que pendant le partage d\'écran et s\'arrête dès que vous mettez fin au partage — la vidéo est mise en pause par le système, pas par un défaut de l\'application.',
+      },
+      {
+        en: 'What to do: end the screen share (or the call) and tap play again — your video resumes where it stopped. The app also shows a short message when it detects this automatic pause.',
+        fr: 'Que faire : mettez fin au partage d\'écran (ou à l\'appel), puis appuyez sur lecture — la vidéo reprend là où elle s\'était arrêtée. L\'application affiche aussi un court message lorsqu\'elle détecte cette pause automatique.',
+      },
+      {
+        en: 'On a computer this doesn\'t happen: a desktop shares a separate window and handles the call and playback independently, so both can run at the same time.',
+        fr: 'Sur ordinateur, cela ne se produit pas : le partage concerne une fenêtre distincte et l\'appel et la lecture sont gérés indépendamment, donc les deux peuvent fonctionner en même temps.',
+      },
+    ],
+  },
 ];
 
 export const GUIDE_CATEGORIES: { id: GuideCategory | 'all'; labelKey: string }[] = [
@@ -259,6 +291,7 @@ export const GUIDE_CATEGORIES: { id: GuideCategory | 'all'; labelKey: string }[]
   { id: 'profile', labelKey: 'guideCategoryProfile' },
   { id: 'bookmarks-mgmt', labelKey: 'guideCategoryBookmarks' },
   { id: 'donations', labelKey: 'guideCategoryDonations' },
+  { id: 'faq', labelKey: 'guideCategoryFaq' },
 ];
 
 export function getGuideById(id: string): UserGuide | undefined {

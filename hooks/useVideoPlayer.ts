@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { createElement, useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAppContext } from '../context/AppContext';
 import { usePlaybackPrefs } from '../context/PlaybackPreferencesContext';
@@ -19,6 +20,9 @@ const PLAY_PAUSE_FEEDBACK_MS = 500;
 const SINGLE_TAP_DELAY_MS = 300;
 const CLICK_DELAY_MS = 300;
 const DOUBLE_CLICK_IGNORE_MS = 500;
+const SYSTEM_PAUSE_USER_GESTURE_MS = 400;
+const SYSTEM_PAUSE_VISIBILITY_GUARD_MS = 800;
+const SYSTEM_PAUSE_NOTICE_KEY = 'system_pause_notice_shown';
 
 interface UseVideoPlayerProps {
   src?: string;
@@ -54,6 +58,7 @@ export function useVideoPlayer({
   videoRef: externalVideoRef,
 }: UseVideoPlayerProps) {
   const { t, userProfile } = useAppContext();
+  const navigate = useNavigate();
 
   // --- Element refs ---
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -96,6 +101,15 @@ export function useVideoPlayer({
   const playPauseFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialAutoplayHandledRef = useRef(false);
   const autoplayFallbackRef = useRef(false);
+  const lastUserInteractionRef = useRef(0);
+  const lastVisibilityChangeRef = useRef(0);
+  const srcChangingRef = useRef(false);
+  const wasPlayingBeforePauseRef = useRef(false);
+  const systemPauseNotifiedRef = useRef(
+    typeof window !== 'undefined' && window.sessionStorage.getItem(SYSTEM_PAUSE_NOTICE_KEY) === 'true'
+  );
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioInterruptedRef = useRef(false);
 
   // --- Device detection ---
   const isTouchDevice = useRef(
@@ -103,6 +117,11 @@ export function useVideoPlayer({
     window.matchMedia('(hover: none) and (pointer: coarse)').matches
   );
   const isTouch = isTouchDevice.current;
+  const isIOS = useRef(
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+  );
 
   // --- Helper: update buffered ---
   const updateBuffered = () => {
@@ -502,6 +521,58 @@ export function useVideoPlayer({
     }
   };
 
+  // --- System pause detection (e.g. audio interruption while screen-sharing on mobile) ---
+  const notifyScreenSharePause = useCallback(() => {
+    if (systemPauseNotifiedRef.current) return;
+    systemPauseNotifiedRef.current = true;
+    try {
+      window.sessionStorage.setItem(SYSTEM_PAUSE_NOTICE_KEY, 'true');
+    } catch {}
+    toast.info(
+      createElement(
+        'div',
+        { className: 'flex flex-col gap-1' },
+        createElement('span', null, t('videoPausedWhileShare')),
+        createElement(
+          'button',
+          {
+            onClick: () => navigate('/docs/mobile-screen-share-video'),
+            className: 'self-start mt-1 text-amber-400 font-semibold hover:text-amber-300 underline',
+          },
+          t('videoPausedLearnMore')
+        )
+      ),
+      {
+        position: 'bottom-center',
+        autoClose: 10000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          background: 'rgba(26, 32, 44, 0.95)',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 20px',
+          fontSize: '14px',
+          fontWeight: 500,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        },
+      }
+    );
+  }, [navigate, t]);
+
+  const detectSystemPause = (video: HTMLVideoElement, wasPlaying: boolean) => {
+    if (!wasPlaying) return;
+    if (Date.now() - lastUserInteractionRef.current <= SYSTEM_PAUSE_USER_GESTURE_MS) return;
+    if (document.hidden) return;
+    if (Date.now() - lastVisibilityChangeRef.current <= SYSTEM_PAUSE_VISIBILITY_GUARD_MS) return;
+    if (srcChangingRef.current) return;
+    if (video.ended) return;
+    if (isIOS.current && !audioInterruptedRef.current) return;
+    notifyScreenSharePause();
+  };
+
   // --- Effects ---
 
   // Sync external autoplayEnabled
@@ -529,6 +600,39 @@ export function useVideoPlayer({
     closePiP();
   }, []);
 
+  // Track user gestures so system-initiated pauses can be distinguished
+  useEffect(() => {
+    const onUserInteraction = () => {
+      lastUserInteractionRef.current = Date.now();
+    };
+    window.addEventListener('pointerdown', onUserInteraction, true);
+    window.addEventListener('keydown', onUserInteraction, true);
+    return () => {
+      window.removeEventListener('pointerdown', onUserInteraction, true);
+      window.removeEventListener('keydown', onUserInteraction, true);
+    };
+  }, []);
+
+  // iOS: observe audio-session interruptions (e.g. screen share via ReplayKit)
+  useEffect(() => {
+    try {
+      const AC =
+        window.AudioContext ||
+        ((window as unknown) as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      audioContextRef.current = ctx;
+      ctx.onstatechange = () => {
+        if (ctx.state === 'interrupted') {
+          audioInterruptedRef.current = true;
+        }
+      };
+    } catch {}
+    return () => {
+      audioContextRef.current?.close().catch(() => {});
+    };
+  }, []);
+
   // Sync internal videoRef to external ref
   useEffect(() => {
     if (externalVideoRef) {
@@ -540,6 +644,7 @@ export function useVideoPlayer({
   // Tab visibility → auto PiP
   useEffect(() => {
     const handleVisibilityChange = async () => {
+      lastVisibilityChangeRef.current = Date.now();
       const video = videoRef.current;
       if (!video) return;
 
@@ -656,12 +761,16 @@ export function useVideoPlayer({
     };
 
     const handlePlay = () => {
+      wasPlayingBeforePauseRef.current = true;
       setIsPlaying(true);
       if (onPlayingStateChange) onPlayingStateChange(true);
     };
     const handlePause = () => {
+      const wasPlaying = wasPlayingBeforePauseRef.current;
+      wasPlayingBeforePauseRef.current = false;
       setIsPlaying(false);
       if (onPlayingStateChange) onPlayingStateChange(false);
+      detectSystemPause(video, wasPlaying);
     };
     const handleTimeUpdate = () => {
       if (video.duration) {
@@ -784,6 +893,8 @@ export function useVideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    srcChangingRef.current = true;
+
     const closePip = async () => {
       if (document.pictureInPictureElement === video) {
         try {
@@ -808,6 +919,10 @@ export function useVideoPlayer({
       video.pause();
       video.load();
     } catch {}
+    const srcResetTimer = setTimeout(() => {
+      srcChangingRef.current = false;
+    }, 1000);
+    return () => clearTimeout(srcResetTimer);
   }, [src]);
 
   // PiP src change observer
