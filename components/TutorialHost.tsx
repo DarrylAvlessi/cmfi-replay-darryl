@@ -21,9 +21,23 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isVisible(el: Element): boolean {
+  const style = getComputedStyle(el);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  return el.getClientRects().length > 0;
+}
+
+function findVisibleElement(selector: string): Element | null {
+  const nodes = document.querySelectorAll(selector);
+  for (const node of nodes) {
+    if (isVisible(node)) return node;
+  }
+  return null;
+}
+
 function waitForElement(selector: string, timeoutMs: number): Promise<Element | null> {
   return new Promise((resolve) => {
-    const existing = document.querySelector(selector);
+    const existing = findVisibleElement(selector);
     if (existing) {
       resolve(existing);
       return;
@@ -31,7 +45,7 @@ function waitForElement(selector: string, timeoutMs: number): Promise<Element | 
 
     const deadline = Date.now() + timeoutMs;
     const interval = setInterval(() => {
-      const el = document.querySelector(selector);
+      const el = findVisibleElement(selector);
       if (el) {
         clearInterval(interval);
         resolve(el);
@@ -122,13 +136,6 @@ const TutorialHost: React.FC = () => {
     let cancelled = false;
 
     const runStep = async () => {
-      if (step.beforeShow) {
-        onStepBeforeShow(step.beforeShow);
-        await wait(DOM_SETTLE_MS);
-      }
-
-      if (cancelled) return;
-
       if (targetRoute && location.pathname !== targetRoute) {
         tourNavTokenRef.current++;
         closeSidebar();
@@ -138,12 +145,42 @@ const TutorialHost: React.FC = () => {
 
       if (cancelled) return;
 
-      let element: Element | null = null;
-      if (step.element) {
-        element = await waitForElement(step.element, ELEMENT_WAIT_MS);
+      if (step.beforeShow) {
+        onStepBeforeShow(step.beforeShow);
+        await wait(DOM_SETTLE_MS);
       }
 
       if (cancelled) return;
+
+      let element: Element | null = null;
+      if (step.element) {
+        element = await waitForElement(step.element, ELEMENT_WAIT_MS);
+
+        // Route-scoped beforeShow handlers (e.g. switching a profile tab) may
+        // not be registered until the destination screen mounts (lazy routes).
+        // Re-apply the action and retry so the target element can appear.
+        if (!element && step.beforeShow) {
+          onStepBeforeShow(step.beforeShow);
+          await wait(DOM_SETTLE_MS);
+          if (cancelled) return;
+          element = await waitForElement(step.element, ELEMENT_WAIT_MS);
+        }
+      }
+
+      if (cancelled) return;
+
+      // If a step declares a target element but it never appears in the DOM
+      // (e.g. removing from an empty favorites list), skip the step instead of
+      // falling back to an invisible dummy element and showing an orphaned popover.
+      if (step.element && !element) {
+        destroyDriver();
+        if (currentStepIndex >= visibleSteps.length - 1) {
+          finishTour(activeTourId);
+        } else {
+          advanceTourStep();
+        }
+        return;
+      }
 
       destroyDriver();
 
@@ -183,7 +220,7 @@ const TutorialHost: React.FC = () => {
       };
 
       if (element && step.element) {
-        driveStep.element = step.element;
+        driveStep.element = element;
       }
 
       const driverObj = driver({

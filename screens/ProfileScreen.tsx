@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import UserAvatar from '../components/UserAvatar';
 import HistorySection from '../components/HistorySection';
-import ViewModeSelector from '../components/ViewModeSelector';
+//import ViewModeSelector from '../components/ViewModeSelector';
 import SettingsItem from '../components/SettingsItem';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/db';
@@ -324,9 +324,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
-                                <div className="relative overflow-visible p-4">
+                                {/* <div className="relative overflow-visible p-4">
                                     <ViewModeSelector />
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -465,9 +465,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
-                                <div className="relative overflow-visible">
+                                {/* <div className="relative overflow-visible">
                                     <ViewModeSelector />
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     )}

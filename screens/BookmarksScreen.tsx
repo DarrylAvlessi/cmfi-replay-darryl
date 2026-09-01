@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
-import Header from '../components/Header';
-import MediaCard from '../components/MediaCard';
+import { PlayIcon, HeartIcon } from '../components/icons';
 import { MediaContent, MediaType } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { bookDocService, bookSeriesService, movieService, episodeSerieService, BookDoc, BookSeries, EpisodeSerie, Movie } from '../lib/db';
+import { bookDocService, bookSeriesService, BookDoc, BookSeries, EpisodeSerie, Movie } from '../lib/db';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { TrashIcon } from '../components/icons';
 
 interface BookmarksScreenProps {
     onSelectMedia: (item: MediaContent) => void;
@@ -15,12 +13,165 @@ interface BookmarksScreenProps {
     onBack: () => void;
 }
 
+interface FavoriteRowProps {
+    item: MediaContent;
+    badge: string;
+    isRemoving: boolean;
+    onSelect: (item: MediaContent) => void;
+    onPlay: (item: MediaContent) => void;
+    onRemove: (e: React.MouseEvent, item: MediaContent) => void;
+}
+
+const toTitleCase = (value: string): string => {
+    if (!value) return value;
+    const trimmed = value.trim();
+    if (trimmed === trimmed.toLowerCase() || trimmed === trimmed.toUpperCase()) {
+        return trimmed.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1));
+    }
+    return value;
+};
+
+const FavoriteRow: React.FC<FavoriteRowProps> = ({ item, badge, isRemoving, onSelect, onPlay, onRemove }) => {
+    const { t } = useAppContext();
+    const displayTitle = toTitleCase(item.title);
+
+    const metaParts: string[] = [];
+    if (item.duration) metaParts.push(item.duration);
+    if (item.episodes && item.episodes > 0) {
+        metaParts.push(`${item.episodes} ${item.episodes === 1 ? t('episodeSingular') : t('episodePlural')}`);
+    }
+
+    return (
+        <div
+            onClick={() => onSelect(item)}
+            tabIndex={0}
+            role="button"
+            aria-label={displayTitle}
+            onKeyDown={(e) => { if (e.key === 'Enter') onSelect(item); }}
+            className={`group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 hover:border-amber-500/70 dark:hover:border-amber-500/70 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black transition-all duration-300 ${
+                isRemoving ? 'opacity-0 -translate-x-3 scale-[0.98] pointer-events-none' : 'opacity-100 translate-x-0 scale-100'
+            }`}
+        >
+            <div className="w-24 sm:w-28 aspect-video flex-shrink-0 rounded-md overflow-hidden bg-gray-200 dark:bg-black border border-gray-200 dark:border-gray-700 transition-transform duration-300 group-hover:scale-[1.04]">
+                <img src={item.imageUrl} alt={displayTitle} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <span className="inline-block px-2 py-0.5 mb-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200">
+                    {badge}
+                </span>
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2 break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                    {displayTitle}
+                </h3>
+                {metaParts.length > 0 && (
+                    <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {metaParts.join(' · ')}
+                    </p>
+                )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 flex-shrink-0">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onPlay(item); }}
+                    aria-label={`Play ${displayTitle}`}
+                    title={`Play ${displayTitle}`}
+                    className="p-2.5 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+                >
+                    <PlayIcon className="w-5 h-5 ml-0.5" />
+                </button>
+                <button
+                    onClick={(e) => onRemove(e, item)}
+                    disabled={isRemoving}
+                    aria-label={`Remove ${displayTitle} from favorites`}
+                    title={`Remove ${displayTitle} from favorites`}
+                    data-tour="bookmark-remove-btn"
+                    className={`p-2.5 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${
+                        isRemoving
+                            ? 'bg-transparent text-red-400'
+                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-600 active:scale-95'
+                    }`}
+                >
+                    <HeartIcon filled={!isRemoving} className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+interface RemoveConfirmDialogProps {
+    item: MediaContent;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const RemoveConfirmDialog: React.FC<RemoveConfirmDialogProps> = ({ item, onConfirm, onCancel }) => {
+    const { t } = useAppContext();
+    const cancelRef = useRef<HTMLButtonElement>(null);
+    const displayTitle = toTitleCase(item.title);
+
+    useEffect(() => {
+        cancelRef.current?.focus();
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onCancel();
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onCancel]);
+
+    return (
+        <div
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={onCancel}
+        >
+            <div
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="remove-confirm-title"
+                aria-describedby="remove-confirm-message"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-red-500/30 overflow-hidden"
+            >
+                <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5">
+                    <div className="flex items-center gap-3">
+                        <HeartIcon filled className="w-8 h-8 flex-shrink-0 text-white" />
+                        <h2 id="remove-confirm-title" className="text-lg font-bold text-white">
+                            {t('removeFromFavorites')}
+                        </h2>
+                    </div>
+                </div>
+                <div className="p-6">
+                    <p id="remove-confirm-message" className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {t('confirmRemoveFavoritesMessage', { title: displayTitle })}
+                    </p>
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <button
+                            ref={cancelRef}
+                            onClick={onCancel}
+                            className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                        >
+                            {t('cancel')}
+                        </button>
+                        <button
+                            onClick={onConfirm}
+                            className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                        >
+                            {t('removeFromFavorites')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay, onBack }) => {
     const { t, user } = useAppContext();
     const [bookmarkedMovies, setBookmarkedMovies] = useState<MediaContent[]>([]);
     const [bookmarkedEpisodes, setBookmarkedEpisodes] = useState<MediaContent[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'movies' | 'series'>('all');
+    const [removingIds, setRemovingIds] = useState<Set<string>>(() => new Set());
+    const [pendingRemove, setPendingRemove] = useState<MediaContent | null>(null);
 
     useEffect(() => {
         const fetchBookmarks = async () => {
@@ -35,13 +186,13 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                 // Récupérer les bookmarks de films
                 const movieBookmarks = await bookDocService.getUserBookmarks(user.email);
                 const movieUids = movieBookmarks.map(b => b.uid).filter(uid => !!uid);
-                
+
                 let movieContents: MediaContent[] = [];
-                
+
                 if (movieUids.length > 0) {
                     const batchSize = 10;
                     const moviePromises = [];
-                    
+
                     for (let i = 0; i < movieUids.length; i += batchSize) {
                         const batch = movieUids.slice(i, i + batchSize);
                         const moviesQuery = query(
@@ -50,17 +201,17 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         );
                         moviePromises.push(getDocs(moviesQuery));
                     }
-                    
+
                     const moviesSnapshots = await Promise.all(moviePromises);
                     const moviesMap = new Map<string, Movie>();
-                    
+
                     moviesSnapshots.forEach(snapshot => {
                         snapshot.docs.forEach(doc => {
                             const movie = doc.data() as Movie;
                             moviesMap.set(movie.uid, movie);
                         });
                     });
-                    
+
                     movieContents = movieBookmarks.map((bookmark: BookDoc) => {
                         const movie = moviesMap.get(bookmark.uid);
                         if (movie) {
@@ -80,7 +231,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                 director: '',
                             };
                         }
-                        
+
                         return {
                             id: bookmark.uid,
                             title: bookmark.title,
@@ -102,13 +253,13 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                 // Récupérer les bookmarks d'épisodes
                 const seriesBookmarks = await bookSeriesService.getUserBookmarks(user.email);
                 const episodeUids = seriesBookmarks.map(b => b.uid).filter(uid => !!uid) as string[];
-                
+
                 let episodeContents: MediaContent[] = [];
-                
+
                 if (episodeUids.length > 0) {
                     const batchSize = 10;
                     const episodePromises = [];
-                    
+
                     for (let i = 0; i < episodeUids.length; i += batchSize) {
                         const batch = episodeUids.slice(i, i + batchSize);
                         const episodesQuery = query(
@@ -117,21 +268,21 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         );
                         episodePromises.push(getDocs(episodesQuery));
                     }
-                    
+
                     const episodesSnapshots = await Promise.all(episodePromises);
                     const episodesMap = new Map<string, EpisodeSerie>();
-                    
+
                     episodesSnapshots.forEach(snapshot => {
                         snapshot.docs.forEach(doc => {
                             const episode = doc.data() as EpisodeSerie;
                             episodesMap.set(episode.uid_episode, episode);
                         });
                     });
-                    
+
                     episodeContents = seriesBookmarks.map((bookmark: BookSeries) => {
                         const uid = bookmark.uid;
                         const episode = uid ? episodesMap.get(uid) : null;
-                        
+
                         if (episode) {
                             return {
                                 id: episode.uid_episode,
@@ -180,35 +331,56 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
         fetchBookmarks();
     }, [user]);
 
-    const handleRemoveBookmark = async (e: React.MouseEvent, item: MediaContent) => {
-        e.stopPropagation();
+    const performRemove = async (item: MediaContent) => {
         if (!user || !user.email) return;
 
+        setRemovingIds(prev => new Set(prev).add(item.id));
+
         try {
-            let success = false;
-            if (item.type === MediaType.Movie) {
-                // Suppression du bookmark film
-                success = await bookDocService.removeBookmark(item.id, user.email);
-                if (success) {
+            const success = item.type === MediaType.Movie
+                ? await bookDocService.removeBookmark(item.id, user.email)
+                : await bookSeriesService.removeBookmark(item.id, user.email);
+
+            if (!success) throw new Error('Removal failed');
+
+            window.setTimeout(() => {
+                if (item.type === MediaType.Movie) {
                     setBookmarkedMovies(prev => prev.filter(m => m.id !== item.id));
-                    toast.success('Removed from list');
                 } else {
-                    toast.error('Failed to remove');
-                }
-            } else {
-                // Suppression du bookmark série/épisode
-                success = await bookSeriesService.removeBookmark(item.id, user.email);
-                if (success) {
                     setBookmarkedEpisodes(prev => prev.filter(ep => ep.id !== item.id));
-                    toast.success('Removed from list');
-                } else {
-                    toast.error('Failed to remove');
                 }
-            }
+                setRemovingIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(item.id);
+                    return next;
+                });
+                toast.success(t('removedFromList'));
+            }, 250);
         } catch (error) {
             console.error('Error removing bookmark:', error);
-            toast.error('Failed to remove');
+            setRemovingIds(prev => {
+                const next = new Set(prev);
+                next.delete(item.id);
+                return next;
+            });
+            toast.error(t('failedToRemove'));
         }
+    };
+
+    const requestRemoveBookmark = (e: React.MouseEvent, item: MediaContent) => {
+        e.stopPropagation();
+        if (!user || !user.email) return;
+        setPendingRemove(item);
+    };
+
+    const confirmRemoveBookmark = () => {
+        if (!pendingRemove) return;
+        setPendingRemove(null);
+        performRemove(pendingRemove);
+    };
+
+    const cancelRemove = () => {
+        setPendingRemove(null);
     };
 
     // Éviter les doublons dans les favoris
@@ -240,7 +412,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                         {t('myFavorites')}
                     </h1>
-                    <div className="h-1 w-16 bg-amber-500 rounded-full"></div>
+                    <div className="h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500"></div>
                 </div>
 
                 {/* Tabs avec design amélioré */}
@@ -248,7 +420,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                     <div className="inline-flex items-center space-x-2 bg-white dark:bg-black p-1.5 rounded-full shadow-lg">
                         <button
                             onClick={() => setActiveTab('all')}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 ${activeTab === 'all'
+                            aria-pressed={activeTab === 'all'}
+                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'all'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -257,7 +430,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         </button>
                         <button
                             onClick={() => setActiveTab('movies')}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 ${activeTab === 'movies'
+                            aria-pressed={activeTab === 'movies'}
+                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'movies'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -266,7 +440,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         </button>
                         <button
                             onClick={() => setActiveTab('series')}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 ${activeTab === 'series'
+                            aria-pressed={activeTab === 'series'}
+                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'series'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -346,26 +521,33 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                             </p>
                         </div>
 
-                        {/* Liste de cartes horizontales */}
-                        <div className="space-y-4">
+                        {/* Liste de favoris */}
+                        <div className="space-y-3">
                             {filteredContent.map((item) => (
-                                <div key={item.id} className="relative group">
-                                    <div className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
-                                        <MediaCard
-                                            item={item}
-                                            variant="list"
-                                            onSelect={onSelectMedia}
-                                            onPlay={onPlay}
-                                        />
-                                    </div>
-                                </div>
+                                <FavoriteRow
+                                    key={item.id}
+                                    item={item}
+                                    badge={item.type === MediaType.Movie ? t('categoryMovies') : t('categorySeries')}
+                                    isRemoving={removingIds.has(item.id)}
+                                    onSelect={onSelectMedia}
+                                    onPlay={onPlay}
+                                    onRemove={requestRemoveBookmark}
+                                />
                             ))}
                         </div>
-                    </div>
+</div>
                 )}
             </div>
-        </div>
-    );
+
+        {pendingRemove && (
+            <RemoveConfirmDialog
+                item={pendingRemove}
+                onConfirm={confirmRemoveBookmark}
+                onCancel={cancelRemove}
+            />
+        )}
+    </div>
+);
 };
 
 export default BookmarksScreen;

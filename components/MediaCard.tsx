@@ -101,7 +101,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
           </div>
         </div>
 
-        <h3 className="text-gray-900 dark:text-white text-sm font-serif font-bold break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+        <h3 className="text-gray-900 dark:text-white text-sm font-sans font-bold break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
           {title}
         </h3>
         {author && <p className="text-gray-500 dark:text-gray-400 text-xs break-words line-clamp-1">{author}</p>}
@@ -142,7 +142,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <h3 className="text-lg md:text-xl font-serif font-bold text-gray-900 dark:text-white break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+            <h3 className="text-lg md:text-xl font-sans font-bold text-gray-900 dark:text-white break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
               {title}
             </h3>
           </div>
@@ -167,6 +167,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
             e.stopPropagation();
             handlePlay(e);
           }}
+          aria-label={`Play ${title}`}
         >
           <PlayIcon className="w-5 h-5" />
         </button>
@@ -207,7 +208,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, variant = 'thumbnail', onSe
           </div>
         )}
       </div>
-      <h3 className="text-gray-900 dark:text-white font-serif font-bold break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
+      <h3 className="text-gray-900 dark:text-white font-sans font-bold break-words line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{title}</h3>
       {author && <p className="text-gray-500 dark:text-gray-400 text-sm break-words line-clamp-1">{author}</p>}
     </div>
   );

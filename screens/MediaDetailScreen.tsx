@@ -266,6 +266,8 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingEpisodes, setIsLoadingEpisodes] = useState(false);
 
+    const [loadingSeasons, setLoadingSeasons] = useState<{ [key: string]: boolean }>({});
+
     const [movieData, setMovieData] = useState<Movie | null>(null);
 
     const [likeCount, setLikeCount] = useState(item.likes || 0);
@@ -433,15 +435,18 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
         loadEpisodesForSeason(selectedSeasonUid);
     }, [selectedSeasonUid]);
 
-    const loadEpisodesForSeason = async (seasonUid: string) => {
-        setIsLoadingEpisodes(true);
+    const loadEpisodesForSeason = async (seasonUid: string, opts?: { globalLoading?: boolean }) => {
+        const globalLoading = opts?.globalLoading ?? true;
+        if (globalLoading) setIsLoadingEpisodes(true);
+        setLoadingSeasons(prev => ({ ...prev, [seasonUid]: true }));
         try {
             const episodes = await episodeSerieService.getEpisodesBySeason(seasonUid);
             setSeasonEpisodes(prev => ({ ...prev, [seasonUid]: episodes }));
         } catch (error) {
             console.error('Error loading episodes:', error);
         } finally {
-            setIsLoadingEpisodes(false);
+            if (globalLoading) setIsLoadingEpisodes(false);
+            setLoadingSeasons(prev => ({ ...prev, [seasonUid]: false }));
         }
     };
 
@@ -991,19 +996,30 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                 {firestoreSeasons.length > 0 && selectedSeasonUid && (() => {
                                     const selectedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
                                     const episodes = seasonEpisodes[selectedSeasonUid];
-                                    const episodeCount = selectedSeason?.nb_episodes ?? episodes?.length ?? 0;
+                                    const episodeCount = episodes?.length ?? 0;
 
                                     return (
                                         <div className="relative">
                                             <button
-                                                onClick={() => setIsSeasonDropdownOpen(!isSeasonDropdownOpen)}
+                                                onClick={() => {
+                                                    setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
+                                                    if (!isSeasonDropdownOpen) {
+                                                        firestoreSeasons.forEach(s => {
+                                                            if (seasonEpisodes[s.uid_season] === undefined && !loadingSeasons[s.uid_season]) {
+                                                                loadEpisodesForSeason(s.uid_season, { globalLoading: false });
+                                                            }
+                                                        });
+                                                    }
+                                                }}
                                                 className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-900 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                                 aria-haspopup="listbox"
                                                 aria-expanded={isSeasonDropdownOpen}
                                             >
                                                 <span>{t('season')} {selectedSeason?.season_number}</span>
                                                 <span className="text-gray-500">|</span>
-                                                <span className="text-gray-400 font-normal">{episodeCount} {t('episodes')}</span>
+                                                {isLoadingEpisodes
+                                                    ? <span className="inline-block w-16 h-4 align-middle rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />
+                                                    : <span className="text-gray-400 font-normal">{episodeCount} {t('episodes')}</span>}
                                                 <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${isSeasonDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
 
@@ -1013,7 +1029,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                     role="listbox"
                                                 >
                                                     {firestoreSeasons.map(season => {
-                                                        const seasonEpCount = season.nb_episodes ?? seasonEpisodes[season.uid_season]?.length ?? 0;
+                                                        const loadedSeasonCount = seasonEpisodes[season.uid_season]?.length;
                                                         return (
                                                             <button
                                                                 key={season.uid_season}
@@ -1028,7 +1044,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                             >
                                                                 {t('season')} {season.season_number}
                                                                 {season.title_season ? ` - ${season.title_season}` : ''}
-                                                                <span className="ml-2 text-gray-500 font-normal">({seasonEpCount})</span>
+                                                                {loadedSeasonCount !== undefined
+                                                                    ? <span className="ml-2 text-gray-500 font-normal">({loadedSeasonCount})</span>
+                                                                    : <span className="ml-2 inline-block w-8 h-3 rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />}
                                                             </button>
                                                         );
                                                     })}

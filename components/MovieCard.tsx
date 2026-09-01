@@ -1,6 +1,7 @@
 import React from 'react';
 import { MediaContent } from '../types';
-import { InfoIcon } from './icons';
+import { PlayIcon, InfoIcon } from './icons';
+import { useAppContext } from '../context/AppContext';
 
 interface MovieCardProps {
   movie: MediaContent;
@@ -9,6 +10,7 @@ interface MovieCardProps {
 }
 
 const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSelect }) => {
+  const { t } = useAppContext();
   const { title, imageUrl, author, progress } = movie;
   const handleSelect = () => onSelect(movie);
   const handleInfo = (e: React.MouseEvent) => {
@@ -77,33 +79,34 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
     );
   }
 
-  // Variant poster optimisé pour 4 cartes par ligne sur mobile
+  // Variant poster optimisé pour une grille responsive
   return (
     <div onClick={handleSelect} className="w-full space-y-1.5 sm:space-y-2 cursor-pointer group hover:z-20">
-      <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl transform transition-all duration-500 border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60 group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2">
+      <div className="relative aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg md:rounded-xl overflow-hidden shadow-xl border-2 border-transparent group-hover:border-amber-500/60 dark:group-hover:border-amber-500/60 transition-all duration-200 ease-out group-hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.6)] group-hover:-translate-y-1">
         <img
           src={imageUrl}
           alt={title}
-          className="w-full h-full object-cover relative z-0 transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-cover relative z-0 transition-transform duration-500 group-hover:scale-105"
         />
         <div
           onClick={handleInfo}
-          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-10 cursor-pointer p-3"
+          className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out z-10 cursor-pointer p-3"
         >
-          <h3 className="text-white font-bold text-xs sm:text-sm lg:text-sm xl:text-base text-center leading-tight mb-2 break-words">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-xl">
+            <PlayIcon className="w-5 h-5 text-gray-900" />
+            <span className="text-gray-900 text-sm font-bold">{t('play') || 'Regarder'}</span>
+          </div>
+          <h3 className="mt-3 text-white font-bold text-xs sm:text-sm text-center leading-tight break-words line-clamp-2">
             {title}
           </h3>
           {movie.duration && (
-            <div className="flex items-center gap-1 text-white/80 text-[10px] sm:text-xs mb-3">
+            <div className="flex items-center gap-1 text-white/80 text-[10px] sm:text-xs mt-1">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{movie.duration}</span>
             </div>
           )}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/40 transition-transform duration-300 group-hover:scale-110">
-            <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-1" />
-          </div>
         </div>
         {/* Barre de progression si présente */}
         {progress !== undefined && progress > 0 && (

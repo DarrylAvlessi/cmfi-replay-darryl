@@ -311,15 +311,15 @@ export const TOURS: TourDefinition[] = [
       },
       {
         id: 'bookmark-remove',
-        element: '[data-tour="bookmarks-list"]',
+        element: '[data-tour="bookmark-remove-btn"]',
         route: '/bookmarks',
         title: {
           en: 'Remove from Favorites',
           fr: 'Retirer des favoris',
         },
         description: {
-          en: 'Tap the trash icon on any item to remove it from your list.',
-          fr: 'Appuyez sur l\'icône poubelle sur un élément pour le retirer de votre liste.',
+          en: 'Tap the heart icon on any item to remove it from your favorites. A confirmation step will keep you safe from accidental removals.',
+          fr: 'Appuyez sur l\'icône cœur sur un élément pour le retirer de vos favoris. Une étape de confirmation évitera les suppressions accidentelles.',
         },
       },
     ],
