@@ -132,7 +132,7 @@ export function useAuthLogic({ language }: UseAuthLogicParams) {
                         await userService.createUserProfile({
                             uid: user.uid,
                             email: user.email || '',
-                            display_name: user.displayName || 'User',
+                            display_name: user.displayName || user.email?.split('@')[0] || 'User',
                             photo_url: user.photoURL || undefined,
                             presence: 'online',
                             hasAcceptedPrivacyPolicy: false,

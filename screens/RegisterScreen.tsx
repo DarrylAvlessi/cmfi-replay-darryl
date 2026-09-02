@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { auth } from '../lib/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { authService } from '../lib/authService';
+import { userService, UserProfile } from '../lib/db';
 import AuthHeader from '../components/AuthHeader';
 import InputField from '../components/InputField';
 import AuthButton from '../components/AuthButton';
@@ -41,7 +42,7 @@ const OrSeparator: React.FC = () => {
 };
 
 const RegisterScreen: React.FC = () => {
-    const { t, setIsAuthenticated } = useAppContext();
+    const { t, setIsAuthenticated, setUserProfile } = useAppContext();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [authLoading, setAuthLoading] = useState(false);
@@ -138,7 +139,26 @@ const RegisterScreen: React.FC = () => {
 
         try {
             // Créer l'utilisateur dans Firebase Auth
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+            // Sauvegarder le nom complet de l'utilisateur
+            await updateProfile(userCredential.user, { displayName: fullName.trim() });
+
+            // Créer le profil Firestore de manière déterministe
+            const language = (localStorage.getItem('language') as 'en' | 'fr') || 'en';
+            const profileData: Omit<UserProfile, 'createdAt' | 'updatedAt'> = {
+                uid: userCredential.user.uid,
+                email: userCredential.user.email || email,
+                display_name: fullName.trim(),
+                presence: 'online',
+                hasAcceptedPrivacyPolicy: false,
+                created_time: new Date().toISOString(),
+                theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+                language,
+                bookmarkedIds: [],
+            };
+            await userService.createUserProfile(profileData);
+            setUserProfile(profileData as UserProfile);
 
             setIsAuthenticated(true);
             navigate('/home');

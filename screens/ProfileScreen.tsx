@@ -244,6 +244,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             />
                             <div className="flex-1 text-center sm:text-left">
                                 <h2 className="text-2xl font-serif font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
+                                {userProfile?.email && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
+                                )}
                                 <button
                                     onClick={() => navigate('EditProfile')}
                                     className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
@@ -434,6 +437,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
                     />
                     <h2 className="text-2xl font-serif font-bold">{userProfile?.display_name || 'User'}</h2>
+                    {userProfile?.email && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
+                    )}
                     <button
                         onClick={() => navigate('EditProfile')}
                         className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
