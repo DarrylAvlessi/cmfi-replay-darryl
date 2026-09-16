@@ -20,3 +20,6 @@ export const TITLE_SUGGESTIONS_COLLECTION = 'title_suggestions';
 export const USER_DAILY_ACTIVITY_COLLECTION = 'user_daily_activity';
 export const INFO_BAR_COLLECTION = 'infoBarMessages';
 export const EPISODE_TRANSCRIPTS_COLLECTION = 'episodeTranscripts';
+export const WATCH_ROOMS_COLLECTION = 'watchRooms';
+export const WATCH_ROOMS_PARTICIPANTS_COLLECTION = 'participants';
+export const WATCH_ROOMS_MESSAGES_COLLECTION = 'messages';

@@ -109,6 +109,31 @@ const AppContent: React.FC = () => {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // Preserve a watch-together invite link across the login redirect
+    // (unauthenticated users are bounced to /login, which would drop ?room=).
+    useEffect(() => {
+        if (isAuthenticated) return;
+        if (!location.pathname.startsWith('/watch/')) return;
+        const params = new URLSearchParams(location.search);
+        if (!params.get('room')) return;
+        try {
+            sessionStorage.setItem('pendingWatchInvite', location.pathname + location.search);
+        } catch {}
+    }, [isAuthenticated, location.pathname, location.search]);
+
+    // After login, resume a stashed watch-together invite link once.
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        let pending: string | null = null;
+        try {
+            pending = sessionStorage.getItem('pendingWatchInvite');
+            sessionStorage.removeItem('pendingWatchInvite');
+        } catch {}
+        if (pending && pending.startsWith('/watch/')) {
+            navigate(pending, { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
+
     // Vérifier si le consentement RGPD est nécessaire
     useEffect(() => {
         if (isAuthenticated && userProfile && !userProfile.hasAcceptedPrivacyPolicy) {

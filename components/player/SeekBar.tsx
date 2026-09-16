@@ -16,6 +16,7 @@ interface SeekBarProps {
   formatTime: (seconds: number) => string;
   previewVideoRef: React.RefObject<HTMLVideoElement>;
   src?: string;
+  disabled?: boolean;
 }
 
 const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
@@ -34,6 +35,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   formatTime,
   previewVideoRef,
   src,
+  disabled = false,
 }) {
   return (
   <div className="px-2 sm:px-4 pt-2 pb-0.5">
@@ -89,7 +91,8 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
         onMouseUp={onSliderMouseUp}
         onTouchStart={onSliderMouseDown}
         onTouchEnd={onSliderMouseUp}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+        disabled={disabled}
+        className={`absolute inset-0 w-full h-full opacity-0 z-10 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
         aria-label="Seek"
       />
     </div>

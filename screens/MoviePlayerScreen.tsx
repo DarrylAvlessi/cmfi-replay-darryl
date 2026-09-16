@@ -1,9 +1,9 @@
 // screens/MoviePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MediaType } from '../types';
-import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie } from '../lib/db';
+import { Movie, movieService, likeService, viewService, getLastWatchedPositionForMovie, WatchRole } from '../lib/db';
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon,
@@ -20,6 +20,7 @@ import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
+import WatchTogetherPanel from '../components/WatchTogetherPanel';
 
 import { useTutorial } from '../context/TutorialContext';
 
@@ -45,6 +46,8 @@ interface MoviePlayerScreenProps {
 const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onReturnHome, forceMini = false, onClose }) => {
     const { t, bookmarkedIds, toggleBookmark, userProfile, autoplay } = useAppContext();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const inviteRoomCode = searchParams.get('room');
     const [movieData, setMovieData] = useState<Movie | null>(null);
     const [likeCount, setLikeCount] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
@@ -52,6 +55,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
+    const [watchRole, setWatchRole] = useState<WatchRole | null>(null);
     const { activeTourId } = useTutorial();
     const [showAd, setShowAd] = useState(() => {
       const key = `ad_shown_movie_${item.id}`;
@@ -410,6 +414,30 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    const handleGetPlaybackState = useCallback(() => {
+        const video = videoRef.current;
+        if (!video) return null;
+        return { isPlaying: !video.paused, currentTime: video.currentTime, playbackRate: video.playbackRate || 1 };
+    }, []);
+
+    const handleApplyRemoteTarget = useCallback((target: { isPlaying: boolean; currentTime: number; positionAt: number; playbackRate: number } | null) => {
+        const video = videoRef.current;
+        if (!video || !target) return;
+        const targetRate = Number.isFinite(target.playbackRate) && target.playbackRate > 0 ? target.playbackRate : 1;
+        if (video.playbackRate !== targetRate) {
+            video.playbackRate = targetRate;
+        }
+        if (Math.abs(video.currentTime - target.currentTime) > 1.5) {
+            video.currentTime = target.currentTime;
+        }
+        if (target.isPlaying && video.paused) {
+            const playPromise = video.play();
+            playPromise?.catch(() => {});
+        } else if (!target.isPlaying && !video.paused) {
+            video.pause();
+        }
+    }, []);
+
     const handlePlayingStateChange = useCallback((playing: boolean) => {
       setVideoIsPlaying(playing);
     }, []);
@@ -503,6 +531,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             isEpisode={false}
                                               hideControls={effectiveMini}
                                               videoRef={videoRef}
+                                              remoteMode={watchRole === 'guest'}
                                         />
                                    )}
                                   </div>
@@ -550,6 +579,15 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                     onClick={() => setShowSuggestModal(true)}
                                 />
                             </div>
+
+                            <WatchTogetherPanel
+                                videoId={movieData?.uid || item.id}
+                                videoType="movie"
+                                onGetPlaybackState={handleGetPlaybackState}
+                                onApplyRemoteTarget={handleApplyRemoteTarget}
+                                onRoleChange={setWatchRole}
+                                initialCode={inviteRoomCode}
+                            />
                         </div>
                         )}
                     </div>

@@ -1,9 +1,9 @@
 // screens/EpisodePlayerScreen.tsx
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { MediaContent } from '../types';
-import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie } from '../lib/db';
+import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie, WatchRole } from '../lib/db';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
     LikeIcon, ShareIcon, PlusIcon,
@@ -20,6 +20,7 @@ import { formatNumber, CommentSection } from '../components/CommentSection';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
+import WatchTogetherPanel from '../components/WatchTogetherPanel';
 
 import { useTutorial } from '../context/TutorialContext';
 
@@ -36,6 +37,8 @@ interface EpisodePlayerScreenProps {
 
 const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode, onBack, onNavigateEpisode, onReturnHome, forceMini = false, onClose }) => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const inviteRoomCode = searchParams.get('room');
     const { t, bookmarkedIds, toggleSeriesBookmark, userProfile, autoplay } = useAppContext();
     const [episodesInSeason, setEpisodesInSeason] = useState<EpisodeSerie[]>([]);
     const [currentSeason, setCurrentSeason] = useState<SeasonSerie | null>(null);
@@ -46,6 +49,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
+    const [watchRole, setWatchRole] = useState<WatchRole | null>(null);
     const { activeTourId } = useTutorial();
     const [showAd, setShowAd] = useState(() => {
       const key = `ad_shown_${episode.uid_episode}`;
@@ -404,6 +408,30 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    const handleGetPlaybackState = useCallback(() => {
+        const video = videoRef.current;
+        if (!video) return null;
+        return { isPlaying: !video.paused, currentTime: video.currentTime, playbackRate: video.playbackRate || 1 };
+    }, []);
+
+    const handleApplyRemoteTarget = useCallback((target: { isPlaying: boolean; currentTime: number; positionAt: number; playbackRate: number } | null) => {
+        const video = videoRef.current;
+        if (!video || !target) return;
+        const targetRate = Number.isFinite(target.playbackRate) && target.playbackRate > 0 ? target.playbackRate : 1;
+        if (video.playbackRate !== targetRate) {
+            video.playbackRate = targetRate;
+        }
+        if (Math.abs(video.currentTime - target.currentTime) > 1.5) {
+            video.currentTime = target.currentTime;
+        }
+        if (target.isPlaying && video.paused) {
+            const playPromise = video.play();
+            playPromise?.catch(() => {});
+        } else if (!target.isPlaying && !video.paused) {
+            video.pause();
+        }
+    }, []);
+
     const handlePlayingStateChange = useCallback((playing: boolean) => {
         setVideoIsPlaying(playing);
     }, []);
@@ -528,6 +556,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                               showAutoplayToggle={true}
                                               hideControls={effectiveMini}
                                               videoRef={videoRef}
+                                              remoteMode={watchRole === 'guest'}
                                           />
                                       )}
                                   </div>
@@ -594,6 +623,15 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                     <ChevronRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                                 </button>
                             </div>
+
+                            <WatchTogetherPanel
+                                videoId={episode.uid_episode}
+                                videoType="episode"
+                                onGetPlaybackState={handleGetPlaybackState}
+                                onApplyRemoteTarget={handleApplyRemoteTarget}
+                                onRoleChange={setWatchRole}
+                                initialCode={inviteRoomCode}
+                            />
                         </div>
                         )}
                     </div>

@@ -6,12 +6,13 @@ interface VideoCenterButtonProps {
   isLoading: boolean;
   isPlaying: boolean;
   onTogglePlay: () => void;
+  disabled?: boolean;
 }
 
 const VideoCenterButton: React.FC<VideoCenterButtonProps> = ({
-  isTouch, isLoading, isPlaying, onTogglePlay,
+  isTouch, isLoading, isPlaying, onTogglePlay, disabled = false,
 }) => {
-  if (!isTouch || isLoading) return null;
+  if (!isTouch || isLoading || disabled) return null;
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

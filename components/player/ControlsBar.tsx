@@ -24,6 +24,9 @@ interface ControlsBarProps {
   onVolumeSliderInput: (e: React.FormEvent<HTMLInputElement>) => void;
   onVolumeSeek: (e: React.MouseEvent<HTMLDivElement>) => void;
   formatTime: (seconds: number) => string;
+  // Watch-together guests: lock play / autoplay / speed buttons.
+  // Volume, PiP and fullscreen stay interactive.
+  disabled?: boolean;
 }
 
 const ControlsBar: React.FC<ControlsBarProps> = ({
@@ -48,13 +51,15 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
   onVolumeSliderInput,
   onVolumeSeek,
   formatTime,
+  disabled = false,
 }) => (
   <div className="px-2 sm:px-4 pb-2 sm:pb-3" data-tour="player-controls">
       <div className="flex items-center justify-between text-white text-sm font-medium">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <button
             onClick={onTogglePlay}
-            className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)]"
+            disabled={disabled}
+            className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-default"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <PauseIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" /> : <PlayIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />}
@@ -74,7 +79,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
         </span>
       </div>
       <div className="flex items-center space-x-1 sm:space-x-2">
-        {showAutoplayToggle && (
+        {showAutoplayToggle && !disabled && (
           <button
             onClick={onToggleAutoplay}
             className={`relative w-11 h-5 rounded-full p-0.5 transition-colors duration-200 ${
@@ -103,7 +108,8 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
         )}
         <button
           onClick={onCyclePlaybackSpeed}
-          className="px-2 py-1 rounded-full bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/50 transition-colors leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)]"
+          disabled={disabled}
+          className="px-2 py-1 rounded-full bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/50 transition-colors leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)] disabled:opacity-40 disabled:hover:bg-black/40 disabled:cursor-default"
           aria-label="Playback speed"
         >
           {playbackRate % 1 === 0

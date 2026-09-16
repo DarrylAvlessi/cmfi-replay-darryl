@@ -39,6 +39,10 @@ interface UseVideoPlayerProps {
   hideControls?: boolean;
   onTimeUpdate?: (time: number) => void;
   videoRef?: React.RefObject<HTMLVideoElement>;
+  // Watch-together guests: video follows the host, so all playback-driving
+  // controls (play/pause/seek/speed/autoplay) are disabled. Volume, mute,
+  // fullscreen and PiP stay local-only and keep working.
+  remoteMode?: boolean;
 }
 
 export function useVideoPlayer({
@@ -56,6 +60,7 @@ export function useVideoPlayer({
   hideControls,
   onTimeUpdate,
   videoRef: externalVideoRef,
+  remoteMode = false,
 }: UseVideoPlayerProps) {
   const { t, userProfile } = useAppContext();
   const navigate = useNavigate();
@@ -64,6 +69,13 @@ export function useVideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Ref mirror of remoteMode: some handlers (keyboard shortcuts) are bound
+  // once on mount, so guards must read the ref to see role changes.
+  const remoteModeRef = useRef(remoteMode);
+  useEffect(() => {
+    remoteModeRef.current = remoteMode;
+  });
 
   // --- State ---
   const [isPlaying, setIsPlaying] = useState(false);
@@ -186,6 +198,7 @@ export function useVideoPlayer({
 
   // --- Handlers ---
   const togglePlay = () => {
+    if (remoteModeRef.current) return;
     const wasPlaying = !videoRef.current?.paused;
     wasPlaying ? videoRef.current?.pause() : videoRef.current?.play();
     setShowControls(wasPlaying);
@@ -199,6 +212,7 @@ export function useVideoPlayer({
   };
 
   const seekBy = (stepSec: number, feedback: 'rewind' | 'forward') => {
+    if (remoteModeRef.current) return;
     resetControlsTimeout();
     const video = videoRef.current;
     if (!video) return;
@@ -261,6 +275,7 @@ export function useVideoPlayer({
   };
 
   const toggleAutoplay = () => {
+    if (remoteModeRef.current) return;
     const newAutoplayState = !autoplayEnabled;
     setAutoplayEnabled(newAutoplayState);
     toast.success(`Lecture automatique ${newAutoplayState ? 'activée' : 'désactivée'}`, {
@@ -283,6 +298,7 @@ export function useVideoPlayer({
   };
 
   const cyclePlaybackSpeed = () => {
+    if (remoteModeRef.current) return;
     const idx = SPEED_PRESETS.indexOf(playbackRate);
     const next = SPEED_PRESETS[(idx + 1) % SPEED_PRESETS.length];
     if (videoRef.current) {
@@ -311,6 +327,7 @@ export function useVideoPlayer({
   };
 
   const handleSliderInput = (e: React.FormEvent<HTMLInputElement>) => {
+    if (remoteModeRef.current) return;
     const video = videoRef.current;
     if (!video || !video.duration) return;
     const pct = parseFloat((e.currentTarget as HTMLInputElement).value);
@@ -327,6 +344,7 @@ export function useVideoPlayer({
   };
 
   const handleSliderMouseDown = () => {
+    if (remoteModeRef.current) return;
     setIsScrubbing(true);
     if (videoRef.current && !videoRef.current.paused) {
       wasPlayingRef.current = true;
@@ -432,7 +450,7 @@ export function useVideoPlayer({
   };
 
   const handleContainerTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isPlaying) return;
+    if (!isPlaying || remoteModeRef.current) return;
     const touch = e.touches[0];
     if (!touch) return;
 
@@ -737,7 +755,7 @@ export function useVideoPlayer({
     const handleCanPlay = () => {
       setIsInitialLoading(false);
       setIsBuffering(false);
-      if (video.playbackRate !== playbackRate) {
+      if (!remoteModeRef.current && video.playbackRate !== playbackRate) {
         video.playbackRate = playbackRate;
       }
       if (video.volume !== volume) {
@@ -999,6 +1017,9 @@ export function useVideoPlayer({
         containerRef.current?.contains(document.activeElement) ||
         containerRef.current?.matches(':hover');
       if (!hasFocus) return;
+
+      // Guests follow the host: play/seek keys are disabled, volume/fullscreen stay local.
+      if (remoteModeRef.current && (e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) return;
 
       if (e.code === 'Space') {
         e.preventDefault();

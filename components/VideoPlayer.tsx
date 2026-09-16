@@ -36,6 +36,8 @@ interface VideoPlayerProps {
     hideControls?: boolean;
     onTimeUpdate?: (time: number) => void;
     videoRef?: React.RefObject<HTMLVideoElement>;
+    // Watch-together guests: video follows the host; playback controls lock.
+    remoteMode?: boolean;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -53,6 +55,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     hideControls = false,
     onTimeUpdate,
     videoRef: externalVideoRef,
+    remoteMode = false,
 }) => {
     const {
         videoRef,
@@ -121,6 +124,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         hideControls,
         onTimeUpdate,
         videoRef: externalVideoRef,
+        remoteMode,
     });
 
     if (unavailable) {
@@ -180,6 +184,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     isLoading={isInitialLoading}
                     isPlaying={isPlaying}
                     onTogglePlay={togglePlay}
+                    disabled={remoteMode}
                 />
                 <div className="bg-gradient-to-t from-black/85 via-black/40 to-black/10">
                     <SeekBar
@@ -198,6 +203,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         formatTime={formatTime}
                         previewVideoRef={previewVideoRef}
                         src={src}
+                        disabled={remoteMode}
                     />
                     <ControlsBar
                         isPlaying={isPlaying}
@@ -221,6 +227,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         onVolumeSliderInput={handleVolumeSliderInput}
                         onVolumeSeek={handleVolumeSeek}
                         formatTime={formatTime}
+                        disabled={remoteMode}
                     />
                 </div>
             </div>

@@ -34,6 +34,12 @@ export type {
   AppSettings,
   Ad,
   AdSettings,
+  WatchRole,
+  WatchRoomState,
+  WatchRoom,
+  WatchParticipant,
+  WatchMessage,
+  WatchSyncTarget,
 } from './firestore';
 
 export const {
@@ -60,6 +66,7 @@ export const {
   navigationTrackingService,
   dailyActivityService,
   reportService,
+  watchTogetherService,
   getCategoryName,
   generateDefaultAvatar,
   getLastWatchedPosition,

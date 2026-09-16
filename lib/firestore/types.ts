@@ -311,3 +311,45 @@ export interface AdSettings {
     updatedAt: Timestamp;
     updatedBy?: string;
 }
+
+export type WatchRole = 'host' | 'guest';
+
+export interface WatchRoomState {
+    isPlaying: boolean;
+    currentTime: number;
+    positionAt: number;
+    playbackRate: number;
+}
+
+export type WatchSyncTarget = WatchRoomState;
+
+export interface WatchRoom {
+    id: string;
+    roomCode: string;
+    hostUid: string;
+    status: 'active' | 'ended';
+    videoId: string;
+    videoType: 'movie' | 'episode';
+    createdAt: Date | Timestamp;
+    updatedAt?: Date | Timestamp;
+    hostAliveAt?: Date | Timestamp;
+    state?: WatchRoomState;
+}
+
+export interface WatchParticipant {
+    uid: string;
+    displayName: string;
+    photoUrl?: string;
+    role: WatchRole;
+    joinedAt: Date | Timestamp;
+    lastSeen: Date | Timestamp;
+}
+
+export interface WatchMessage {
+    id: string;
+    uid: string;
+    displayName: string;
+    photoUrl?: string;
+    text: string;
+    createdAt: Date | Timestamp;
+}

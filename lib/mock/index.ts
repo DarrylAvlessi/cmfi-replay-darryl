@@ -63,3 +63,4 @@ export const updateEpisodeViews = async (): Promise<void> => {};
 export const initializeMovieViews = async (): Promise<{ success: boolean; updated: number }> => ({ success: true, updated: 0 });
 export const updateAppSettings = async (_updates: Record<string, unknown>): Promise<void> => {};
 export { subscriptionService } from '../subscriptionService';
+export { watchTogetherService } from './watchTogether';

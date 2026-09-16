@@ -22,6 +22,9 @@ export {
   TITLE_SUGGESTIONS_COLLECTION,
   USER_DAILY_ACTIVITY_COLLECTION,
   INFO_BAR_COLLECTION,
+  WATCH_ROOMS_COLLECTION,
+  WATCH_ROOMS_PARTICIPANTS_COLLECTION,
+  WATCH_ROOMS_MESSAGES_COLLECTION,
 } from './firestore/constants';
 
 export {
@@ -41,4 +44,5 @@ export { bookDocService, bookSeriesService, likeService } from './firestore/book
 export { commentService, titleSuggestionService, reportService } from './firestore/socialServices';
 export { statsVuesService, viewService, searchService, navigationTrackingService, dailyActivityService } from './firestore/statsServices';
 export { notificationService, infoBarService, appSettingsService, adService } from './firestore/adminServices';
+export { watchTogetherService } from './firestore/watchTogetherService';
 export { subscriptionService } from './subscriptionService';
