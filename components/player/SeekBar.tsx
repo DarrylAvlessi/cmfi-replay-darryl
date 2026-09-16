@@ -17,6 +17,14 @@ interface SeekBarProps {
   previewVideoRef: React.RefObject<HTMLVideoElement>;
   src?: string;
   disabled?: boolean;
+  // Live DVR mode: bar spans [0, liveEdge] (expands with the stream).
+  liveMode?: boolean;
+  liveEdge?: number | null;
+  currentTime?: number;
+  ariaValueText?: string;
+  // While scrubbing, the thumb/input render this drag-local value so live
+  // edge ticks can't fight the user's finger.
+  scrubProgress?: number | null;
 }
 
 const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
@@ -36,11 +44,25 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   previewVideoRef,
   src,
   disabled = false,
+  liveMode = false,
+  liveEdge = null,
+  currentTime = 0,
+  ariaValueText,
+  scrubProgress = null,
 }) {
+  // Edge-anchored scaling: thumb sits at the far right when at the live edge.
+  const edgeScale = liveMode && liveEdge && liveEdge > 0 ? liveEdge : 0;
+  const displayProgress = edgeScale > 0
+    ? Math.max(0, Math.min(100, (currentTime / edgeScale) * 100))
+    : progress;
+  const shownProgress = scrubProgress ?? displayProgress;
+  const displayBuffered = edgeScale > 0 && duration > 0
+    ? Math.max(0, Math.min(100, ((buffered / 100) * duration) / edgeScale * 100))
+    : buffered;
   return (
   <div className="px-2 sm:px-4 pt-2 pb-0.5">
     <div
-      className="relative w-full h-1.5 hover:h-2.5 transition-all duration-200 bg-black/30 rounded-full cursor-pointer group"
+      className={`relative w-full transition-all duration-200 rounded-full group ${liveMode ? 'h-0.5 hover:h-1.5 bg-white/20' : 'h-1.5 hover:h-2.5 bg-black/30'} ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
       onMouseMove={onSeekBarHover}
       onMouseEnter={(e) => { onShowPreview(true); onSeekBarHover(e); }}
       onMouseLeave={() => onShowPreview(false)}
@@ -72,10 +94,10 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
       </div>
 
       {/* Buffered Bar */}
-      <div className="absolute inset-y-0 left-0 bg-white/20 rounded-full transition-all duration-200" style={{ width: `${buffered}%` }} />
+      <div className="absolute inset-y-0 left-0 bg-white/20 rounded-full transition-all duration-200" style={{ width: `${displayBuffered}%` }} />
 
-      {/* Progress Bar with Gradient and Glow */}
-      <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.6)] transition-all duration-100" style={{ width: `${progress}%` }}>
+      {/* Progress Bar with Gradient and Glow (red in live mode) */}
+      <div className={`absolute inset-y-0 left-0 rounded-full transition-all duration-100 ${liveMode ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-[0_0_12px_rgba(220,38,38,0.6)]' : 'bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_0_12px_rgba(245,158,11,0.6)]'}`} style={{ width: `${shownProgress}%` }}>
         <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_6px_rgb(0_0_0/0.8)] opacity-60 group-hover:opacity-100 transition-all duration-200 scale-75 group-hover:scale-100 ring-2 ring-amber-500/50" />
       </div>
 
@@ -85,7 +107,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
         min={0}
         max={100}
         step={0.1}
-        value={progress}
+        value={shownProgress}
         onInput={onSliderInput}
         onMouseDown={onSliderMouseDown}
         onMouseUp={onSliderMouseUp}
@@ -94,6 +116,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
         disabled={disabled}
         className={`absolute inset-0 w-full h-full opacity-0 z-10 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
         aria-label="Seek"
+        aria-valuetext={ariaValueText}
       />
     </div>
   </div>

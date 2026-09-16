@@ -23,6 +23,9 @@ const DOUBLE_CLICK_IGNORE_MS = 500;
 const SYSTEM_PAUSE_USER_GESTURE_MS = 400;
 const SYSTEM_PAUSE_VISIBILITY_GUARD_MS = 800;
 const SYSTEM_PAUSE_NOTICE_KEY = 'system_pause_notice_shown';
+// Live DVR: forward seeks clamp at (liveEdge + tolerance); the tolerance
+// absorbs edge staleness between sync frames.
+const LIVE_EDGE_TOL_SEC = 2;
 
 interface UseVideoPlayerProps {
   src?: string;
@@ -43,6 +46,10 @@ interface UseVideoPlayerProps {
   // controls (play/pause/seek/speed/autoplay) are disabled. Volume, mute,
   // fullscreen and PiP stay local-only and keep working.
   remoteMode?: boolean;
+  // Live DVR: guests in live rooms may pause and rewind locally, but never
+  // seek ahead of liveEdge (seconds). Rate/speed stays host-driven.
+  liveDvr?: boolean;
+  liveEdge?: number | null;
 }
 
 export function useVideoPlayer({
@@ -61,6 +68,8 @@ export function useVideoPlayer({
   onTimeUpdate,
   videoRef: externalVideoRef,
   remoteMode = false,
+  liveDvr = false,
+  liveEdge = null,
 }: UseVideoPlayerProps) {
   const { t, userProfile } = useAppContext();
   const navigate = useNavigate();
@@ -73,8 +82,12 @@ export function useVideoPlayer({
   // Ref mirror of remoteMode: some handlers (keyboard shortcuts) are bound
   // once on mount, so guards must read the ref to see role changes.
   const remoteModeRef = useRef(remoteMode);
+  const liveDvrRef = useRef(liveDvr);
+  const liveEdgeRef = useRef<number | null>(liveEdge);
   useEffect(() => {
     remoteModeRef.current = remoteMode;
+    liveDvrRef.current = liveDvr;
+    liveEdgeRef.current = liveEdge;
   });
 
   // --- State ---
@@ -93,6 +106,10 @@ export function useVideoPlayer({
   const [autoplayEnabled, setAutoplayEnabled] = useState(externalAutoplayEnabled ?? true);
   const [buffered, setBuffered] = useState(0);
   const [isScrubbing, setIsScrubbing] = useState(false);
+// Drag-local truth for the seek bar: while scrubbing, the thumb/input render
+// this instead of the live-computed progress, so an advancing live edge can't
+// fight the user's finger mid-drag. Cleared on release.
+const [scrubProgress, setScrubProgress] = useState<number | null>(null);
   const wasPausedBeforeTabSwitch = useRef(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -198,7 +215,9 @@ export function useVideoPlayer({
 
   // --- Handlers ---
   const togglePlay = () => {
-    if (remoteModeRef.current) return;
+    // Live DVR guests may pause/resume locally (they fall behind the edge);
+    // all other remote guests are fully locked.
+    if (remoteModeRef.current && !liveDvrRef.current) return;
     const wasPlaying = !videoRef.current?.paused;
     wasPlaying ? videoRef.current?.pause() : videoRef.current?.play();
     setShowControls(wasPlaying);
@@ -212,11 +231,17 @@ export function useVideoPlayer({
   };
 
   const seekBy = (stepSec: number, feedback: 'rewind' | 'forward') => {
-    if (remoteModeRef.current) return;
+    if (remoteModeRef.current && !liveDvrRef.current) return;
     resetControlsTimeout();
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = Math.max(0, Math.min(video.duration || Infinity, video.currentTime + stepSec));
+    let target = video.currentTime + stepSec;
+    if (remoteModeRef.current && liveDvrRef.current && liveEdgeRef.current != null) {
+      // Live DVR: rewind freely, but never ahead of the live edge.
+      target = Math.min(target, liveEdgeRef.current + LIVE_EDGE_TOL_SEC);
+      if (stepSec > 0 && target <= video.currentTime + 0.25) return;
+    }
+    video.currentTime = Math.max(0, Math.min(video.duration || Infinity, target));
     setCurrentTime(video.currentTime);
     if (video.duration) setProgress((video.currentTime / video.duration) * 100);
     updateBuffered();
@@ -327,12 +352,18 @@ export function useVideoPlayer({
   };
 
   const handleSliderInput = (e: React.FormEvent<HTMLInputElement>) => {
-    if (remoteModeRef.current) return;
+    if (remoteModeRef.current && !liveDvrRef.current) return;
     const video = videoRef.current;
     if (!video || !video.duration) return;
     const pct = parseFloat((e.currentTarget as HTMLInputElement).value);
     setProgress(pct);
-    const nextTime = (pct / 100) * video.duration;
+    setScrubProgress(pct);
+    // Live DVR: the bar is edge-anchored, so fractions map against the edge.
+    const scale = liveDvrRef.current && liveEdgeRef.current ? liveEdgeRef.current : video.duration;
+    let nextTime = (pct / 100) * scale;
+    if (remoteModeRef.current && liveDvrRef.current && liveEdgeRef.current != null) {
+      nextTime = Math.min(nextTime, liveEdgeRef.current + LIVE_EDGE_TOL_SEC);
+    }
     video.currentTime = nextTime;
     setCurrentTime(nextTime);
     const pos = pct / 100;
@@ -344,7 +375,7 @@ export function useVideoPlayer({
   };
 
   const handleSliderMouseDown = () => {
-    if (remoteModeRef.current) return;
+    if (remoteModeRef.current && !liveDvrRef.current) return;
     setIsScrubbing(true);
     if (videoRef.current && !videoRef.current.paused) {
       wasPlayingRef.current = true;
@@ -356,6 +387,7 @@ export function useVideoPlayer({
 
   const handleSliderMouseUp = () => {
     setIsScrubbing(false);
+    setScrubProgress(null);
     if (wasPlayingRef.current && videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
@@ -365,7 +397,9 @@ export function useVideoPlayer({
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     setHoverPos(pos);
-    const time = pos * duration;
+    // Live DVR: hover fractions map against the edge-anchored bar.
+    const scale = liveDvrRef.current && liveEdgeRef.current ? liveEdgeRef.current : duration;
+    const time = pos * scale;
     setPreviewHoverTime(time);
     if (previewVideoRef.current && !isNaN(time) && isFinite(time) && time >= 0) {
       previewVideoRef.current.currentTime = time;
@@ -582,6 +616,10 @@ export function useVideoPlayer({
 
   const detectSystemPause = (video: HTMLVideoElement, wasPlaying: boolean) => {
     if (!wasPlaying) return;
+    // Watch-together guests: pauses are host-driven by design (guest controls
+    // are locked), so the screen-share interruption notice never applies.
+    // Genuine OS interruptions self-heal at the next sync frame anyway.
+    if (remoteModeRef.current) return;
     if (Date.now() - lastUserInteractionRef.current <= SYSTEM_PAUSE_USER_GESTURE_MS) return;
     if (document.hidden) return;
     if (Date.now() - lastVisibilityChangeRef.current <= SYSTEM_PAUSE_VISIBILITY_GUARD_MS) return;
@@ -1019,7 +1057,8 @@ export function useVideoPlayer({
       if (!hasFocus) return;
 
       // Guests follow the host: play/seek keys are disabled, volume/fullscreen stay local.
-      if (remoteModeRef.current && (e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) return;
+      // Live DVR guests keep Space (pause/resume behind) and arrows (seekBy clamps at edge).
+      if (remoteModeRef.current && !liveDvrRef.current && (e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -1113,6 +1152,7 @@ export function useVideoPlayer({
     currentTime,
     buffered,
     isScrubbing,
+    scrubProgress,
     showControls,
     showPreview,
     setShowPreview,

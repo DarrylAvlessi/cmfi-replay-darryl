@@ -62,6 +62,9 @@ export const parseWatchRoom = (docData: any, roomId: string): WatchRoom => ({
     status: docData.status || 'ended',
     videoId: docData.videoId || '',
     videoType: docData.videoType || 'episode',
+    mode: docData.mode === 'live' ? 'live' : 'replay',
+    startedAt: docData.startedAt ? toDate(docData.startedAt) : undefined,
+    endedAt: docData.endedAt ? toDate(docData.endedAt) : undefined,
     createdAt: toDate(docData.createdAt),
     updatedAt: docData.updatedAt ? toDate(docData.updatedAt) : undefined,
     hostAliveAt: docData.hostAliveAt ? toDate(docData.hostAliveAt) : undefined,
@@ -89,8 +92,10 @@ export const watchTogetherService = {
         hostPhotoUrl?: string;
         videoId: string;
         videoType: 'movie' | 'episode';
+        mode?: 'replay' | 'live';
     }): Promise<WatchRoom> {
         const now = Timestamp.now();
+        const mode = params.mode === 'live' ? 'live' : 'replay';
         const roomRef = doc(roomsRef());
         await setDoc(roomRef, {
             roomCode: params.roomCode,
@@ -98,6 +103,8 @@ export const watchTogetherService = {
             status: 'active',
             videoId: params.videoId,
             videoType: params.videoType,
+            mode,
+            ...(mode === 'live' ? { startedAt: now } : {}),
             createdAt: now,
             updatedAt: now,
             hostAliveAt: now,
@@ -179,6 +186,7 @@ export const watchTogetherService = {
             await updateDoc(doc(roomsRef(), roomId), {
                 status: 'ended',
                 updatedAt: serverTimestamp(),
+                endedAt: serverTimestamp(),
                 state: {
                     isPlaying: false,
                     currentTime: 0,
@@ -279,7 +287,8 @@ export const watchTogetherService = {
                 displayName: message.displayName,
                 photoUrl: message.photoUrl || null,
                 text: message.text,
-                createdAt: Timestamp.now(),
+                // Server clock: the single source of truth for cross-device ordering.
+                createdAt: serverTimestamp(),
             });
         } catch (error) {
             console.error('Error sending message:', error);
@@ -299,19 +308,26 @@ export const watchTogetherService = {
         const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
+                // Deterministic chronological order: sort on the raw snapshot
+                // values (not the mapped Dates) so ties break by doc id and
+                // pending writes (createdAt still null) sort last instead of
+                // first. The desc+limit query keeps the last-N window.
                 const messages = snapshot.docs
-                    .map((docSnap) => {
-                        const data = docSnap.data();
-                        return {
-                            id: docSnap.id,
-                            uid: data.uid || '',
-                            displayName: data.displayName || '',
-                            photoUrl: data.photoUrl,
-                            text: data.text || '',
-                            createdAt: toDate(data.createdAt),
-                        } as WatchMessage;
+                    .map((docSnap) => ({ docSnap, data: docSnap.data() }))
+                    .sort((a, b) => {
+                        const aTime = a.data.createdAt?.toMillis?.() ?? Number.POSITIVE_INFINITY;
+                        const bTime = b.data.createdAt?.toMillis?.() ?? Number.POSITIVE_INFINITY;
+                        if (aTime !== bTime) return aTime - bTime;
+                        return a.docSnap.id < b.docSnap.id ? -1 : a.docSnap.id > b.docSnap.id ? 1 : 0;
                     })
-                    .reverse();
+                    .map(({ docSnap, data }) => ({
+                        id: docSnap.id,
+                        uid: data.uid || '',
+                        displayName: data.displayName || '',
+                        photoUrl: data.photoUrl,
+                        text: data.text || '',
+                        createdAt: toDate(data.createdAt),
+                    }) as WatchMessage);
                 callback(messages);
             },
             (error) => {

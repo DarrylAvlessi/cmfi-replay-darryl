@@ -35,6 +35,7 @@ export type {
   Ad,
   AdSettings,
   WatchRole,
+  WatchRoomMode,
   WatchRoomState,
   WatchRoom,
   WatchParticipant,

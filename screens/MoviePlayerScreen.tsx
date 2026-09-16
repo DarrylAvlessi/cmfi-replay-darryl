@@ -55,7 +55,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
-    const [watchRole, setWatchRole] = useState<WatchRole | null>(null);
+    const [watchState, setWatchState] = useState<{ role: WatchRole | null; isLive: boolean; liveEdge: number | null; behindBySec: number; isBehind: boolean; jumpToLive: () => void }>({ role: null, isLive: false, liveEdge: null, behindBySec: 0, isBehind: false, jumpToLive: () => {} });
     const { activeTourId } = useTutorial();
     const [showAd, setShowAd] = useState(() => {
       const key = `ad_shown_movie_${item.id}`;
@@ -531,7 +531,13 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             isEpisode={false}
                                               hideControls={effectiveMini}
                                               videoRef={videoRef}
-                                              remoteMode={watchRole === 'guest'}
+                                              remoteMode={watchState.role === 'guest'}
+                                              liveDvr={watchState.role === 'guest' && watchState.isLive}
+                                              liveEdge={watchState.liveEdge}
+                                              isLive={watchState.isLive && watchState.role !== null}
+                                              isBehindLive={watchState.role === 'guest' && watchState.isLive && watchState.isBehind}
+                                              behindBySec={watchState.behindBySec}
+                                              onJumpToLive={watchState.jumpToLive}
                                         />
                                    )}
                                   </div>
@@ -585,7 +591,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                 videoType="movie"
                                 onGetPlaybackState={handleGetPlaybackState}
                                 onApplyRemoteTarget={handleApplyRemoteTarget}
-                                onRoleChange={setWatchRole}
+                                onWatchStateChange={setWatchState}
+                                videoTitle={item.title}
                                 initialCode={inviteRoomCode}
                             />
                         </div>

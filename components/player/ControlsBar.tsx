@@ -27,6 +27,14 @@ interface ControlsBarProps {
   // Watch-together guests: lock play / autoplay / speed buttons.
   // Volume, PiP and fullscreen stay interactive.
   disabled?: boolean;
+  // Live DVR guests regain the play button but speed/autoplay stay locked.
+  lockSpeed?: boolean;
+  // Live mode: time slot becomes a LIVE badge / negative offset + jump control.
+  liveMode?: boolean;
+  isBehindLive?: boolean;
+  behindBySec?: number;
+  onJumpToLive?: () => void;
+  liveBadgeText?: string;
 }
 
 const ControlsBar: React.FC<ControlsBarProps> = ({
@@ -52,6 +60,12 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
   onVolumeSeek,
   formatTime,
   disabled = false,
+  lockSpeed = false,
+  liveMode = false,
+  isBehindLive = false,
+  behindBySec = 0,
+  onJumpToLive,
+  liveBadgeText = 'LIVE',
 }) => (
   <div className="px-2 sm:px-4 pb-2 sm:pb-3" data-tour="player-controls">
       <div className="flex items-center justify-between text-white text-sm font-medium">
@@ -74,12 +88,35 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
           onVolumeSliderInput={onVolumeSliderInput}
           onVolumeSeek={onVolumeSeek}
         />
-        <span className="text-[13px] text-white/90 font-medium tabular-nums leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
+        {liveMode ? (
+          isBehindLive && onJumpToLive ? (
+            <span className="flex items-center gap-1.5 leading-none">
+              <button
+                onClick={onJumpToLive}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/15 text-white/70 text-[11px] font-bold tracking-widest hover:bg-white/25 transition-colors"
+                aria-label="Jump to live"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                {liveBadgeText}
+              </button>
+              <span className="text-[13px] text-white/90 font-medium tabular-nums drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
+                -{formatTime(Math.max(0, Math.round(behindBySec)))}
+              </span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-600 text-white text-[11px] font-bold tracking-widest leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              {liveBadgeText}
+            </span>
+          )
+        ) : (
+          <span className="text-[13px] text-white/90 font-medium tabular-nums leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        )}
       </div>
       <div className="flex items-center space-x-1 sm:space-x-2">
-        {showAutoplayToggle && !disabled && (
+        {showAutoplayToggle && !disabled && !lockSpeed && (
           <button
             onClick={onToggleAutoplay}
             className={`relative w-11 h-5 rounded-full p-0.5 transition-colors duration-200 ${
@@ -108,7 +145,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
         )}
         <button
           onClick={onCyclePlaybackSpeed}
-          disabled={disabled}
+          disabled={disabled || lockSpeed}
           className="px-2 py-1 rounded-full bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/50 transition-colors leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)] disabled:opacity-40 disabled:hover:bg-black/40 disabled:cursor-default"
           aria-label="Playback speed"
         >

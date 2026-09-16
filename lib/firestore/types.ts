@@ -323,6 +323,8 @@ export interface WatchRoomState {
 
 export type WatchSyncTarget = WatchRoomState;
 
+export type WatchRoomMode = 'replay' | 'live';
+
 export interface WatchRoom {
     id: string;
     roomCode: string;
@@ -330,6 +332,11 @@ export interface WatchRoom {
     status: 'active' | 'ended';
     videoId: string;
     videoType: 'movie' | 'episode';
+    // Premiere-style live: 'live' rooms treat the host position as the live
+    // edge. Absent on older docs → treated as 'replay' (backward compatible).
+    mode?: WatchRoomMode;
+    startedAt?: Date | Timestamp;
+    endedAt?: Date | Timestamp;
     createdAt: Date | Timestamp;
     updatedAt?: Date | Timestamp;
     hostAliveAt?: Date | Timestamp;

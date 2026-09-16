@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { UserGroupIcon, CheckIcon, ArrowRightIcon, ArrowLeftStartOnRectangleIcon, PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, CheckIcon, ArrowRightIcon, ArrowLeftStartOnRectangleIcon, PaperAirplaneIcon, LinkIcon, VideoCameraIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { useAppContext } from '../context/AppContext';
 import { useWatchTogether } from '../hooks/useWatchTogether';
 import { WatchParticipant, WatchRole, WatchRoom, WatchSyncTarget } from '../lib/db';
@@ -12,6 +12,11 @@ interface WatchTogetherPanelProps {
     onGetPlaybackState?: () => { isPlaying: boolean; currentTime: number; playbackRate: number } | null;
     onApplyRemoteTarget?: (target: WatchSyncTarget | null) => void;
     onRoleChange?: (role: WatchRole | null) => void;
+    // Live DVR: screens need role + liveness + edge for guest control locking.
+    // Replaces onRoleChange (kept for backward compat, both fire if provided).
+    onWatchStateChange?: (state: { role: WatchRole | null; isLive: boolean; liveEdge: number | null; behindBySec: number; isBehind: boolean; jumpToLive: () => void }) => void;
+    // Human-readable video title for invite phrasing ("X invites you…").
+    videoTitle?: string;
     // Room code from a shareable invite link (?room=CODE). Prefills the join
     // field and triggers a one-time auto-join for authenticated guests.
     initialCode?: string | null;
@@ -66,11 +71,11 @@ const ParticipantRow: React.FC<{ participant: WatchParticipant; isSelf: boolean 
     </div>
 );
 
-const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoType, enabled = true, onGetPlaybackState, onApplyRemoteTarget, onRoleChange, initialCode }) => {
+const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoType, enabled = true, onGetPlaybackState, onApplyRemoteTarget, onRoleChange, onWatchStateChange, videoTitle, initialCode }) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const autoJoinAttemptedRef = useRef(false);
-    const { t, isAuthenticated, userProfile } = useAppContext();
+    const { t, isAuthenticated, userProfile, user } = useAppContext();
     const {
         room,
         participants,
@@ -81,7 +86,13 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
         isChatBusy,
         error,
         notice,
+        viewerCount,
+        behindBySec,
+        isBehind,
+        liveEdge,
+        jumpToLive,
         createRoom,
+        createLiveRoom,
         joinRoom,
         leaveRoom,
         sendMessage,
@@ -97,6 +108,16 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
     const [joinCode, setJoinCode] = useState(initialCode ?? '');
     const [copied, setCopied] = useState(false);
     const [chatDraft, setChatDraft] = useState('');
+    const chatBoxRef = useRef<HTMLDivElement | null>(null);
+
+    // Keep the latest message visible without yanking users reading history:
+    // auto-scroll only when already near the bottom.
+    useEffect(() => {
+        const el = chatBoxRef.current;
+        if (!el) return;
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        if (nearBottom) el.scrollTop = el.scrollHeight;
+    }, [messages]);
 
     const stripRoomParam = () => {
         if (!searchParams.get('room')) return;
@@ -118,30 +139,45 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
         stripRoomParam();
     };
 
+    // "John Doe invites you to watch … together" phrasing for shares.
+    const buildInviteText = () => {
+        const hostName = userProfile?.display_name || user?.email || 'Guest';
+        const title = videoTitle?.trim();
+        return title
+            ? t('inviteShareText', { name: hostName, title })
+            : t('inviteShareTextNoTitle', { name: hostName });
+    };
+
+    const markCopied = () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+    };
+
     const handleCopyInviteLink = async () => {
         if (!room) return;
         const inviteUrl = buildInviteUrl(room);
+        const inviteText = buildInviteText();
         try {
             if (navigator.share) {
-                await navigator.share({ title: t('watchTogether'), url: inviteUrl });
+                await navigator.share({ title: videoTitle?.trim() || t('watchTogether'), text: inviteText, url: inviteUrl });
                 return;
             }
-            await navigator.clipboard.writeText(inviteUrl);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1600);
+            await navigator.clipboard.writeText(`${inviteText}\n${inviteUrl}`);
+            markCopied();
         } catch (err) {
             // User dismissed the share sheet: not an error. Otherwise fall back
             // to clipboard so there is always a way to copy the link.
             if (err instanceof Error && err.name === 'AbortError') return;
             try {
-                await navigator.clipboard.writeText(inviteUrl);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1600);
+                await navigator.clipboard.writeText(`${inviteText}\n${inviteUrl}`);
+                markCopied();
             } catch {
                 // Clipboard may be unavailable; silently ignore for the POC.
             }
         }
     };
+
+    const hostParticipant = participants.find((p) => p.role === 'host');
 
     const handleJoin = async () => {
         const joinedRoom = await joinRoom(joinCode);
@@ -150,12 +186,18 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
 
     // Notify the hosting screen of role changes so it can lock guest controls.
     const onRoleChangeRef = useRef(onRoleChange);
+    const onWatchStateChangeRef = useRef(onWatchStateChange);
     useEffect(() => {
         onRoleChangeRef.current = onRoleChange;
-    }, [onRoleChange]);
+        onWatchStateChangeRef.current = onWatchStateChange;
+    }, [onRoleChange, onWatchStateChange]);
     useEffect(() => {
         onRoleChangeRef.current?.(role);
     }, [role]);
+    const isLiveRoom = room?.mode === 'live';
+    useEffect(() => {
+        onWatchStateChangeRef.current?.({ role, isLive: isLiveRoom, liveEdge, behindBySec, isBehind, jumpToLive });
+    }, [role, isLiveRoom, liveEdge, behindBySec, isBehind, jumpToLive]);
 
     // One-time auto-join from a shareable invite link (?room=CODE).
     useEffect(() => {
@@ -184,12 +226,26 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                     </h3>
                 </div>
                 {isInRoom && (
-                    <span className={`text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full ${
-                        role === 'host'
-                            ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
-                            : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                    }`}>
-                        {role === 'host' ? t('youAreHost') : t('youAreGuest')}
+                    <span className="flex items-center gap-1.5">
+                        {room?.mode === 'live' && (
+                            <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full bg-red-600 text-white">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                {t('liveBadge')}
+                            </span>
+                        )}
+                        <span className={`text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full ${
+                            role === 'host'
+                                ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                                : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                        }`}>
+                            {role === 'host' ? t('youAreHost') : t('youAreGuest')}
+                        </span>
+                        {room?.mode === 'live' && (
+                            <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                                <EyeIcon className="w-3.5 h-3.5" />
+                                {t('viewersWatching', { count: String(viewerCount) })}
+                            </span>
+                        )}
                     </span>
                 )}
             </div>
@@ -198,6 +254,11 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                 <p className="text-sm text-gray-500 dark:text-gray-400">{t('loginToWatchTogether')}</p>
             ) : !isInRoom ? (
                 <div className="space-y-3">
+                    {initialCode && (
+                        <p className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-900/30 rounded-lg px-3 py-2">
+                            {t('invitedViaLink')}
+                        </p>
+                    )}
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t('watchTogetherDesc')}</p>
 
                     <button
@@ -207,6 +268,15 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                     >
                         <UserGroupIcon className="w-4 h-4" />
                         {isBusy ? t('creatingRoom') : t('createRoom')}
+                    </button>
+
+                    <button
+                        onClick={createLiveRoom}
+                        disabled={isBusy}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                        <VideoCameraIcon className="w-4 h-4" />
+                        {isBusy ? t('goingLive') : t('goLive')}
                     </button>
 
                     <div className="flex items-center gap-3">
@@ -236,6 +306,13 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                 </div>
             ) : (
                 <div className="space-y-3">
+                    {role === 'guest' && hostParticipant && (
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-900/30 rounded-lg px-3 py-2">
+                            {videoTitle?.trim()
+                                ? t('inviteShareText', { name: hostParticipant.displayName, title: videoTitle.trim() })
+                                : t('inviteShareTextNoTitle', { name: hostParticipant.displayName })}
+                        </p>
+                    )}
                     {notice && (
                         <div className="text-xs font-medium text-green-700 dark:text-green-400 bg-green-100/60 dark:bg-green-900/30 rounded-lg px-3 py-2">
                             {notice}
@@ -264,6 +341,18 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                         </p>
                     )}
 
+                    {role === 'guest' && isLiveRoom && isBehind && (
+                        <div className="flex items-center justify-between gap-2 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-900/30 rounded-lg px-3 py-2">
+                            <span>{t('behindLive', { count: String(Math.round(behindBySec)) })}</span>
+                            <button
+                                onClick={jumpToLive}
+                                className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-500 text-white hover:bg-amber-600 text-xs font-semibold transition-colors"
+                            >
+                                {t('jumpToLive')}
+                            </button>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                             {t('participants')} ({participants.length})
@@ -281,10 +370,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
 
                     <div>
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                            {t('chatTitle')}
+                            {room?.mode === 'live' ? t('liveChatTitle') : t('chatTitle')}
                         </p>
                         {messages.length > 0 && (
-                            <div className="max-h-44 overflow-y-auto space-y-2 pr-1 mb-2 scrollbar-thin scrollbar-thumb-gray-400">
+                            <div ref={chatBoxRef} className="max-h-44 overflow-y-auto space-y-2 pr-1 mb-2 scrollbar-thin scrollbar-thumb-gray-400">
                                 {messages.map((m) => (
                                     <div key={m.id} className="flex items-start gap-2">
                                         <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden shrink-0 flex items-center justify-center">
@@ -345,7 +434,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold text-sm transition-colors disabled:opacity-60"
                     >
                         <ArrowLeftStartOnRectangleIcon className="w-4 h-4" />
-                        {role === 'host' ? t('endRoom') : t('leaveRoom')}
+                        {role === 'host' ? (room?.mode === 'live' ? t('endStream') : t('endRoom')) : t('leaveRoom')}
                     </button>
                 </div>
             )}

@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import {
     watchTogetherService,
     WatchRoom,
+    WatchRoomMode,
     WatchParticipant,
     WatchRole,
     WatchMessage,
@@ -12,6 +13,14 @@ import {
 const STATE_PUBLISH_INTERVAL_MS = 1500;
 const HEARTBEAT_INTERVAL_MS = 10000;
 const SYNC_POLL_MS = 500;
+// Presence heartbeat for every room member (drives the live viewer count).
+const PARTICIPANT_HEARTBEAT_MS = 20000;
+// A viewer counts as "watching" while lastSeen is fresher than this.
+const VIEWER_FRESH_MS = 45000;
+// Live DVR: a guest is "behind" once the live edge is this far ahead (seconds).
+const BEHIND_THRESHOLD_SEC = 3;
+// Live DVR state is re-evaluated on this cadence (edge advances while playing).
+const DVR_POLL_MS = 1000;
 
 interface UseWatchTogetherOptions {
     videoId: string;
@@ -34,9 +43,20 @@ interface UseWatchTogetherResult {
     error: string | null;
     notice: string | null;
     lastHostAliveAt: Date | null;
+    // Live viewers: members with a fresh presence heartbeat.
+    viewerCount: number;
+    // Live DVR (guests in live rooms): seconds behind the live edge (0 = at edge),
+    // latest known edge position, and a snap-back action. Always 0/null outside live.
+    behindBySec: number;
+    // Single source of truth for the behind threshold (panel + player share it).
+    isBehind: boolean;
+    liveEdge: number | null;
+    jumpToLive: () => void;
     createRoom: () => Promise<void>;
+    createLiveRoom: () => Promise<void>;
     joinRoom: (code: string) => Promise<WatchRoom | null>;
     leaveRoom: () => Promise<void>;
+    endLive: () => Promise<void>;
     sendMessage: (text: string) => Promise<void>;
     dismissError: () => void;
 }
@@ -59,6 +79,8 @@ export function useWatchTogether({
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
     const [lastHostAliveAt, setLastHostAliveAt] = useState<Date | null>(null);
+    const [behindBySec, setBehindBySec] = useState(0);
+    const [liveEdge, setLiveEdge] = useState<number | null>(null);
 
     const roomIdRef = useRef<string | null>(null);
     const roleRef = useRef<WatchRole | null>(null);
@@ -68,6 +90,11 @@ export function useWatchTogether({
     const lastPublishedRef = useRef<WatchSyncTarget | null>(null);
     const getPlaybackStateRef = useRef(getPlaybackState);
     const onApplyRemoteTargetRef = useRef(onApplyRemoteTarget);
+    // Last received live edge frame {currentTime, positionAt, isPlaying, playbackRate}.
+    const lastEdgeRef = useRef<WatchSyncTarget | null>(null);
+    // False until the first remote frame is applied after joining: guarantees
+    // late joiners always snap to the edge once before DVR gating kicks in.
+    const edgeSnapDoneRef = useRef(false);
 
     useEffect(() => {
         userProfileRef.current = userProfile;
@@ -98,7 +125,32 @@ export function useWatchTogether({
         setMessages([]);
         setRole(null);
         setLastHostAliveAt(null);
+        setBehindBySec(0);
+        setLiveEdge(null);
         lastPublishedRef.current = null;
+        lastEdgeRef.current = null;
+        edgeSnapDoneRef.current = false;
+    }, []);
+
+    // Live DVR evaluation shared by the snapshot callback and the poll interval:
+    // returns { edgeNow, behind } and pushes rounded values to state.
+    const evaluateDvr = useCallback(() => {
+        const edge = lastEdgeRef.current;
+        const local = getPlaybackStateRef.current?.() ?? null;
+        if (!edge || !local) return { edgeNow: null as number | null, behind: false };
+        const edgeNow = edge.isPlaying
+            ? edge.currentTime + (Date.now() - edge.positionAt) / 1000
+            : edge.currentTime;
+        const gap = Math.max(0, edgeNow - local.currentTime);
+        const behind = gap >= BEHIND_THRESHOLD_SEC;
+        // Paused-behind: guest deliberately paused while the edge plays on.
+        // Stateless latch — clears itself the moment the guest resumes.
+        const held = !local.isPlaying && edge.isPlaying;
+        if (isMountedRef.current) {
+            setLiveEdge(Math.max(0, Math.round(edgeNow)));
+            setBehindBySec(Math.round(gap));
+        }
+        return { edgeNow, behind, held };
     }, []);
 
     // Host: publish playback state on an interval and immediately on play/pause
@@ -173,6 +225,25 @@ export function useWatchTogether({
                 const expected = s.isPlaying
                     ? s.currentTime + (Date.now() - s.positionAt) / 1000
                     : s.currentTime;
+                // Record the live edge on every frame (drives DVR + seek clamp).
+                lastEdgeRef.current = {
+                    isPlaying: s.isPlaying,
+                    currentTime: s.currentTime,
+                    positionAt: s.positionAt,
+                    playbackRate: s.playbackRate ?? 1,
+                };
+                const isLiveGuest = roleRef.current === 'guest' && updatedRoom.mode === 'live';
+                if (isLiveGuest) {
+                    const { behind, held } = evaluateDvr();
+                    // First frame after joining always snaps to the edge; afterwards
+                    // a behind guest keeps its local position (no forced re-apply),
+                    // and a guest that paused deliberately is never force-resumed.
+                    if (!edgeSnapDoneRef.current) {
+                        edgeSnapDoneRef.current = true;
+                    } else if (behind || held) {
+                        return;
+                    }
+                }
                 const isHostEcho =
                     roleRef.current === 'host' &&
                     lastPublishedRef.current !== null &&
@@ -205,7 +276,41 @@ export function useWatchTogether({
             unsubParticipants();
             unsubMessages();
         };
-    }, [enabled, roomId, resetRoomState, t]);
+    }, [enabled, roomId, resetRoomState, t, evaluateDvr]);
+
+    // Live DVR poll: the edge advances while the host plays, so behind-ness
+    // (and the seek-clamp edge) must refresh between room snapshots too.
+    useEffect(() => {
+        if (!enabled || !roomId || role !== 'guest' || room?.mode !== 'live') return;
+        const id = setInterval(() => {
+            if (roleRef.current === 'guest') evaluateDvr();
+        }, DVR_POLL_MS);
+        return () => clearInterval(id);
+    }, [enabled, roomId, role, room?.mode, evaluateDvr]);
+
+    // Presence heartbeat: every member (host included) refreshes lastSeen so
+    // the viewer count reflects who's actually still watching.
+    useEffect(() => {
+        if (!enabled || !roomId || !role) return;
+        const uid = userProfileRef.current?.uid;
+        if (!uid) return;
+        watchTogetherService.setParticipantLastSeen(roomId, uid).catch(() => {});
+        const id = setInterval(() => {
+            const currentUid = userProfileRef.current?.uid;
+            const currentRoomId = roomIdRef.current;
+            if (currentUid && currentRoomId) {
+                watchTogetherService.setParticipantLastSeen(currentRoomId, currentUid).catch(() => {});
+            }
+        }, PARTICIPANT_HEARTBEAT_MS);
+        return () => clearInterval(id);
+    }, [enabled, roomId, role]);
+
+    const viewerCount = participants.filter((p) => {
+        const seen = p.lastSeen instanceof Date
+            ? p.lastSeen.getTime()
+            : (p.lastSeen as { toMillis?: () => number })?.toMillis?.() ?? 0;
+        return Date.now() - seen < VIEWER_FRESH_MS;
+    }).length;
 
     // Keep roleRef in sync for the subscription callback
     useEffect(() => {
@@ -228,7 +333,7 @@ export function useWatchTogether({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const createRoom = useCallback(async () => {
+    const doCreateRoom = useCallback(async (mode: WatchRoomMode) => {
         const uid = handleUid();
         if (!isAuthenticated || !uid) {
             setError(t('loginToWatchTogether'));
@@ -256,6 +361,7 @@ export function useWatchTogether({
                 hostPhotoUrl: handlePhotoUrl(),
                 videoId,
                 videoType,
+                mode,
             });
 
             if (!isMountedRef.current) return;
@@ -263,7 +369,7 @@ export function useWatchTogether({
             setRoomId(createdRoom.id);
             setRoom(createdRoom);
             setRole('host');
-            setNotice(t('roomCreated'));
+            setNotice(t(mode === 'live' ? 'liveStarted' : 'roomCreated'));
         } catch (err) {
             if (isMountedRef.current) {
                 setError(err instanceof Error ? err.message : String(err));
@@ -272,6 +378,11 @@ export function useWatchTogether({
             if (isMountedRef.current) setIsBusy(false);
         }
     }, [isAuthenticated, videoId, videoType, t]);
+
+    const createRoom = useCallback(() => doCreateRoom('replay'), [doCreateRoom]);
+
+    // Premiere-style live: same room mechanics, host position is the live edge.
+    const createLiveRoom = useCallback(() => doCreateRoom('live'), [doCreateRoom]);
 
     const joinRoom = useCallback(
         async (code: string): Promise<WatchRoom | null> => {
@@ -339,6 +450,26 @@ export function useWatchTogether({
         }
     }, [resetRoomState]);
 
+    // Ending a live stream is leaving as host (closes the room for everyone).
+    const endLive = useCallback(() => leaveRoom(), [leaveRoom]);
+
+    // Snap back to the live edge (freshly computed, not the last snapshot).
+    const jumpToLive = useCallback(() => {
+        const edge = lastEdgeRef.current;
+        const applyTarget = onApplyRemoteTargetRef.current;
+        if (!edge || !applyTarget) return;
+        const edgeNow = edge.isPlaying
+            ? edge.currentTime + (Date.now() - edge.positionAt) / 1000
+            : edge.currentTime;
+        isApplyingRemoteRef.current = true;
+        applyTarget({
+            isPlaying: edge.isPlaying,
+            currentTime: Math.max(0, edgeNow),
+            positionAt: Date.now(),
+            playbackRate: edge.playbackRate,
+        });
+    }, []);
+
     const dismissError = useCallback(() => setError(null), []);
 
     const sendMessage = useCallback(async (text: string) => {
@@ -374,9 +505,16 @@ export function useWatchTogether({
         error,
         notice,
         lastHostAliveAt,
+        viewerCount,
+        behindBySec,
+        isBehind: behindBySec >= BEHIND_THRESHOLD_SEC,
+        liveEdge,
+        jumpToLive,
         createRoom,
+        createLiveRoom,
         joinRoom,
         leaveRoom,
+        endLive,
         sendMessage,
         dismissError,
     };

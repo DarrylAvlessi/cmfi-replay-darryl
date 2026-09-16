@@ -50,8 +50,10 @@ export const watchTogetherService = {
         hostPhotoUrl?: string;
         videoId: string;
         videoType: 'movie' | 'episode';
+        mode?: 'replay' | 'live';
     }): Promise<WatchRoom> {
         const roomId = makeRoomId();
+        const mode = params.mode === 'live' ? 'live' : 'replay';
         const room: WatchRoom = {
             id: roomId,
             roomCode: params.roomCode,
@@ -59,6 +61,8 @@ export const watchTogetherService = {
             status: 'active',
             videoId: params.videoId,
             videoType: params.videoType,
+            mode,
+            ...(mode === 'live' ? { startedAt: now() } : {}),
             createdAt: now(),
             updatedAt: now(),
             hostAliveAt: now(),
@@ -122,6 +126,7 @@ export const watchTogetherService = {
         const room = rooms.get(roomId);
         if (room) {
             room.status = 'ended';
+            room.endedAt = now();
             room.updatedAt = now();
             room.state = { isPlaying: false, currentTime: 0, positionAt: Date.now(), playbackRate: 1 };
         }
@@ -187,7 +192,16 @@ export const watchTogetherService = {
         maxMessages = 100
     ): () => void {
         return subscribeWithPolling(
-            () => (messages.get(roomId) || []).slice(-maxMessages),
+            // Same deterministic chronological order as the Firestore service:
+            // ascending by timestamp, ties broken by id, last-N window.
+            () => [...(messages.get(roomId) || [])]
+                .sort((a, b) => {
+                    const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+                    const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+                    if (aTime !== bTime) return aTime - bTime;
+                    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+                })
+                .slice(-maxMessages),
             callback
         );
     },
