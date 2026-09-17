@@ -200,6 +200,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 label: t('manageVideos'),
                 action: () => navigateRouter('/admin')
             },
+            {
+                icon: SettingsIcon,
+                label: 'Youtube',
+                action: () => navigateRouter('/manage-youtube')
+            },
         ];
     }, [isAdminValue, navigateRouter, t]);
 

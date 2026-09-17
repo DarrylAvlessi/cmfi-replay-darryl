@@ -21,6 +21,8 @@ import { VideoPlayer } from '../components/VideoPlayer';
 import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { useDraggable } from '../hooks/useDraggable';
 import WatchTogetherPanel from '../components/WatchTogetherPanel';
+import YouTubePlayer from '../components/YouTubePlayer';
+import { isYouTubeEpisode, youTubeIdFromEpisode, isYouTubeSeason, seasonLabel } from '../lib/youtubeApi';
 
 import { useTutorial } from '../context/TutorialContext';
 
@@ -469,11 +471,17 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                             </button>
                             <span className="shrink-0 text-gray-500 dark:text-gray-400">•</span>
                             <span className="shrink-0 text-gray-700 dark:text-gray-300 font-medium">
-                                {t('season')} {currentSeason.season_number}
-                                {currentSeason.title_season && (
-                                    <span className="ml-2 text-gray-600 dark:text-gray-400">
-                                        - {currentSeason.title_season}
-                                    </span>
+                                {isYouTubeSeason(currentSeason) ? (
+                                    seasonLabel(currentSeason, t('season'))
+                                ) : (
+                                    <>
+                                        {t('season')} {currentSeason.season_number}
+                                        {currentSeason.title_season && (
+                                            <span className="ml-2 text-gray-600 dark:text-gray-400">
+                                                - {currentSeason.title_season}
+                                            </span>
+                                        )}
+                                    </>
                                 )}
                             </span>
                         </div>
@@ -542,7 +550,14 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                               onSkip={handleAdSkip}
                                           />
                                       )}
-                                      {!showAd && (
+                                      {!showAd && isYouTubeEpisode(episode) && youTubeIdFromEpisode(episode) && (
+                                          <YouTubePlayer
+                                              key={episode.uid_episode || episode.title}
+                                              videoId={youTubeIdFromEpisode(episode) as string}
+                                              title={episode.title}
+                                          />
+                                      )}
+                                      {!showAd && !isYouTubeEpisode(episode) && (
                                           <VideoPlayer
                                               key={episode.uid_episode || episode.title}
                                               src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
@@ -630,15 +645,17 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 </button>
                             </div>
 
-                            <WatchTogetherPanel
-                                videoId={episode.uid_episode}
-                                videoType="episode"
-                                onGetPlaybackState={handleGetPlaybackState}
-                                onApplyRemoteTarget={handleApplyRemoteTarget}
-                                onWatchStateChange={setWatchState}
-                                videoTitle={displayEpisode.title}
-                                initialCode={inviteRoomCode}
-                            />
+                            {!isYouTubeEpisode(episode) && (
+                                <WatchTogetherPanel
+                                    videoId={episode.uid_episode}
+                                    videoType="episode"
+                                    onGetPlaybackState={handleGetPlaybackState}
+                                    onApplyRemoteTarget={handleApplyRemoteTarget}
+                                    onWatchStateChange={setWatchState}
+                                    videoTitle={displayEpisode.title}
+                                    initialCode={inviteRoomCode}
+                                />
+                            )}
                         </div>
                         )}
                     </div>

@@ -64,6 +64,9 @@ export interface SeasonSerie {
     year_season: number;
     isSecret?: boolean;
     allowedUserIds?: string[];
+    // YouTube-backed season (Season = YouTube channel). Additive, ignored by legacy code.
+    youtubeChannelId?: string;
+    youtubeUploadsPlaylistId?: string;
 }
 
 export interface EpisodeSerie {
@@ -90,6 +93,10 @@ export interface EpisodeSerie {
     views?: number;
     likesCount?: number;
     other_seasons?: { [seasonUid: string]: number };
+    // YouTube-backed episode (curated YouTube video). Additive, ignored by legacy code.
+    youtubeVideoId?: string;
+    youtubeChannelId?: string;
+    youtubePublishedAt?: string;
 }
 
 export interface Movie {

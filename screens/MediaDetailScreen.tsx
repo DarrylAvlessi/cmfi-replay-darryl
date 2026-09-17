@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import SuggestTitleModal from '../components/SuggestTitleModal';
+import { isYouTubeSeason, seasonLabel } from '../lib/youtubeApi';
 
 
 
@@ -638,11 +639,16 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
             const shareUrl = `${window.location.origin}${mediaPath}`;
 
-            const seasonNumber = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid)?.season_number;
+            const sharedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
+            const seasonNumber = sharedSeason?.season_number;
 
             const shareData = {
-                title: shareType === 'season' && type === MediaType.Series && seasonNumber !== undefined
-                    ? t('shareSeasonTitle', { number: String(seasonNumber), title: item.title })
+                title: shareType === 'season' && type === MediaType.Series && sharedSeason
+                    ? (isYouTubeSeason(sharedSeason) && sharedSeason.title_season
+                        ? sharedSeason.title_season
+                        : seasonNumber !== undefined
+                            ? t('shareSeasonTitle', { number: String(seasonNumber), title: item.title })
+                            : item.title)
                     : item.title,
                 text: shareText,
                 url: shareUrl,
@@ -1015,7 +1021,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                 aria-haspopup="listbox"
                                                 aria-expanded={isSeasonDropdownOpen}
                                             >
-                                                <span>{t('season')} {selectedSeason?.season_number}</span>
+                                                <span>{selectedSeason ? seasonLabel(selectedSeason, t('season')) : ''}</span>
                                                 <span className="text-gray-500">|</span>
                                                 {isLoadingEpisodes
                                                     ? <span className="inline-block w-16 h-4 align-middle rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />
@@ -1042,8 +1048,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                                                 }`}
                                                             >
-                                                                {t('season')} {season.season_number}
-                                                                {season.title_season ? ` - ${season.title_season}` : ''}
+                                                                {isYouTubeSeason(season)
+                                                                    ? (season.title_season || seasonLabel(season, t('season')))
+                                                                    : (<>{t('season')} {season.season_number}{season.title_season ? ` - ${season.title_season}` : ''}</>)}
                                                                 {loadedSeasonCount !== undefined
                                                                     ? <span className="ml-2 text-gray-500 font-normal">({loadedSeasonCount})</span>
                                                                     : <span className="ml-2 inline-block w-8 h-3 rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />}

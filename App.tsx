@@ -38,6 +38,7 @@ const WhatsNewScreen = React.lazy(() => import('./screens/WhatsNewScreen'));
 const DonateScreen = React.lazy(() => import('./screens/DonateScreen'));
 const ManageReportsScreen = React.lazy(() => import('./screens/ManageReportsScreen'));
 const ManageTitleSuggestionsScreen = React.lazy(() => import('./screens/ManageTitleSuggestionsScreen'));
+const ManageYouTubeScreen = React.lazy(() => import('./screens/ManageYouTubeScreen'));
 
 // Category Screens
 const MoviesScreen = React.lazy(() => import('./screens/MoviesScreen'));
@@ -580,6 +581,9 @@ const AppContent: React.FC = () => {
                             } />
                             <Route path="/manage-title-suggestions" element={
                                 <ManageTitleSuggestionsScreen />
+                            } />
+                            <Route path="/manage-youtube" element={
+                                <ManageYouTubeScreen />
                             } />
                             <Route path="/admin" element={
                                 <AdminBackupVideosScreen />
