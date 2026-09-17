@@ -11,8 +11,7 @@
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'c-m-f-i-replay-f-63xui3';
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyBK7nmvzQ1Zmb2iiW2NAvJ-U8b8XloYKto';
 const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
-const SITE_URL = 'https://cmfi-replay.com';
-const DEFAULT_IMAGE = `${SITE_URL}/cmfireplay.svg`;
+const FALLBACK_SITE_URL = 'https://cmfi-replay.com';
 
 // Minimal structural types (no @vercel/node dependency needed).
 interface OgRequest {
@@ -93,11 +92,16 @@ export default async function handler(req: OgRequest, res: OgResponse) {
     const uid = first(req.query.uid).split('?')[0];
     const seasonUid = first(req.query.season);
 
+    // Live domain comes from the request (reverse proxies set x-forwarded-host).
+    // Falls back to production; never hardcode a possibly stale domain.
+    const host = first(req.headers['x-forwarded-host'] || req.headers['host']).split(',')[0].trim();
+    const siteUrl = host ? `https://${host}` : FALLBACK_SITE_URL;
+
     let title = 'CMFI Replay';
     let description = 'Plateforme de replay chrétienne — Documentaires, productions et podcasts.';
-    let image = DEFAULT_IMAGE;
+    let image = `${siteUrl}/cmfireplay.svg`;
     let ogType = 'website';
-    const pageUrl = `${SITE_URL}/${type}/${encodeURIComponent(uid)}`;
+    const pageUrl = `${siteUrl}/${type}/${encodeURIComponent(uid)}`;
 
     if (uid) {
         if (type === 'documentary' || type === 'movie') {

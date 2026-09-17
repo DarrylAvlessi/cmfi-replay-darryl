@@ -6,7 +6,9 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=documentary&uid=:uid"
@@ -17,7 +19,9 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=movie&uid=:uid"
@@ -28,7 +32,9 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=production&uid=:uid"
@@ -39,7 +45,9 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=serie&uid=:uid"
@@ -50,7 +58,9 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=podcast&uid=:uid"
@@ -61,11 +71,16 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+          "value": {
+            "re": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely).*"
+          }
         }
       ],
       "destination": "/api/og?type=watch&uid=:uid"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
