@@ -14,14 +14,15 @@
   <link rel="icon" type="image/svg+xml" href="/cmfireplay.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Open Graph Meta Tags (défaut — remplacées dynamiquement par Edge Function) -->
+  <!-- Open Graph Meta Tags (fallback — crawlers on media pages get per-media tags from /api/og via vercel.json) -->
+  <!-- NOTE: og:image must be an absolute URL, crawlers ignore relative paths -->
   <meta property="og:title" content="CMFI Replay" />
   <meta property="og:description"
     content="Plateforme de replay chrétienne — Documentaires, productions et podcasts." />
-  <meta property="og:image" content="/cmfireplay.svg" />
+  <meta property="og:image" content="https://cmfi-replay.com/cmfireplay.svg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="https://cmfireplay.com" />
+  <meta property="og:url" content="https://cmfi-replay.com" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="CMFI Replay" />
 
@@ -30,7 +31,7 @@
   <meta name="twitter:title" content="CMFI Replay" />
   <meta name="twitter:description"
     content="Plateforme de replay chrétienne — Documentaires, productions et podcasts." />
-  <meta name="twitter:image" content="/cmfireplay.svg" />
+  <meta name="twitter:image" content="https://cmfi-replay.com/cmfireplay.svg" />
 
   <!-- Description pour SEO -->
   <meta name="description" content="Plateforme de replay chrétienne — Documentaires, productions et podcasts." />

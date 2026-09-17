@@ -1,5 +1,71 @@
 {
   "rewrites": [
+    {
+      "source": "/documentary/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=documentary&uid=:uid"
+    },
+    {
+      "source": "/movie/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=movie&uid=:uid"
+    },
+    {
+      "source": "/production/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=production&uid=:uid"
+    },
+    {
+      "source": "/serie/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=serie&uid=:uid"
+    },
+    {
+      "source": "/podcast/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=podcast&uid=:uid"
+    },
+    {
+      "source": "/watch/:uid",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i)(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|pinterest|vkshare|embedly|quora|outbrain|showyoubot|rogerbot|iframely)"
+        }
+      ],
+      "destination": "/api/og?type=watch&uid=:uid"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
