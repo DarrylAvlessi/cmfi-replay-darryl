@@ -49,7 +49,8 @@ const ManageYouTubeScreen: React.FC = () => {
     const [fetched, setFetched] = useState<YouTubeFetchedVideo[]>([]);
     const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined);
     const [fetching, setFetching] = useState(false);
-    const [checked, setChecked] = useState<Set<string>>(new Set());
+    // Ordered selection: click order defines episode numbers (first selected = 1).
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [publishing, setPublishing] = useState(false);
 
     const [published, setPublished] = useState<EpisodeSerie[]>([]);
@@ -106,7 +107,7 @@ const ManageYouTubeScreen: React.FC = () => {
         if (selectedSeasonUid) {
             setFetched([]);
             setNextPageToken(undefined);
-            setChecked(new Set());
+            setSelectedIds([]);
             setSearchQuery('');
             loadPublished(selectedSeasonUid);
         } else {
@@ -127,18 +128,17 @@ const ManageYouTubeScreen: React.FC = () => {
     }, [fetched, searchQuery]);
 
     const handleCheckFiltered = () => {
-        setChecked((prev) => {
-            const next = new Set(prev);
-            filteredFetched.forEach((v) => next.add(v.videoId));
-            return next;
+        setSelectedIds((prev) => {
+            const seen = new Set(prev);
+            const additions = filteredFetched.map((v) => v.videoId).filter((id) => !seen.has(id));
+            return additions.length === 0 ? prev : [...prev, ...additions];
         });
     };
 
     const handleUncheckFiltered = () => {
-        setChecked((prev) => {
-            const next = new Set(prev);
-            filteredFetched.forEach((v) => next.delete(v.videoId));
-            return next;
+        setSelectedIds((prev) => {
+            const remove = new Set(filteredFetched.map((v) => v.videoId));
+            return prev.filter((id) => !remove.has(id));
         });
     };
 
@@ -292,26 +292,30 @@ const ManageYouTubeScreen: React.FC = () => {
     };
 
     const toggleCheck = (videoId: string) => {
-        setChecked((prev) => {
-            const next = new Set(prev);
-            if (next.has(videoId)) next.delete(videoId);
-            else next.add(videoId);
-            return next;
-        });
+        setSelectedIds((prev) =>
+            prev.includes(videoId) ? prev.filter((id) => id !== videoId) : [...prev, videoId]
+        );
     };
 
+    /** 1-based rank of a selected video in click order (0 = not selected). */
+    const selectionRank = (videoId: string) => selectedIds.indexOf(videoId) + 1;
+
     const handlePublish = async () => {
-        if (!selectedSeason || checked.size === 0) return;
+        if (!selectedSeason || selectedIds.length === 0) return;
         setPublishing(true);
         try {
-            const toPublish = fetched.filter((v) => checked.has(v.videoId));
+            // Selection order defines episode numbers: first selected = lowest new number.
+            const byId = new Map(fetched.map((v) => [v.videoId, v]));
+            const toPublish = selectedIds
+                .map((id) => byId.get(id))
+                .filter((v): v is YouTubeFetchedVideo => !!v);
             const created = await publishCuratedEpisodes(selectedSeason, toPublish);
             const skipped = toPublish.length - created;
             toast.success(
                 t('ytPublished', { created: String(created) }) +
                 (skipped > 0 ? t('ytPublishedSkipped', { skipped: String(skipped) }) : '')
             );
-            setChecked(new Set());
+            setSelectedIds([]);
             await loadPublished(selectedSeason.uid_season);
             await loadSeasons();
         } catch (error: any) {
@@ -534,14 +538,14 @@ const ManageYouTubeScreen: React.FC = () => {
                             </div>
                         </div>
 
-                        {checked.size > 0 && (
+                        {selectedIds.length > 0 && (
                             <button
                                 onClick={handlePublish}
                                 disabled={publishing}
                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-sm disabled:opacity-50"
                             >
                                 <CheckIcon className="w-4 h-4" />
-                                {publishing ? t('ytPublishing') : t('ytPublishSelection', { count: String(checked.size) })}
+                                {publishing ? t('ytPublishing') : t('ytPublishSelection', { count: String(selectedIds.length) })}
                             </button>
                         )}
 
@@ -593,7 +597,8 @@ const ManageYouTubeScreen: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {filteredFetched.map((v) => {
                                     const already = publishedUids.has(episodeUidForVideo(v.videoId));
-                                    const isChecked = checked.has(v.videoId);
+                                    const rank = selectionRank(v.videoId);
+                                    const isChecked = rank > 0;
                                     return (
                                         <label
                                             key={v.videoId}
@@ -622,8 +627,8 @@ const ManageYouTubeScreen: React.FC = () => {
                                                 )}
                                             </span>
                                             {isChecked && (
-                                                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
-                                                    <CheckIcon className="w-4 h-4 text-gray-900" />
+                                                <span className="absolute top-2 right-2 min-w-6 h-6 px-1.5 rounded-full bg-amber-500 flex items-center justify-center text-gray-900 text-xs font-black tabular-nums">
+                                                    {rank}
                                                 </span>
                                             )}
                                         </label>

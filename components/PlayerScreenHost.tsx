@@ -50,7 +50,7 @@ const PlayerScreenHost: React.FC = () => {
       navigate(`/watch/${playerData.episode.uid_episode}`);
     } else {
       navigate(`/watch/${playerData.item.id}`);
-    }
+    }²
     restore();
   };
 
