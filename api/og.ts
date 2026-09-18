@@ -38,6 +38,56 @@ function escapeHtml(s: string): string {
         .replace(/'/g, '&#039;');
 }
 
+const FALLBACK_IMAGE_PATH = '/og-fallback.jpg';
+const FALLBACK_IMAGE_TYPE = 'image/jpeg';
+const FALLBACK_IMAGE_WIDTH = '1200';
+const FALLBACK_IMAGE_HEIGHT = '630';
+const DEFAULT_DESCRIPTION = 'Plateforme de replay chrétienne — Documentaires, productions et podcasts.';
+
+// Accepts only crawler-fetchable absolute https URLs. Rejects relative paths,
+// gs:// bucket paths, SVG files (unsupported by WhatsApp/FB/X/TG) and empties.
+// Returns '' when unusable so callers fall back to the JPG fallback.
+function toAbsoluteImage(raw: string, siteUrl: string): string {
+    const v = (raw || '').trim();
+    if (!v) return '';
+    if (/^gs:\/\//i.test(v)) return '';
+    if (/\.svg(\?.*)?$/i.test(v)) return '';
+    if (/^https?:\/\//i.test(v)) {
+        // Force https — crawlers prefer secure URLs.
+        return v.replace(/^http:\/\//i, 'https://');
+    }
+    if (v.startsWith('/')) return `${siteUrl}${v}`;
+    return '';
+}
+
+function mimeFromUrl(url: string, fallback = FALLBACK_IMAGE_TYPE): string {
+    const clean = url.split('?')[0].split('#')[0].toLowerCase();
+    try {
+        const decoded = decodeURIComponent(clean);
+        if (decoded.endsWith('.png')) return 'image/png';
+        if (decoded.endsWith('.webp')) return 'image/webp';
+        if (decoded.endsWith('.gif')) return 'image/gif';
+        if (decoded.endsWith('.jpg') || decoded.endsWith('.jpeg')) return 'image/jpeg';
+    } catch {
+        if (clean.endsWith('.png')) return 'image/png';
+        if (clean.endsWith('.webp')) return 'image/webp';
+    }
+    // Firebase Storage / YouTube thumbs without extension are JPEGs in practice.
+    if (/i\.ytimg\.com/i.test(url)) return 'image/jpeg';
+    return fallback;
+}
+
+// Empty Firestore overviews (incl. legacy "Aucune description" placeholder)
+// must never leak into link previews.
+function cleanDescription(raw: string, title: string): string {
+    const v = (raw || '').trim();
+    if (!v || /^aucune description$/i.test(v)) {
+        const t = (title || '').trim() && title !== 'CMFI Replay' ? title : '';
+        return t ? `Découvrez « ${t} » sur CMFI Replay` : DEFAULT_DESCRIPTION;
+    }
+    return v;
+}
+
 type FirestoreFields = Record<string, any>;
 
 function getField(fields: FirestoreFields | null, name: string, fallback = ''): string {
@@ -98,8 +148,11 @@ export default async function handler(req: OgRequest, res: OgResponse) {
     const siteUrl = host ? `https://${host}` : FALLBACK_SITE_URL;
 
     let title = 'CMFI Replay';
-    let description = 'Plateforme de replay chrétienne — Documentaires, productions et podcasts.';
-    let image = `${siteUrl}/cmfireplay.svg`;
+    let description = DEFAULT_DESCRIPTION;
+    // Crawlers reject SVG (WhatsApp/FB/X/TG require JPG/PNG/WebP), so the
+    // fallback — and every emitted og:image — must be the JPG below.
+    let image = `${siteUrl}${FALLBACK_IMAGE_PATH}`;
+    let imageIsFallback = true;
     let ogType = 'website';
     const pageUrl = `${siteUrl}/${type}/${encodeURIComponent(uid)}`;
 
@@ -109,7 +162,8 @@ export default async function handler(req: OgRequest, res: OgResponse) {
             if (data) {
                 title = getField(data, 'title', title);
                 description = getField(data, 'overview', description);
-                image = getField(data, 'picture_path', '') || getField(data, 'backdrop_path', '') || image;
+                const candidate = toAbsoluteImage(getField(data, 'picture_path', '') || getField(data, 'backdrop_path', ''), siteUrl);
+                if (candidate) { image = candidate; imageIsFallback = false; }
                 ogType = 'video.movie';
             }
         } else if (type === 'production' || type === 'serie' || type === 'podcast') {
@@ -117,7 +171,8 @@ export default async function handler(req: OgRequest, res: OgResponse) {
             if (data) {
                 title = getField(data, 'title_serie', title);
                 description = getField(data, 'overview_serie', description);
-                image = getField(data, 'image_path', '') || getField(data, 'back_path', '') || image;
+                const candidate = toAbsoluteImage(getField(data, 'image_path', '') || getField(data, 'back_path', ''), siteUrl);
+                if (candidate) { image = candidate; imageIsFallback = false; }
                 ogType = 'video.tv_show';
             }
             // Season-aware title: /production/youtube?season=yt_xxx shows the channel name.
@@ -133,7 +188,8 @@ export default async function handler(req: OgRequest, res: OgResponse) {
             if (movie) {
                 title = getField(movie, 'title', title);
                 description = getField(movie, 'overview', description);
-                image = getField(movie, 'picture_path', '') || getField(movie, 'backdrop_path', '') || image;
+                const candidate = toAbsoluteImage(getField(movie, 'picture_path', '') || getField(movie, 'backdrop_path', ''), siteUrl);
+                if (candidate) { image = candidate; imageIsFallback = false; }
                 ogType = 'video.movie';
             } else {
                 const ep = await queryFirestore('episodesSeries', 'uid_episode', uid);
@@ -144,20 +200,32 @@ export default async function handler(req: OgRequest, res: OgResponse) {
                         title = serieTitle ? `${episodeTitle} — ${serieTitle}` : episodeTitle;
                     }
                     description = getField(ep, 'overview', '') || getField(ep, 'overviewFr', '') || description;
-                    image = getField(ep, 'picture_path', '') || getField(ep, 'backdrop_path', '') || image;
+                    const candidate = toAbsoluteImage(getField(ep, 'picture_path', '') || getField(ep, 'backdrop_path', ''), siteUrl);
+                    if (candidate) { image = candidate; imageIsFallback = false; }
                     ogType = 'video.episode';
                 }
             }
         }
     }
 
+    description = cleanDescription(description, title);
     const fullTitle = title !== 'CMFI Replay' ? `${title} — CMFI Replay` : title;
     const truncated = description.length > 200 ? `${description.slice(0, 197)}...` : description;
+    const imageType = mimeFromUrl(image);
 
     const t = escapeHtml(fullTitle);
     const d = escapeHtml(truncated);
     const img = escapeHtml(image);
+    const imgType = escapeHtml(imageType);
     const url = escapeHtml(pageUrl);
+
+    // NOTE: no hardcoded og:image:width/height for per-video images — posters
+    // are portrait while backdrops are landscape; declaring 1200x630 for a
+    // portrait PNG gets the image rejected by FB/WhatsApp. Only the fallback
+    // (a real 1200x630 JPG) declares dimensions so scrapers can trust them.
+    const dimensionTags = imageIsFallback
+        ? `\n    <meta property="og:image:width" content="${FALLBACK_IMAGE_WIDTH}">\n    <meta property="og:image:height" content="${FALLBACK_IMAGE_HEIGHT}">`
+        : '';
 
     const html = `<!DOCTYPE html>
 <html lang="fr" prefix="og: https://ogp.me/ns#">
@@ -168,8 +236,9 @@ export default async function handler(req: OgRequest, res: OgResponse) {
     <meta property="og:title" content="${t}">
     <meta property="og:description" content="${d}">
     <meta property="og:image" content="${img}">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <meta property="og:image:secure_url" content="${img}">
+    <meta property="og:image:type" content="${imgType}">
+    <meta property="og:image:alt" content="${t}">${dimensionTags}
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="${ogType}">
     <meta property="og:site_name" content="CMFI Replay">
@@ -177,6 +246,7 @@ export default async function handler(req: OgRequest, res: OgResponse) {
     <meta name="twitter:title" content="${t}">
     <meta name="twitter:description" content="${d}">
     <meta name="twitter:image" content="${img}">
+    <meta name="twitter:image:alt" content="${t}">
     <meta name="description" content="${d}">
     <link rel="canonical" href="${url}">
 </head>
