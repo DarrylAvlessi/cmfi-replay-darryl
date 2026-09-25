@@ -64,6 +64,19 @@ const ManageYouTubeScreen: React.FC = () => {
     const [playlistPreview, setPlaylistPreview] = useState<YouTubePlaylistInfo | null>(null);
     const [addingPlaylist, setAddingPlaylist] = useState(false);
 
+    // Step 1 — unified add tabs: channel | playlist | custom.
+    const [addTab, setAddTab] = useState<'channel' | 'playlist' | 'custom'>('channel');
+
+    // Duplicate detection: warn before re-adding a season that already exists.
+    const channelDuplicate = useMemo(
+        () => (preview ? seasons.find((s) => s.youtubeChannelId && s.youtubeChannelId === preview.channelId) || null : null),
+        [preview, seasons]
+    );
+    const playlistDuplicate = useMemo(
+        () => (playlistPreview ? seasons.find((s) => resolveSeasonPlaylistId(s) === playlistPreview.playlistId) || null : null),
+        [playlistPreview, seasons]
+    );
+
     // Step 1c — App-created custom playlist (free title, fed by pasted links).
     const [customTitle, setCustomTitle] = useState('');
     const [customDesc, setCustomDesc] = useState('');
@@ -101,10 +114,8 @@ const ManageYouTubeScreen: React.FC = () => {
     const [fetchAllCount, setFetchAllCount] = useState(0);
     const [fetchMoreCount, setFetchMoreCount] = useState(0);
     const stopFetchAllRef = useRef(false);
-    // Search among fetched videos (curation filter).
-    const [searchQuery, setSearchQuery] = useState('');
-    // Search among published episodes of the selected season.
-    const [publishedSearch, setPublishedSearch] = useState('');
+    // Unified content search (fetched videos + published episodes).
+    const [contentQuery, setContentQuery] = useState('');
     const FETCH_MORE_PAGES = 10; // +500 button = 10 pages x 50 videos (~10 units)
 
     // Step 2 filter: display preference, independent from the selected season.
@@ -115,6 +126,26 @@ const ManageYouTubeScreen: React.FC = () => {
     const selectedSeason = seasons.find((s) => s.uid_season === selectedSeasonUid) || null;
     /** Custom seasons have no backing YouTube playlist: feed by links only, no fetch. */
     const canFetch = !!selectedSeason && resolveSeasonPlaylistId(selectedSeason) !== '';
+
+    // Step 3 anchor: selecting a season scrolls the curation workspace into view.
+    const step3Ref = useRef<HTMLElement | null>(null);
+    const selectSeason = useCallback((uid: string) => {
+        setSelectedSeasonUid(uid);
+    }, []);
+
+    // Post-commit scroll: runs after the content section has mounted,
+    // so it works for every path (create, pick, re-select). No-op on deselect.
+    useEffect(() => {
+        if (!selectedSeasonUid) return;
+        step3Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [selectedSeasonUid]);
+
+    /** Quota estimate for a full fetch: ~1 unit per 50 videos. */
+    const fetchEstimate = useMemo(() => {
+        const total = selectedSeason?.nb_episodes || 0;
+        if (!selectedSeason || total <= 0) return null;
+        return { count: total, units: Math.max(1, Math.ceil(total / 50)) };
+    }, [selectedSeason]);
 
     useEffect(() => {
         if (userProfile && !userProfile.isAdmin) {
@@ -155,8 +186,7 @@ const ManageYouTubeScreen: React.FC = () => {
             setFetched([]);
             setNextPageToken(undefined);
             setSelectedIds([]);
-            setSearchQuery('');
-            setPublishedSearch('');
+            setContentQuery('');
             setLinksInput('');
             setLinkPreview(null);
             setCoverUrlInput('');
@@ -170,18 +200,18 @@ const ManageYouTubeScreen: React.FC = () => {
     const normalizeForSearch = (s: string) =>
         s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    /** Fetched videos filtered by the search box (title + description, accent-insensitive). */
-    const filteredFetched = useMemo(() => {
-        const q = normalizeForSearch(searchQuery.trim());
+    /** Fetched videos filtered by the unified search box (title + description, accent-insensitive). */
+    const filteredVideos = useMemo(() => {
+        const q = normalizeForSearch(contentQuery.trim());
         if (!q) return fetched;
         return fetched.filter((v) =>
             normalizeForSearch(`${v.title} ${v.description || ''}`).includes(q)
         );
-    }, [fetched, searchQuery]);
+    }, [fetched, contentQuery]);
 
-    /** Published episodes filtered by title, description or episode number (accent-insensitive). */
-    const filteredPublished = useMemo(() => {
-        const raw = publishedSearch.trim();
+    /** Published episodes filtered by the unified search (title, description or number). */
+    const filteredPublishedEpisodes = useMemo(() => {
+        const raw = contentQuery.trim();
         if (!raw) return published;
         const q = normalizeForSearch(raw);
         return published.filter((ep) => {
@@ -194,7 +224,7 @@ const ManageYouTubeScreen: React.FC = () => {
                 String(seasonNum || '').includes(raw)
             );
         });
-    }, [published, publishedSearch, selectedSeasonUid]);
+    }, [published, contentQuery, selectedSeasonUid]);
 
     /** Step 2 seasons filtered by source + search (title, accent-insensitive). Custom seasons count as playlists. */
     const seasonCounts = useMemo(() => {
@@ -219,14 +249,14 @@ const ManageYouTubeScreen: React.FC = () => {
     const handleCheckFiltered = () => {
         setSelectedIds((prev) => {
             const seen = new Set(prev);
-            const additions = filteredFetched.map((v) => v.videoId).filter((id) => !seen.has(id));
+            const additions = filteredVideos.map((v) => v.videoId).filter((id) => !seen.has(id));
             return additions.length === 0 ? prev : [...prev, ...additions];
         });
     };
 
     const handleUncheckFiltered = () => {
         setSelectedIds((prev) => {
-            const remove = new Set(filteredFetched.map((v) => v.videoId));
+            const remove = new Set(filteredVideos.map((v) => v.videoId));
             return prev.filter((id) => !remove.has(id));
         });
     };
@@ -262,7 +292,7 @@ const ManageYouTubeScreen: React.FC = () => {
             setChannelInput('');
             setPreview(null);
             await loadSeasons();
-            setSelectedSeasonUid(season.uid_season);
+            selectSeason(season.uid_season);
         } catch (error: any) {
             console.error('Error adding channel:', error);
             notifyYtError(error, 'ytAddChannelError');
@@ -317,7 +347,7 @@ const ManageYouTubeScreen: React.FC = () => {
             setPlaylistInput('');
             setPlaylistPreview(null);
             await loadSeasons();
-            setSelectedSeasonUid(season.uid_season);
+            selectSeason(season.uid_season);
         } catch (error: any) {
             console.error('Error adding playlist:', error);
             notifyYtError(error, 'ytAddChannelError');
@@ -338,7 +368,7 @@ const ManageYouTubeScreen: React.FC = () => {
             setCustomTitle('');
             setCustomDesc('');
             await loadSeasons();
-            setSelectedSeasonUid(season.uid_season);
+            selectSeason(season.uid_season);
         } catch (error: any) {
             console.error('Error creating custom playlist:', error);
             notifyYtError(error, 'ytAddChannelError');
@@ -528,6 +558,7 @@ const ManageYouTubeScreen: React.FC = () => {
             toast.error(t('ytApiKeyMissingError'));
             return;
         }
+        if (!window.confirm(t('ytFetchAllConfirm', { name: selectedSeason.title_season }))) return;
         const playlistId = resolveSeasonPlaylistId(selectedSeason);
         if (!playlistId) {
             toast.error(t('ytNoPlaylistId'));
@@ -757,11 +788,11 @@ const ManageYouTubeScreen: React.FC = () => {
                 )}
 
                 {apiKeyOk && (
-                    <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
-                        <span>
+                    <details className="px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
+                        <summary className="cursor-pointer font-semibold">
                             {t('ytQuotaSession', { units: String(quota.units) })}
-                        </span>
-                        <span className="text-gray-300 dark:text-gray-600">•</span>
+                        </summary>
+                        <div className="flex flex-wrap items-center gap-2 pt-2">
                         <span>
                             {t('ytQuotaSearches', { count: String(quota.searches) })}
                         </span>
@@ -776,13 +807,42 @@ const ManageYouTubeScreen: React.FC = () => {
                                 {t('ytReset')}
                             </button>
                         )}
-                    </div>
+                        </div>
+                    </details>
                 )}
 
-                {/* Step 1 — Add channel */}
+                {/* Step 1 — Season: add or pick */}
                 <section className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
-                    <h2 className="font-bold text-gray-900 dark:text-white">{t('ytStep1')}</h2>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <h2 className="font-bold text-gray-900 dark:text-white">{t('ytStepSeason')}</h2>
+                    <div className="flex flex-wrap gap-1.5" role="tablist" aria-label={t('ytStepSeason')}>
+                        {(['channel', 'playlist', 'custom'] as const).map((tab) => {
+                            const active = addTab === tab;
+                            return (
+                                <button
+                                    key={tab}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={active}
+                                    onClick={() => setAddTab(tab)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none ${
+                                        active
+                                            ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                                            : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                                    }`}
+                                >
+                                    {tab === 'channel' ? t('ytAddTabChannel') : tab === 'playlist' ? t('ytAddTabPlaylist') : t('ytAddTabCustom')}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {addTab === 'channel' && (
+                    <div className="space-y-4" role="tabpanel">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytAddChannelHint')}</p>
+                    <form
+                        className="flex flex-col sm:flex-row gap-2"
+                        onSubmit={(e) => { e.preventDefault(); void handleResolve(); }}
+                    >
                         <input
                             value={channelInput}
                             onChange={(e) => setChannelInput(e.target.value)}
@@ -790,13 +850,13 @@ const ManageYouTubeScreen: React.FC = () => {
                             className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
                         />
                         <button
-                            onClick={handleResolve}
+                            type="submit"
                             disabled={resolving || !apiKeyOk}
                             className="px-5 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-sm disabled:opacity-50"
                         >
                             {resolving ? t('ytSearching') : t('ytSearch')}
                         </button>
-                    </div>
+                    </form>
                     {preview && (
                         <div className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50">
                             {preview.thumbnailUrl && (
@@ -808,7 +868,18 @@ const ManageYouTubeScreen: React.FC = () => {
                                     {preview.channelId}
                                     {preview.subscriberCount !== undefined && ` • ${t('ytSubscribers', { count: preview.subscriberCount.toLocaleString() })}`}
                                 </p>
+                                {channelDuplicate && (
+                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">{t('ytAlreadyAdded')}</p>
+                                )}
                             </div>
+                            {channelDuplicate ? (
+                                <button
+                                    onClick={() => selectSeason(channelDuplicate.uid_season)}
+                                    className="px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold text-sm"
+                                >
+                                    {channelDuplicate.title_season}
+                                </button>
+                            ) : (
                             <button
                                 onClick={handleAddChannel}
                                 disabled={adding}
@@ -817,15 +888,19 @@ const ManageYouTubeScreen: React.FC = () => {
                                 <PlusIcon className="w-4 h-4" />
                                 {adding ? t('ytAdding') : t('ytAdd')}
                             </button>
+                            )}
                         </div>
                     )}
-                </section>
+                    </div>
+                    )}
 
-                {/* Step 1b — Add playlist as season */}
-                <section className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
-                    <h2 className="font-bold text-gray-900 dark:text-white">{t('ytPlaylistStep')}</h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytPlaylistResolveHint')}</p>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {addTab === 'playlist' && (
+                    <div className="space-y-4" role="tabpanel">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytAddPlaylistHint')}</p>
+                    <form
+                        className="flex flex-col sm:flex-row gap-2"
+                        onSubmit={(e) => { e.preventDefault(); void handleResolvePlaylist(); }}
+                    >
                         <input
                             value={playlistInput}
                             onChange={(e) => setPlaylistInput(e.target.value)}
@@ -833,13 +908,13 @@ const ManageYouTubeScreen: React.FC = () => {
                             className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
                         />
                         <button
-                            onClick={handleResolvePlaylist}
+                            type="submit"
                             disabled={resolvingPlaylist || !apiKeyOk}
                             className="px-5 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-sm disabled:opacity-50"
                         >
                             {resolvingPlaylist ? t('ytPlaylistSearching') : t('ytPlaylistSearch')}
                         </button>
-                    </div>
+                    </form>
                     {playlistPreview && (
                         <div className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50">
                             {playlistPreview.thumbnailUrl && (
@@ -852,7 +927,18 @@ const ManageYouTubeScreen: React.FC = () => {
                                     {playlistPreview.channelTitle && ` • ${playlistPreview.channelTitle}`}
                                     {` • ${t('ytEpisodesCount', { count: String(playlistPreview.itemCount) })}`}
                                 </p>
+                                {playlistDuplicate && (
+                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">{t('ytAlreadyAdded')}</p>
+                                )}
                             </div>
+                            {playlistDuplicate ? (
+                                <button
+                                    onClick={() => selectSeason(playlistDuplicate.uid_season)}
+                                    className="px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold text-sm"
+                                >
+                                    {playlistDuplicate.title_season}
+                                </button>
+                            ) : (
                             <button
                                 onClick={handleAddPlaylist}
                                 disabled={addingPlaylist}
@@ -861,15 +947,19 @@ const ManageYouTubeScreen: React.FC = () => {
                                 <PlusIcon className="w-4 h-4" />
                                 {addingPlaylist ? t('ytAdding') : t('ytAdd')}
                             </button>
+                            )}
                         </div>
                     )}
-                </section>
+                    </div>
+                    )}
 
-                {/* Step 1c — App-created custom playlist */}
-                <section className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
-                    <h2 className="font-bold text-gray-900 dark:text-white">{t('ytCustomStep')}</h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytCustomHint')}</p>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {addTab === 'custom' && (
+                    <div className="space-y-4" role="tabpanel">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytAddCustomHint')}</p>
+                    <form
+                        className="flex flex-col sm:flex-row gap-2"
+                        onSubmit={(e) => { e.preventDefault(); void handleCreateCustom(); }}
+                    >
                         <input
                             value={customTitle}
                             onChange={(e) => setCustomTitle(e.target.value)}
@@ -883,19 +973,18 @@ const ManageYouTubeScreen: React.FC = () => {
                             className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
                         />
                         <button
-                            onClick={handleCreateCustom}
+                            type="submit"
                             disabled={creatingCustom || !customTitle.trim()}
                             className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-sm disabled:opacity-50"
                         >
                             <PlusIcon className="w-4 h-4" />
                             {creatingCustom ? t('ytAdding') : t('ytCustomCreate')}
                         </button>
+                    </form>
                     </div>
-                </section>
-
-                {/* Step 2 — Seasons */}
-                <section className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3">
-                    <h2 className="font-bold text-gray-900 dark:text-white">{t('ytStep2')}</h2>
+                    )}
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700" />
+                    <h3 className="font-bold text-sm text-gray-900 dark:text-white">{t('ytSeasonPick')}</h3>
                     {loading ? (
                         <p className="text-sm text-gray-500">{t('loading')}</p>
                     ) : seasons.length === 0 ? (
@@ -903,7 +992,7 @@ const ManageYouTubeScreen: React.FC = () => {
                     ) : (
                         <>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t('ytStep2')}>
+                            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t('ytSeasonPick')}>
                                 {(['all', 'channel', 'playlist'] as const).map((f) => {
                                     const active = seasonFilter === f;
                                     const label = f === 'all'
@@ -950,24 +1039,25 @@ const ManageYouTubeScreen: React.FC = () => {
                         {visibleSeasons.length === 0 ? (
                             <p className="text-sm text-gray-500 italic">{t('ytNoSeasonMatch', { query: seasonSearch })}</p>
                         ) : (
-                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
+                        <div className="space-y-1">
                             {visibleSeasons.map((s) => {
                                 const isCustom = seasonSource(s) === 'custom';
                                 const isRenaming = renamingUid === s.uid_season;
+                                const isActive = s.uid_season === selectedSeasonUid;
                                 return (
                                 <div
                                     key={s.uid_season}
-                                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                                        s.uid_season === selectedSeasonUid
+                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-xl border transition-colors ${
+                                        isActive
                                             ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                                            : 'border-transparent hover:bg-gray-50 dark:hover:bg-white/[0.04]'
                                     }`}
                                 >
-                                    <button onClick={() => setSelectedSeasonUid(s.uid_season)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                                    <button onClick={() => selectSeason(s.uid_season)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                                         {s.poster_path ? (
-                                            <img src={s.poster_path} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                                            <img src={s.poster_path} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
                                         ) : (
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-black dark:border dark:border-gray-700 shrink-0 flex items-center justify-center text-xs font-black text-gray-500">
+                                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-black dark:border dark:border-gray-700 shrink-0 flex items-center justify-center text-xs font-black text-gray-500">
                                                 {s.title_season.trim().charAt(0).toUpperCase() || '?'}
                                             </div>
                                         )}
@@ -996,11 +1086,12 @@ const ManageYouTubeScreen: React.FC = () => {
                                                 </span>
                                             </span>
                                         ) : (
-                                        <span className="min-w-0">
+                                        <span className="min-w-0 flex-1">
                                             <span className="block font-semibold text-sm text-gray-900 dark:text-white truncate">
                                                 {s.title_season}
+                                                {isActive && <span className="ml-2 text-xs font-bold text-amber-600 dark:text-amber-400">●</span>}
                                             </span>
-                                            <span className="block text-xs text-gray-500 dark:text-gray-400">
+                                            <span className="block text-xs text-gray-500 dark:text-gray-400 truncate">
                                                 {(() => {
                                                     const src = seasonSource(s);
                                                     return src === 'custom'
@@ -1018,7 +1109,7 @@ const ManageYouTubeScreen: React.FC = () => {
                                     {isCustom && !isRenaming && (
                                         <button
                                             onClick={() => startRename(s)}
-                                            className="p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                            className="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 shrink-0"
                                             title={t('ytRename')}
                                         >
                                             <PencilIcon className="w-4 h-4" />
@@ -1026,7 +1117,7 @@ const ManageYouTubeScreen: React.FC = () => {
                                     )}
                                     <button
                                         onClick={() => handleRemoveSeason(s)}
-                                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
                                         title={t('ytDeleteChannel')}
                                     >
                                         <TrashIcon className="w-4 h-4" />
@@ -1040,45 +1131,21 @@ const ManageYouTubeScreen: React.FC = () => {
                     )}
                 </section>
 
-                {/* Step 3 — Fetch + curate */}
+                {/* Step 2 — Content */}
                 {selectedSeason && (
-                    <section className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
-                        {seasonSource(selectedSeason) === 'custom' && (
-                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 space-y-2">
-                                <h3 className="font-bold text-sm text-gray-900 dark:text-white">{t('ytCoverTitle')}</h3>
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                    <label className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 font-bold text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/[0.04] text-center">
-                                        {uploadingCover ? t('ytUploading') : t('ytCoverUpload')}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="sr-only"
-                                            disabled={uploadingCover}
-                                            onChange={(e) => { void handleCoverFile(e.target.files?.[0]); e.target.value = ''; }}
-                                        />
-                                    </label>
-                                    <input
-                                        value={coverUrlInput}
-                                        onChange={(e) => setCoverUrlInput(e.target.value)}
-                                        placeholder={t('ytCoverUrlPlaceholder')}
-                                        className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
-                                    />
-                                    <button
-                                        onClick={handleCoverUrl}
-                                        disabled={uploadingCover || !coverUrlInput.trim()}
-                                        className="px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-sm disabled:opacity-50"
-                                    >
-                                        {t('ytAdd')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                    <section ref={step3Ref} className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4 scroll-mt-4">
                         <div className="flex flex-wrap items-center gap-2 justify-between">
                             <h2 className="font-bold text-gray-900 dark:text-white">
-                                {t('ytStep3', { name: selectedSeason.title_season })}
+                                {t('ytStepContent', { name: selectedSeason.title_season })}
                             </h2>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200">
+                                {t('ytSelectedSeason', { name: selectedSeason.title_season })}
+                            </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 justify-between">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytCurateHint')}</p>
                             {canFetch && (
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={() => handleFetch(false)}
                                     disabled={fetching || fetchingAll || !apiKeyOk}
@@ -1098,26 +1165,38 @@ const ManageYouTubeScreen: React.FC = () => {
                                         {t('ytLoadMore')}
                                     </button>
                                 )}
-                                {fetchingAll ? (
-                                    <button
-                                        onClick={() => { stopFetchAllRef.current = true; }}
-                                        className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold text-sm"
-                                    >
-                                        {t('ytStop', { count: String(fetchAllCount) })}
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleFetchAll}
-                                        disabled={fetching || !apiKeyOk}
-                                        title={t('ytFetchAllHint')}
-                                        className="px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-700 font-bold text-sm text-amber-700 dark:text-amber-300 disabled:opacity-50"
-                                    >
-                                        {t('ytFetchAll')}
-                                    </button>
-                                )}
+                                <details className="relative">
+                                    <summary className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 font-bold text-sm text-gray-700 dark:text-gray-300 cursor-pointer list-none">
+                                        {t('ytAdvanced')}
+                                    </summary>
+                                    <div className="absolute right-0 mt-2 z-20 w-64 p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl space-y-2">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytFetchAllHint')}</p>
+                                        {fetchingAll ? (
+                                            <button
+                                                onClick={() => { stopFetchAllRef.current = true; }}
+                                                className="w-full px-4 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold text-sm"
+                                            >
+                                                {t('ytStop', { count: String(fetchAllCount) })}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={handleFetchAll}
+                                                disabled={fetching || !apiKeyOk}
+                                                className="w-full px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-700 font-bold text-sm text-amber-700 dark:text-amber-300 disabled:opacity-50"
+                                            >
+                                                {t('ytFetchAll')}
+                                            </button>
+                                        )}
+                                    </div>
+                                </details>
                             </div>
                             )}
                         </div>
+                        {canFetch && fetchEstimate && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {t('ytFetchEstimate', { units: String(fetchEstimate.units), count: String(fetchEstimate.count) })}
+                            </p>
+                        )}
 
                         {!canFetch && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">{t('ytCustomFeedNote')}</p>
@@ -1125,17 +1204,6 @@ const ManageYouTubeScreen: React.FC = () => {
 
                         {canFetch && (
                         <>
-                        {selectedIds.length > 0 && (
-                            <button
-                                onClick={handlePublish}
-                                disabled={publishing}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-sm disabled:opacity-50"
-                            >
-                                <CheckIcon className="w-4 h-4" />
-                                {publishing ? t('ytPublishing') : t('ytPublishSelection', { count: String(selectedIds.length) })}
-                            </button>
-                        )}
-
                         {fetched.length === 0 ? (
                             <p className="text-sm text-gray-500 italic">{t('ytFetchHint')}</p>
                         ) : (
@@ -1143,14 +1211,14 @@ const ManageYouTubeScreen: React.FC = () => {
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                 <div className="relative flex-1">
                                     <input
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        value={contentQuery}
+                                        onChange={(e) => setContentQuery(e.target.value)}
                                         placeholder={t('ytSearchPlaceholder')}
                                         className="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
                                     />
-                                    {searchQuery && (
+                                    {contentQuery && (
                                         <button
-                                            onClick={() => setSearchQuery('')}
+                                            onClick={() => setContentQuery('')}
                                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                                             aria-label={t('clearSearch')}
                                         >
@@ -1159,15 +1227,15 @@ const ManageYouTubeScreen: React.FC = () => {
                                     )}
                                 </div>
                                 <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                    {t('ytVideosCount', { filtered: String(filteredFetched.length), total: String(fetched.length) })}
+                                    {t('ytVideosCount', { filtered: String(filteredVideos.length), total: String(fetched.length) })}
                                 </span>
-                                {filteredFetched.length > 0 && (
+                                {filteredVideos.length > 0 && (
                                     <div className="flex gap-2">
                                         <button
                                             onClick={handleCheckFiltered}
                                             className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.04]"
                                         >
-                                            {t('ytCheckAll', { count: String(filteredFetched.length) })}
+                                            {t('ytCheckAll', { count: String(filteredVideos.length) })}
                                         </button>
                                         <button
                                             onClick={handleUncheckFiltered}
@@ -1178,11 +1246,11 @@ const ManageYouTubeScreen: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                            {filteredFetched.length === 0 ? (
-                                <p className="text-sm text-gray-500 italic">{t('ytNoSearchResult', { query: searchQuery })}</p>
+                            {filteredVideos.length === 0 ? (
+                                <p className="text-sm text-gray-500 italic">{t('ytNoSearchResult', { query: contentQuery })}</p>
                             ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredFetched.map((v) => {
+                                {filteredVideos.map((v) => {
                                     const badge = badgeFor(v.videoId);
                                     const rank = selectionRank(v.videoId);
                                     const isChecked = rank > 0;
@@ -1230,11 +1298,66 @@ const ManageYouTubeScreen: React.FC = () => {
                             )}
                             </>
                         )}
+                        {/* Sticky curation bar: publish + clear, always reachable while scrolling. */}
+                        {canFetch && selectedIds.length > 0 && (
+                            <div className="sticky bottom-4 z-20 flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-gray-900 dark:bg-white shadow-xl">
+                                <span className="px-3 py-1 rounded-full bg-amber-500 text-gray-900 text-xs font-black tabular-nums">
+                                    {selectedIds.length}
+                                </span>
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={publishing}
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-sm disabled:opacity-50"
+                                >
+                                    <CheckIcon className="w-4 h-4" />
+                                    {publishing ? t('ytPublishing') : t('ytPublishSelection', { count: String(selectedIds.length) })}
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds([])}
+                                    disabled={publishing}
+                                    className="px-4 py-2.5 rounded-xl font-bold text-sm text-white dark:text-gray-900 hover:underline disabled:opacity-50"
+                                >
+                                    {t('ytClearSelection')}
+                                </button>
+                            </div>
+                        )}
                         </>)}
 
-                        {/* Add by links (custom seasons only) */}
+                        {/* Custom season feed: cover + links in one place */}
                         {seasonSource(selectedSeason) === 'custom' && (
-                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 space-y-2">
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-sm text-gray-900 dark:text-white">{t('ytCoverTitle')}</h3>
+                                {selectedSeason.poster_path && (
+                                    <img src={selectedSeason.poster_path} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                                )}
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <label className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 font-bold text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/[0.04] text-center">
+                                        {uploadingCover ? t('ytUploading') : t('ytCoverUpload')}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="sr-only"
+                                            disabled={uploadingCover}
+                                            onChange={(e) => { void handleCoverFile(e.target.files?.[0]); e.target.value = ''; }}
+                                        />
+                                    </label>
+                                    <input
+                                        value={coverUrlInput}
+                                        onChange={(e) => setCoverUrlInput(e.target.value)}
+                                        placeholder={t('ytCoverUrlPlaceholder')}
+                                        className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
+                                    />
+                                    <button
+                                        onClick={handleCoverUrl}
+                                        disabled={uploadingCover || !coverUrlInput.trim()}
+                                        className="px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-sm disabled:opacity-50"
+                                    >
+                                        {t('ytAdd')}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
                             <h3 className="font-bold text-sm text-gray-900 dark:text-white">{t('ytLinksTitle')}</h3>
                             <textarea
                                 value={linksInput}
@@ -1287,6 +1410,7 @@ const ManageYouTubeScreen: React.FC = () => {
                                     ))}
                                 </div>
                             )}
+                            </div>
                         </div>
                         )}
 
@@ -1302,16 +1426,17 @@ const ManageYouTubeScreen: React.FC = () => {
                             ) : (
                                 <>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                                    {!canFetch && (
                                     <div className="relative flex-1">
                                         <input
-                                            value={publishedSearch}
-                                            onChange={(e) => setPublishedSearch(e.target.value)}
+                                            value={contentQuery}
+                                            onChange={(e) => setContentQuery(e.target.value)}
                                             placeholder={t('ytPublishedSearchPlaceholder')}
                                             className="w-full px-4 py-2 pr-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white text-sm"
                                         />
-                                        {publishedSearch && (
+                                        {contentQuery && (
                                             <button
-                                                onClick={() => setPublishedSearch('')}
+                                                onClick={() => setContentQuery('')}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                                                 aria-label={t('clearSearch')}
                                             >
@@ -1319,15 +1444,16 @@ const ManageYouTubeScreen: React.FC = () => {
                                             </button>
                                         )}
                                     </div>
+                                    )}
                                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                        {t('ytVideosCount', { filtered: String(filteredPublished.length), total: String(published.length) })}
+                                        {t('ytVideosCount', { filtered: String(filteredPublishedEpisodes.length), total: String(published.length) })}
                                     </span>
                                 </div>
-                                {filteredPublished.length === 0 ? (
-                                    <p className="text-sm text-gray-500 italic">{t('ytNoSearchResult', { query: publishedSearch })}</p>
+                                {filteredPublishedEpisodes.length === 0 ? (
+                                    <p className="text-sm text-gray-500 italic">{t('ytNoSearchResult', { query: contentQuery })}</p>
                                 ) : (
                                 <div className="space-y-1">
-                                    {filteredPublished.map((ep) => {
+                                    {filteredPublishedEpisodes.map((ep) => {
                                         const rank = published.findIndex((e) => e.uid_episode === ep.uid_episode) + 1;
                                         return (
                                         <div key={ep.uid_episode} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.04]">
