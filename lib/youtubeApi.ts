@@ -104,6 +104,47 @@ export function parseVideoId(input: string): string | null {
     return m ? m[1] : null;
 }
 
+/** Raw playlist IDs start with PL/UU/LL/RD/FL followed by 10+ base64-ish chars. */
+const PLAYLIST_ID_RE = /^(PL|UU|LL|RD|FL|OL|UU)[\w-]{10,}$/i;
+
+/**
+ * Extract a playlist ID from a raw ID or common playlist URL shapes.
+ * Supports: raw PL..., youtube.com/playlist?list=PL..., youtube.com/watch?v=...&list=PL...
+ * Returns null for channel/watch-without-list URLs (no quota consumed).
+ */
+export function parsePlaylistIdInput(input: string): string | null {
+    const v = input.trim();
+    if (!v) return null;
+    if (PLAYLIST_ID_RE.test(v)) return v;
+    const m =
+        v.match(/[?&]list=([A-Za-z0-9_-]+)/) ||
+        v.match(/youtube\.com\/playlist\/([A-Za-z0-9_-]+)/i);
+    if (m && PLAYLIST_ID_RE.test(m[1])) return m[1];
+    return null;
+}
+
+export interface YouTubePlaylistInfo {
+    playlistId: string;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    channelId: string;
+    channelTitle: string;
+    itemCount: number;
+}
+
+function playlistInfoFrom(item: any, fallbackId: string): YouTubePlaylistInfo {
+    return {
+        playlistId: item.id || fallbackId,
+        title: item.snippet?.title || fallbackId,
+        description: item.snippet?.description || '',
+        thumbnailUrl: thumbOf(item.snippet?.thumbnails),
+        channelId: item.snippet?.channelId || '',
+        channelTitle: item.snippet?.channelTitle || '',
+        itemCount: typeof item.contentDetails?.itemCount === 'number' ? item.contentDetails.itemCount : 0,
+    };
+}
+
 export function thumbnailFor(videoId: string): string {
     return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
 }
@@ -256,6 +297,41 @@ export async function fetchChannelById(channelId: string): Promise<YouTubeChanne
     return channelInfoFrom(item, channelId);
 }
 
+/** Map a playlist fetch failure to a specific i18n error (private vs not found). */
+export function mapPlaylistError(error: any, playlistId: string): Error {
+    const msg = String(error?.message || '');
+    const vars = error && typeof error === 'object' && 'i18nVars' in error
+        ? (error as any).i18nVars as Record<string, string>
+        : {};
+    const status = vars.status || (msg.match(/(\d{3})/)?.[1] || '');
+    const detail = `${vars.detail || msg}`.toLowerCase();
+    if (status === '404' || detail.includes('playlistnotfound') || detail.includes('not found')) {
+        return ytError('ytPlaylistNotFound', { id: playlistId }, `Playlist not found: ${playlistId}`);
+    }
+    if (status === '403' || detail.includes('forbidden') || detail.includes('private') || detail.includes('playlistitems.notaccessible')) {
+        return ytError('ytPlaylistPrivate', { id: playlistId }, `Playlist is private or inaccessible: ${playlistId}`);
+    }
+    if (error instanceof Error && (error as Partial<YtI18nError>).i18nKey) return error;
+    return ytError('ytFetchError', {}, `Error fetching playlist ${playlistId}.`);
+}
+
+/** Validate a playlist exists + is visible before creating a season. 1 quota unit. */
+export async function fetchPlaylistMeta(playlistId: string): Promise<YouTubePlaylistInfo> {
+    const id = playlistId.trim();
+    if (!PLAYLIST_ID_RE.test(id)) {
+        throw ytError('ytInvalidPlaylistUrl', { input: playlistId }, `Invalid playlist URL or ID: "${playlistId}". Paste a youtube.com/playlist?list=PL... link.`);
+    }
+    let data: any;
+    try {
+        data = await ytGet('/playlists', { part: 'snippet,contentDetails', id });
+    } catch (error) {
+        throw mapPlaylistError(error, id);
+    }
+    const item = data?.items?.[0];
+    if (!item) throw ytError('ytPlaylistNotFound', { id }, `Playlist not found: ${id}`);
+    return playlistInfoFrom(item, id);
+}
+
 /** Fetch latest videos from a channel's uploads playlist. 1 quota unit per 50-video page. */
 export async function fetchChannelVideos(
     uploadsPlaylistId: string,
@@ -263,12 +339,30 @@ export async function fetchChannelVideos(
     maxResults = 50,
     pageToken?: string
 ): Promise<{ videos: YouTubeFetchedVideo[]; nextPageToken?: string }> {
-    const data = await ytGet('/playlistItems', {
-        part: 'snippet,contentDetails',
-        playlistId: uploadsPlaylistId,
-        maxResults: String(Math.min(50, Math.max(1, maxResults))),
-        ...(pageToken ? { pageToken } : {}),
-    });
+    return fetchPlaylistVideos(uploadsPlaylistId, channelId, maxResults, pageToken);
+}
+
+/**
+ * Fetch videos from any playlist (uploads auto-playlist or custom playlist).
+ * Same cost: 1 quota unit per 50-video page.
+ */
+export async function fetchPlaylistVideos(
+    playlistId: string,
+    channelId: string,
+    maxResults = 50,
+    pageToken?: string
+): Promise<{ videos: YouTubeFetchedVideo[]; nextPageToken?: string }> {
+    let data: any;
+    try {
+        data = await ytGet('/playlistItems', {
+            part: 'snippet,contentDetails',
+            playlistId,
+            maxResults: String(Math.min(50, Math.max(1, maxResults))),
+            ...(pageToken ? { pageToken } : {}),
+        });
+    } catch (error) {
+        throw mapPlaylistError(error, playlistId);
+    }
     const videos: YouTubeFetchedVideo[] = (data?.items || [])
         .map((it: any) => {
             const videoId = it?.contentDetails?.videoId || it?.snippet?.resourceId?.videoId;
@@ -288,12 +382,97 @@ export async function fetchChannelVideos(
     return { videos, nextPageToken: data?.nextPageToken };
 }
 
-/** Season detection: seasons of the "Youtube" serie are YouTube channels. */
+export interface ResolveVideosResult {
+    videos: YouTubeFetchedVideo[];
+    /** IDs absent from the response: private, deleted or invalid. */
+    missing: string[];
+}
+
+function fetchedVideoFromDetails(item: any): YouTubeFetchedVideo | null {
+    const videoId = item?.id;
+    if (!videoId || typeof videoId !== 'string') return null;
+    const channelId = item.snippet?.channelId || '';
+    return {
+        videoId,
+        channelId,
+        title: item.snippet?.title || videoId,
+        description: item.snippet?.description || '',
+        thumbnailUrl: thumbOf(item.snippet?.thumbnails) || thumbnailFor(videoId),
+        publishedAt: item.snippet?.publishedAt || '',
+        embedUrl: embedUrlFor(videoId),
+    };
+}
+
+/**
+ * Resolve arbitrary video IDs (pasted links) to metadata.
+ * videos.list, 1 quota unit per 50 IDs. Order of `ids` is preserved.
+ */
+export async function fetchVideosByIds(ids: string[]): Promise<ResolveVideosResult> {
+    const clean = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+    if (clean.length === 0) return { videos: [], missing: [] };
+    const byId = new Map<string, YouTubeFetchedVideo>();
+    for (let i = 0; i < clean.length; i += 50) {
+        const batch = clean.slice(i, i + 50);
+        const data = await ytGet('/videos', {
+            part: 'snippet,contentDetails',
+            id: batch.join(','),
+        });
+        for (const item of data?.items || []) {
+            const v = fetchedVideoFromDetails(item);
+            if (v) byId.set(v.videoId, v);
+        }
+    }
+    const videos = clean.map((id) => byId.get(id)).filter((v): v is YouTubeFetchedVideo => !!v);
+    const missing = clean.filter((id) => !byId.has(id));
+    return { videos, missing };
+}
+
+/** Source kind of a YouTube season: channel, playlist, or app-created custom. */
+export type YouTubeSeasonSource = 'channel' | 'playlist' | 'custom';
+
+/**
+ * Classify a season. youtubeSourceType wins; uid prefix is the fallback for
+ * seasons created before the field existed. Non-YouTube seasons → 'channel'.
+ */
+export function seasonSource(
+    season: { uid_serie?: string; uid_season?: string; youtubeSourceType?: 'channel' | 'playlist' | 'custom' } | null | undefined
+): YouTubeSeasonSource {
+    if (!season) return 'channel';
+    if (season.youtubeSourceType === 'playlist') return 'playlist';
+    if (season.youtubeSourceType === 'custom') return 'custom';
+    if (season.youtubeSourceType === 'channel') return 'channel';
+    if (season.uid_season?.startsWith('ytpl_')) return 'playlist';
+    if (season.uid_season?.startsWith('ytc_')) return 'custom';
+    return 'channel';
+}
+
+/**
+ * Split YouTube seasons into channels (left) and playlists (right).
+ * Custom app-created seasons join the playlists group. Pure, no quota.
+ */
+export function splitSeasonsBySource<T extends { uid_serie?: string; uid_season?: string; youtubeSourceType?: 'channel' | 'playlist' | 'custom' }>(
+    seasons: T[]
+): { channels: T[]; playlists: T[] } {
+    const channels: T[] = [];
+    const playlists: T[] = [];
+    for (const s of seasons) {
+        if (seasonSource(s) === 'channel') channels.push(s);
+        else playlists.push(s);
+    }
+    return { channels, playlists };
+}
+
+/** Seasons of the "Youtube" serie are YouTube channels, playlists or custom lists. */
 export function isYouTubeSeason(
     season: { uid_serie?: string; uid_season?: string } | null | undefined
 ): boolean {
     if (!season) return false;
-    return season.uid_serie === 'youtube' || (season.uid_season?.startsWith('yt_') ?? false);
+    return (
+        season.uid_serie === 'youtube' ||
+        (season.uid_season?.startsWith('yt_') ?? false) ||
+        (season.uid_season?.startsWith('ytpl_') ?? false) ||
+        (season.uid_season?.startsWith('ytc_') ?? false)
+    );
 }
 
 /**

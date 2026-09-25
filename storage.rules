@@ -10,6 +10,18 @@ service firebase.storage {
     match /avatars/{userId}/{fileName} {
       allow read: if true;
     }
+
+    // YouTube custom season covers: public read, admin write.
+    // Admin flag lives on the users/{uid} Firestore doc (isAdmin).
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    match /youtube/seasons/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
     
     // Default deny for all other paths
     match /{allPaths=**} {

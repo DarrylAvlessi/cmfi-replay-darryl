@@ -64,9 +64,13 @@ export interface SeasonSerie {
     year_season: number;
     isSecret?: boolean;
     allowedUserIds?: string[];
-    // YouTube-backed season (Season = YouTube channel). Additive, ignored by legacy code.
+    // YouTube-backed season (Season = YouTube channel or playlist). Additive, ignored by legacy code.
     youtubeChannelId?: string;
     youtubeUploadsPlaylistId?: string;
+    /** 'channel' = uploads auto-playlist, 'playlist' = custom playlist, 'custom' = app-created list. Defaults to 'channel'. */
+    youtubeSourceType?: 'channel' | 'playlist' | 'custom';
+    /** Custom playlist ID when youtubeSourceType === 'playlist'. */
+    youtubePlaylistId?: string;
 }
 
 export interface EpisodeSerie {

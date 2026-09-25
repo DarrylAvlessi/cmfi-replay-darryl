@@ -19,7 +19,9 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import SuggestTitleModal from '../components/SuggestTitleModal';
-import { isYouTubeSeason, seasonLabel } from '../lib/youtubeApi';
+import YouTubeSourcePicker from '../components/YouTubeSourcePicker';
+import { isYouTubeSeason, seasonLabel, seasonSource, splitSeasonsBySource } from '../lib/youtubeApi';
+import { YOUTUBE_SERIE_UID } from '../lib/firestore/youtubeAdmin';
 
 
 
@@ -290,6 +292,68 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     const [bookmarkedEpisodeIds, setBookmarkedEpisodeIds] = useState<string[]>([]);
 
     const [activeTab, setActiveTab] = useState<'episodes' | 'about'>('episodes');
+
+    // YouTube production: channels (left) vs playlists (right) source filter.
+    // null = undecided (picker hidden until seasons load and a default is picked).
+    // Custom app-created seasons live under the playlists tab.
+    const [sourceFilter, setSourceFilter] = useState<'channel' | 'playlist' | null>(null);
+
+    const isYoutubeProd = item.id === YOUTUBE_SERIE_UID;
+
+    const { channels: channelSeasons, playlists: playlistSeasons } = useMemo(
+        () => (isYoutubeProd ? splitSeasonsBySource(firestoreSeasons) : { channels: firestoreSeasons, playlists: [] as typeof firestoreSeasons }),
+        [isYoutubeProd, firestoreSeasons]
+    );
+
+    /** Picker visible only for the Youtube serie with both sources present. */
+    const showSourcePicker = isYoutubeProd && channelSeasons.length > 0 && playlistSeasons.length > 0;
+
+    /** Seasons actually listed in the dropdown + episode column. */
+    const visibleSeasons = showSourcePicker && sourceFilter
+        ? (sourceFilter === 'playlist' ? playlistSeasons : channelSeasons)
+        : firestoreSeasons;
+
+    // Default the filter once seasons load: deep-link season wins, then
+    // remembered choice, then the source of the first season.
+    useEffect(() => {
+        if (!showSourcePicker || sourceFilter || firestoreSeasons.length === 0) return;
+        if (initialSeasonUid) {
+            const target = firestoreSeasons.find((s) => s.uid_season === initialSeasonUid);
+            if (target) {
+                setSourceFilter(seasonSource(target) === 'channel' ? 'channel' : 'playlist');
+                return;
+            }
+        }
+        try {
+            const remembered = window.localStorage.getItem('yt-source-filter');
+            if (remembered === 'channel' || remembered === 'playlist') {
+                setSourceFilter(remembered);
+                return;
+            }
+        } catch {
+            // Private mode: fall through to the default below.
+        }
+        setSourceFilter(seasonSource(firestoreSeasons[0]) === 'channel' ? 'channel' : 'playlist');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showSourcePicker, firestoreSeasons]);
+
+    // Keep the selected season inside the active source group.
+    useEffect(() => {
+        if (!showSourcePicker || !sourceFilter || visibleSeasons.length === 0) return;
+        if (!visibleSeasons.some((s) => s.uid_season === selectedSeasonUid)) {
+            setSelectedSeasonUid(visibleSeasons[0].uid_season);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showSourcePicker, sourceFilter, firestoreSeasons]);
+
+    const handleSourceSelect = useCallback((source: 'channel' | 'playlist') => {
+        setSourceFilter(source);
+        try {
+            window.localStorage.setItem('yt-source-filter', source);
+        } catch {
+            // Ignore persistence failures (private mode).
+        }
+    }, []);
 
     const descriptionThreshold = 150;
 
@@ -992,6 +1056,31 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                 )}
 
                 {activeTab === 'episodes' && (type === MediaType.Series || type === MediaType.Podcast) && (
+                    <>
+
+                    {showSourcePicker && sourceFilter && (
+                        <div className="mb-6">
+                            <YouTubeSourcePicker
+                                channels={{
+                                    seasons: channelSeasons,
+                                    previews: channelSeasons.slice(0, 3).map((s) => s.poster_path),
+                                    latestTitle: channelSeasons[channelSeasons.length - 1]?.title_season || '',
+                                }}
+                                playlists={{
+                                    seasons: playlistSeasons,
+                                    previews: playlistSeasons.slice(0, 3).map((s) => s.poster_path),
+                                    latestTitle: playlistSeasons[playlistSeasons.length - 1]?.title_season || '',
+                                }}
+                                selected={sourceFilter}
+                                onSelect={handleSourceSelect}
+                                channelsLabel={t('ytSourceChannels')}
+                                playlistsLabel={t('ytSourcePlaylists')}
+                                soonLabel={t('ytSourceSoon')}
+                                latestLabel={(name) => t('ytSourceLatest', { name })}
+                                hint={t('ytSourcePickHint')}
+                            />
+                        </div>
+                    )}
 
                     <div className="flex flex-col md:flex-row gap-6 md:gap-8">
 
@@ -1010,7 +1099,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                 onClick={() => {
                                                     setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
                                                     if (!isSeasonDropdownOpen) {
-                                                        firestoreSeasons.forEach(s => {
+                                                        visibleSeasons.forEach(s => {
                                                             if (seasonEpisodes[s.uid_season] === undefined && !loadingSeasons[s.uid_season]) {
                                                                 loadEpisodesForSeason(s.uid_season, { globalLoading: false });
                                                             }
@@ -1034,7 +1123,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                     className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl max-h-72 overflow-y-auto shadow-xl z-10 border border-gray-200 dark:border-gray-700"
                                                     role="listbox"
                                                 >
-                                                    {firestoreSeasons.map(season => {
+                                                    {visibleSeasons.map(season => {
                                                         const loadedSeasonCount = seasonEpisodes[season.uid_season]?.length;
                                                         return (
                                                             <button
@@ -1241,7 +1330,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                         </div>
 
                     </div>
-
+                    </>
                 )}
 
 

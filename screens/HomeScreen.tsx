@@ -4,12 +4,13 @@ import { featuredContent } from '../data/mockData';
 import { MediaContent, MediaType } from '../types';
 import MediaCard from '../components/MediaCard';
 import { useAppContext } from '../context/AppContext';
-import { episodeSerieService, serieService, seasonSerieService, EpisodeSerie, ContinueWatchingItem } from '../lib/db';
+import { episodeSerieService, ContinueWatchingItem } from '../lib/db';
 import InfoBar from '../components/InfoBar';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import { useTutorial } from '../context/TutorialContext';
 import MoviesSection from '../components/sections/MoviesSection';
 import SeriesSection from '../components/sections/SeriesSection';
+import YouTubeChannelsSection from '../components/sections/YouTubeChannelsSection';
 import PodcastsSection from '../components/sections/PodcastsSection';
 import MostWatchedSection from '../components/sections/MostWatchedSection';
 import MostLikedSection from '../components/sections/MostLikedSection';
@@ -22,6 +23,8 @@ import { useCategories, useSeriesByCategories } from '../hooks/useCategories';
 import { useMostLikedItems } from '../hooks/useMostLiked';
 import { useMostWatchedItems } from '../hooks/useMostWatched';
 import { useContinueWatching } from '../hooks/useContinueWatching';
+import { useYouTubeHomeSeasons } from '../hooks/useYouTubeHome';
+import { YOUTUBE_SERIE_UID } from '../lib/firestore/youtubeAdmin';
 
 interface HomeScreenProps {
     onSelectMedia: (item: MediaContent) => void;
@@ -115,6 +118,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
         data: continueWatchingItems,
         isLoading: loadingContinueWatching,
     } = useContinueWatching(user?.uid, 10);
+
+    const {
+        data: youtubeSeasons,
+        error: youtubeSeasonsError,
+    } = useYouTubeHomeSeasons();
+
+    // The Youtube serie has its own rails below: keep it out of Productions.
+    const seriesWithoutYoutube = (series || []).filter((s) => s.uid_serie !== YOUTUBE_SERIE_UID);
 
     const cwToMediaContent = (item: ContinueWatchingItem): MediaContent => ({
         id: item.id,
@@ -264,11 +275,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                     <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
                         <SeriesSection
-                            series={series || []}
+                            series={seriesWithoutYoutube}
                             onSelectMedia={onSelectMedia}
                             onPlay={onPlay}
                             navigateToCategory={navigateToCategory}
                             t={t}
+                        />
+                    </ScrollReveal>
+                    </div>
+                )}
+
+                {youtubeSeasonsError ? (
+                    <SectionError message={String(youtubeSeasonsError)} />
+                ) : (
+                    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
+                    <ScrollReveal>
+                        <YouTubeChannelsSection
+                            seasons={youtubeSeasons || []}
+                            channelsLabel={t('ytSourceChannels')}
+                            playlistsLabel={t('ytSourcePlaylists')}
+                            episodesCountLabel={(count) => t('ytEpisodesCount', { count: String(count) })}
+                            channelEyebrow={t('ytSeasonLabelChannel')}
+                            playlistEyebrow={t('ytSeasonLabelPlaylist')}
+                            seeAllLabel={t('viewAll')}
                         />
                     </ScrollReveal>
                     </div>
