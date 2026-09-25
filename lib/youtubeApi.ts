@@ -480,13 +480,18 @@ export function isYouTubeSeason(
  * "Season N" for everything else (or as fallback when title is missing).
  */
 export function seasonLabel(
-    season: { uid_serie?: string; uid_season?: string; title_season?: string; season_number?: number },
+    season: { uid_serie?: string; uid_season?: string; title_season?: string; season_number?: number } | null | undefined,
     seasonWord: string
 ): string {
-    if (isYouTubeSeason(season) && season.title_season?.trim()) {
-        return season.title_season;
+    const title = season?.title_season?.trim();
+    if (isYouTubeSeason(season) && title) {
+        return title;
     }
-    return `${seasonWord} ${season.season_number}`;
+    if (title && season?.season_number === undefined) return title;
+    if (season?.season_number !== undefined && season.season_number !== null) {
+        return `${seasonWord} ${season.season_number}`;
+    }
+    return title || seasonWord;
 }
 
 /** Episode detection shared by player + admin UI. */

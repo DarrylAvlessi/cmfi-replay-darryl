@@ -297,6 +297,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     // null = undecided (picker hidden until seasons load and a default is picked).
     // Custom app-created seasons live under the playlists tab.
     const [sourceFilter, setSourceFilter] = useState<'channel' | 'playlist' | null>(null);
+    const [seasonEpisodesError, setSeasonEpisodesError] = useState<{ [key: string]: boolean }>({});
+    const [isLiking, setIsLiking] = useState(false);
+    const seasonsRequestRef = useRef(0);
+    const episodesLoadingRef = useRef<Set<string>>(new Set());
 
     const isYoutubeProd = item.id === YOUTUBE_SERIE_UID;
 
@@ -309,12 +313,15 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     const showSourcePicker = isYoutubeProd && channelSeasons.length > 0 && playlistSeasons.length > 0;
 
     /** Seasons actually listed in the dropdown + episode column. */
-    const visibleSeasons = showSourcePicker && sourceFilter
-        ? (sourceFilter === 'playlist' ? playlistSeasons : channelSeasons)
-        : firestoreSeasons;
+    const visibleSeasons = useMemo(
+        () => (showSourcePicker && sourceFilter
+            ? (sourceFilter === 'playlist' ? playlistSeasons : channelSeasons)
+            : firestoreSeasons),
+        [showSourcePicker, sourceFilter, playlistSeasons, channelSeasons, firestoreSeasons]
+    );
 
     // Default the filter once seasons load: deep-link season wins, then
-    // remembered choice, then the source of the first season.
+    // remembered choice (only if that group is non-empty), then the source of the first season.
     useEffect(() => {
         if (!showSourcePicker || sourceFilter || firestoreSeasons.length === 0) return;
         if (initialSeasonUid) {
@@ -323,10 +330,15 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                 setSourceFilter(seasonSource(target) === 'channel' ? 'channel' : 'playlist');
                 return;
             }
+            // Invalid deep-link: fall through to remembered/default below.
         }
         try {
             const remembered = window.localStorage.getItem('yt-source-filter');
-            if (remembered === 'channel' || remembered === 'playlist') {
+            if (remembered === 'channel' && channelSeasons.length > 0) {
+                setSourceFilter(remembered);
+                return;
+            }
+            if (remembered === 'playlist' && playlistSeasons.length > 0) {
                 setSourceFilter(remembered);
                 return;
             }
@@ -334,17 +346,18 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
             // Private mode: fall through to the default below.
         }
         setSourceFilter(seasonSource(firestoreSeasons[0]) === 'channel' ? 'channel' : 'playlist');
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showSourcePicker, firestoreSeasons]);
+    }, [showSourcePicker, firestoreSeasons, initialSeasonUid, sourceFilter, channelSeasons.length, playlistSeasons.length]);
 
     // Keep the selected season inside the active source group.
+    // Also repairs a stale/invalid selectedSeasonUid (bad deep-link, deleted season).
     useEffect(() => {
-        if (!showSourcePicker || !sourceFilter || visibleSeasons.length === 0) return;
-        if (!visibleSeasons.some((s) => s.uid_season === selectedSeasonUid)) {
-            setSelectedSeasonUid(visibleSeasons[0].uid_season);
+        if (firestoreSeasons.length === 0) return;
+        const pool = showSourcePicker && sourceFilter ? visibleSeasons : firestoreSeasons;
+        if (pool.length === 0) return;
+        if (!pool.some((s) => s.uid_season === selectedSeasonUid)) {
+            setSelectedSeasonUid(pool[0].uid_season);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showSourcePicker, sourceFilter, firestoreSeasons]);
+    }, [showSourcePicker, sourceFilter, firestoreSeasons, visibleSeasons, selectedSeasonUid]);
 
     const handleSourceSelect = useCallback((source: 'channel' | 'playlist') => {
         setSourceFilter(source);
@@ -354,6 +367,16 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
             // Ignore persistence failures (private mode).
         }
     }, []);
+
+    // Close the season dropdown on Escape.
+    useEffect(() => {
+        if (!isSeasonDropdownOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsSeasonDropdownOpen(false);
+        };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isSeasonDropdownOpen]);
 
     const descriptionThreshold = 150;
 
@@ -471,29 +494,52 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
         }
 
-    }, [item.id, type]);
+    }, [item.id, type, userProfile?.uid]);
 
 
 
     const loadSeasonsAndEpisodes = async () => {
+        const requestId = ++seasonsRequestRef.current;
+        const serieUid = item.id;
         setIsLoading(true);
+        // Reset stale selection so a previous serie's season never flashes here.
+        setSelectedSeasonUid(null);
+        setSeasonEpisodesError({});
         try {
-            const serie = await serieService.getSerieByUid(item.id);
+            const serie = await serieService.getSerieByUid(serieUid);
+            if (seasonsRequestRef.current !== requestId) return;
             if (serie) {
                 const userUid = userProfile?.uid;
                 const seasons = await seasonSerieService.getSeasonsBySerie(serie.uid_serie, userUid);
-                setFirestoreSeasons(seasons);
+                if (seasonsRequestRef.current !== requestId) return;
+                const sorted = [...seasons].sort((a, b) => (a.season_number ?? 0) - (b.season_number ?? 0));
+                setFirestoreSeasons(sorted);
 
-                if (seasons.length > 0) {
-                    setSelectedSeasonUid(initialSeasonUid || seasons[0].uid_season);
+                if (sorted.length > 0) {
+                    const validInitial = initialSeasonUid && sorted.some((s) => s.uid_season === initialSeasonUid)
+                        ? initialSeasonUid
+                        : null;
+                    setSelectedSeasonUid(validInitial || sorted[0].uid_season);
+                } else {
+                    setFirestoreSeasons([]);
+                    setSelectedSeasonUid(null);
                 }
             }
         } catch (error) {
             console.error('Error loading seasons and episodes:', error);
         } finally {
-            setIsLoading(false);
+            if (seasonsRequestRef.current === requestId) setIsLoading(false);
         }
     };
+
+    // Reset per-serie caches when navigating between productions.
+    useEffect(() => {
+        setSourceFilter(null);
+        setSeasonEpisodes({});
+        setSeasonEpisodesError({});
+        setLoadingSeasons({});
+        episodesLoadingRef.current.clear();
+    }, [item.id]);
 
     useEffect(() => {
         if (!selectedSeasonUid) return;
@@ -501,15 +547,20 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     }, [selectedSeasonUid]);
 
     const loadEpisodesForSeason = async (seasonUid: string, opts?: { globalLoading?: boolean }) => {
+        if (episodesLoadingRef.current.has(seasonUid)) return;
+        episodesLoadingRef.current.add(seasonUid);
         const globalLoading = opts?.globalLoading ?? true;
         if (globalLoading) setIsLoadingEpisodes(true);
         setLoadingSeasons(prev => ({ ...prev, [seasonUid]: true }));
         try {
             const episodes = await episodeSerieService.getEpisodesBySeason(seasonUid);
             setSeasonEpisodes(prev => ({ ...prev, [seasonUid]: episodes }));
+            setSeasonEpisodesError(prev => ({ ...prev, [seasonUid]: false }));
         } catch (error) {
             console.error('Error loading episodes:', error);
+            setSeasonEpisodesError(prev => ({ ...prev, [seasonUid]: true }));
         } finally {
+            episodesLoadingRef.current.delete(seasonUid);
             if (globalLoading) setIsLoadingEpisodes(false);
             setLoadingSeasons(prev => ({ ...prev, [seasonUid]: false }));
         }
@@ -517,7 +568,27 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
 
 
-    // Find the season of the currently playing episode to initialize state
+    // UID of the season holding the currently playing episode (robust against
+    // duplicate season_number across YouTube channels/playlists).
+    const playingSeasonUid = useMemo(() => {
+        if (playingItem?.media.id === item.id && playingItem.episode) {
+            const ep = playingItem.episode;
+            if ('uid_episode' in ep) {
+                const episodeSerie = ep as EpisodeSerie;
+                // Fast path: episode knows its own season.
+                if (episodeSerie.uid_season) return episodeSerie.uid_season;
+                for (const season of firestoreSeasons) {
+                    const episodes = seasonEpisodes[season.uid_season] || [];
+                    if (episodes.some(e => e.uid_episode === episodeSerie.uid_episode)) {
+                        return season.uid_season;
+                    }
+                }
+            }
+        }
+        return undefined;
+    }, [playingItem, item.id, firestoreSeasons, seasonEpisodes]);
+
+    // Legacy numeric fallback for mocked (non-Firestore) seasons only.
     const playingEpisodeSeasonNumber = useMemo(() => {
         if (playingItem?.media.id === item.id && playingItem.episode) {
             const ep = playingItem.episode;
@@ -571,16 +642,23 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
         let episodeToPlay: Episode | EpisodeSerie | undefined;
 
         if (type === MediaType.Series || type === MediaType.Podcast) {
-            if (firestoreSeasons.length > 0) {
-                const firstSeason = firestoreSeasons[0];
-                const cached = seasonEpisodes[firstSeason.uid_season];
+            // Respect the active source tab + current selection, not firestoreSeasons[0].
+            const targetSeason = visibleSeasons.find((s) => s.uid_season === selectedSeasonUid)
+                ?? visibleSeasons[0]
+                ?? firestoreSeasons[0];
+            if (targetSeason) {
+                const cached = seasonEpisodes[targetSeason.uid_season];
                 if (cached && cached.length > 0) {
                     episodeToPlay = cached[0];
                 } else {
-                    const fresh = await episodeSerieService.getEpisodesBySeason(firstSeason.uid_season);
-                    if (fresh.length > 0) {
-                        episodeToPlay = fresh[0];
-                        setSeasonEpisodes(prev => ({ ...prev, [firstSeason.uid_season]: fresh }));
+                    try {
+                        const fresh = await episodeSerieService.getEpisodesBySeason(targetSeason.uid_season);
+                        if (fresh.length > 0) {
+                            episodeToPlay = fresh[0];
+                            setSeasonEpisodes(prev => ({ ...prev, [targetSeason.uid_season]: fresh }));
+                        }
+                    } catch (e) {
+                        console.error('Error loading first episode:', e);
                     }
                 }
             } else if (seasons && seasons.length > 0) {
@@ -594,7 +672,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
         }
 
         onPlay(item, episodeToPlay);
-    }, [type, firestoreSeasons, seasonEpisodes, seasons, onPlay, item]);
+    }, [type, visibleSeasons, firestoreSeasons, selectedSeasonUid, seasonEpisodes, seasons, onPlay, item]);
 
     const handleLike = useCallback(async () => {
         if (!userProfile) {
@@ -606,7 +684,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
         }
 
         try {
-            setIsLoading(true);
+            setIsLiking(true);
             const itemUid = movieData?.uid || item.id;
             const itemTitle = movieData?.title || item.title;
             const contentType = type === MediaType.Movie ? 'movie' : 'episode';
@@ -623,7 +701,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                 autoClose: 2000,
             });
         } finally {
-            setIsLoading(false);
+            setIsLiking(false);
         }
     }, [userProfile, movieData, item.id, item.title]);
 
@@ -924,7 +1002,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                         {type === MediaType.Movie && (
                             <button
                                 onClick={handleLike}
-                                disabled={isLoading}
+                                disabled={isLiking}
                                 className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
                                     hasLiked
                                         ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
@@ -1089,9 +1167,15 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                             <div className="md:sticky md:top-24 space-y-4">
 
                                 {firestoreSeasons.length > 0 && selectedSeasonUid && (() => {
-                                    const selectedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
+                                    const selectedSeason = visibleSeasons.find(s => s.uid_season === selectedSeasonUid)
+                                        ?? firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
                                     const episodes = seasonEpisodes[selectedSeasonUid];
-                                    const episodeCount = episodes?.length ?? 0;
+                                    const isSeasonLoading = !!loadingSeasons[selectedSeasonUid];
+                                    // Prefer real count, fall back to Firestore nb_episodes before first load.
+                                    const episodeCount = episodes?.length ?? selectedSeason?.nb_episodes ?? 0;
+                                    const showCountSkeleton = isSeasonLoading && episodes === undefined;
+
+                                    if (!selectedSeason) return null;
 
                                     return (
                                         <div className="relative">
@@ -1100,7 +1184,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                     setIsSeasonDropdownOpen(!isSeasonDropdownOpen);
                                                     if (!isSeasonDropdownOpen) {
                                                         visibleSeasons.forEach(s => {
-                                                            if (seasonEpisodes[s.uid_season] === undefined && !loadingSeasons[s.uid_season]) {
+                                                            if (seasonEpisodes[s.uid_season] === undefined && !loadingSeasons[s.uid_season] && !seasonEpisodesError[s.uid_season]) {
                                                                 loadEpisodesForSeason(s.uid_season, { globalLoading: false });
                                                             }
                                                         });
@@ -1110,9 +1194,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                 aria-haspopup="listbox"
                                                 aria-expanded={isSeasonDropdownOpen}
                                             >
-                                                <span>{selectedSeason ? seasonLabel(selectedSeason, t('season')) : ''}</span>
+                                                <span>{seasonLabel(selectedSeason, t('season'))}</span>
                                                 <span className="text-gray-500">|</span>
-                                                {isLoadingEpisodes
+                                                {showCountSkeleton
                                                     ? <span className="inline-block w-16 h-4 align-middle rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />
                                                     : <span className="text-gray-400 font-normal">{episodeCount} {t('episodes')}</span>}
                                                 <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${isSeasonDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1124,7 +1208,9 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                     role="listbox"
                                                 >
                                                     {visibleSeasons.map(season => {
-                                                        const loadedSeasonCount = seasonEpisodes[season.uid_season]?.length;
+                                                        const loadedSeasonCount = seasonEpisodes[season.uid_season]?.length
+                                                            ?? (seasonEpisodesError[season.uid_season] ? undefined : season.nb_episodes);
+                                                        const isFailed = !!seasonEpisodesError[season.uid_season] && seasonEpisodes[season.uid_season] === undefined;
                                                         return (
                                                             <button
                                                                 key={season.uid_season}
@@ -1138,11 +1224,13 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                                 }`}
                                                             >
                                                                 {isYouTubeSeason(season)
-                                                                    ? (season.title_season || seasonLabel(season, t('season')))
-                                                                    : (<>{t('season')} {season.season_number}{season.title_season ? ` - ${season.title_season}` : ''}</>)}
-                                                                {loadedSeasonCount !== undefined
-                                                                    ? <span className="ml-2 text-gray-500 font-normal">({loadedSeasonCount})</span>
-                                                                    : <span className="ml-2 inline-block w-8 h-3 rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />}
+                                                                    ? (season.title_season?.trim() || seasonLabel(season, t('season')))
+                                                                    : (<>{t('season')} {season.season_number ?? '? '}{season.title_season?.trim() ? ` - ${season.title_season.trim()}` : ''}</>)}
+                                                                {isFailed
+                                                                    ? <span className="ml-2 text-red-500 font-normal">(!)</span>
+                                                                    : loadedSeasonCount !== undefined
+                                                                        ? <span className="ml-2 text-gray-500 font-normal">({loadedSeasonCount})</span>
+                                                                        : <span className="ml-2 inline-block w-8 h-3 rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />}
                                                             </button>
                                                         );
                                                     })}
@@ -1190,9 +1278,12 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                     (() => {
 
-                                        const selectedSeason = firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
+                                        const selectedSeason = visibleSeasons.find(s => s.uid_season === selectedSeasonUid)
+                                            ?? firestoreSeasons.find(s => s.uid_season === selectedSeasonUid);
 
                                         const episodes = seasonEpisodes[selectedSeasonUid];
+                                        const seasonFailed = !!seasonEpisodesError[selectedSeasonUid] && episodes === undefined;
+                                        const seasonLoading = !!loadingSeasons[selectedSeasonUid] && episodes === undefined;
 
                                         if (!selectedSeason) return null;
 
@@ -1200,7 +1291,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
 
                                             <div className="space-y-1">
 
-                                                {isLoadingEpisodes ? (
+                                                {seasonLoading ? (
 
                                                     <div className="space-y-3 animate-pulse">
                                                         {[1, 2, 3].map((n) => (
@@ -1218,11 +1309,23 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                         ))}
                                                     </div>
 
+                                                ) : seasonFailed ? (
+
+                                                    <div className="text-center py-8 space-y-3">
+                                                        <p className="text-gray-500 dark:text-gray-400 text-sm">{t('loadError')}</p>
+                                                        <button
+                                                            onClick={() => loadEpisodesForSeason(selectedSeasonUid)}
+                                                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 text-sm font-bold transition-colors"
+                                                        >
+                                                            {t('retry')}
+                                                        </button>
+                                                    </div>
+
                                                 ) : episodes && episodes.length > 0 ? (
 
                                                     episodes.map(episode => {
                                                         const playingEpUid = playingItem?.episode && 'uid_episode' in playingItem.episode ? (playingItem.episode as EpisodeSerie).uid_episode : undefined;
-                                                        const isPlaying = selectedSeason.season_number === playingEpisodeSeasonNumber && episode.uid_episode === playingEpUid;
+                                                        const isPlaying = selectedSeason.uid_season === playingSeasonUid && episode.uid_episode === playingEpUid;
                                                         const isEpBookmarked = bookmarkedEpisodeIds.includes(episode.uid_episode);
 
                                                         return <EpisodeListItem 
