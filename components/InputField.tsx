@@ -24,7 +24,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, type = 'text', ...props 
       <div className="flex items-center border border-gray-400/50 dark:border-gray-600 rounded-xl focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
           <input
               type={inputType}
-              className="w-full bg-transparent px-4 py-3.5 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-500/80"
+              className="w-full bg-transparent px-4 py-2.5 lg:py-3.5 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-500/80"
               {...props}
           />
           {isPasswordField && (

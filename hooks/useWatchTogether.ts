@@ -26,6 +26,7 @@ interface UseWatchTogetherOptions {
     videoId: string;
     videoType: 'movie' | 'episode';
     enabled?: boolean;
+    videoTitle?: string;
     // Host: how to read the live playback state to publish to guests.
     getPlaybackState?: () => { currentTime: number; isPlaying: boolean; playbackRate: number } | null;
     // Guest/host: what to do when a remote sync frame arrives (host = echo guard).
@@ -65,6 +66,7 @@ export function useWatchTogether({
     videoId,
     videoType,
     enabled = true,
+    videoTitle,
     getPlaybackState,
     onApplyRemoteTarget,
 }: UseWatchTogetherOptions): UseWatchTogetherResult {
@@ -92,6 +94,9 @@ export function useWatchTogether({
     const onApplyRemoteTargetRef = useRef(onApplyRemoteTarget);
     // Last received live edge frame {currentTime, positionAt, isPlaying, playbackRate}.
     const lastEdgeRef = useRef<WatchSyncTarget | null>(null);
+    // Peak live viewers (host side): max of viewerCount over the session,
+    // persisted at endRoom so history shows attendance stats.
+    const peakViewersRef = useRef(0);
     // False until the first remote frame is applied after joining: guarantees
     // late joiners always snap to the edge once before DVR gating kicks in.
     const edgeSnapDoneRef = useRef(false);
@@ -129,6 +134,7 @@ export function useWatchTogether({
         setLiveEdge(null);
         lastPublishedRef.current = null;
         lastEdgeRef.current = null;
+        peakViewersRef.current = 0;
         edgeSnapDoneRef.current = false;
     }, []);
 
@@ -312,6 +318,13 @@ export function useWatchTogether({
         return Date.now() - seen < VIEWER_FRESH_MS;
     }).length;
 
+    // Track session peak (drives endRoom stats + history).
+    useEffect(() => {
+        if (viewerCount > peakViewersRef.current) {
+            peakViewersRef.current = viewerCount;
+        }
+    }, [viewerCount]);
+
     // Keep roleRef in sync for the subscription callback
     useEffect(() => {
         roleRef.current = role;
@@ -326,7 +339,14 @@ export function useWatchTogether({
             const uid = userProfileRef.current?.uid;
             if (!currentRoomId || !uid) return;
             if (currentRole === 'host') {
-                watchTogetherService.endRoom(currentRoomId);
+                const edge = lastEdgeRef.current;
+                const edgeNow = edge
+                    ? (edge.isPlaying ? edge.currentTime + (Date.now() - edge.positionAt) / 1000 : edge.currentTime)
+                    : 0;
+                watchTogetherService.endRoom(currentRoomId, {
+                    peakViewers: peakViewersRef.current,
+                    finalPositionSec: Math.max(0, edgeNow),
+                });
             }
             watchTogetherService.leaveRoom(currentRoomId, uid);
         };
@@ -362,7 +382,9 @@ export function useWatchTogether({
                 videoId,
                 videoType,
                 mode,
+                ...(videoTitle?.trim() ? { videoTitle: videoTitle.trim() } : {}),
             });
+            peakViewersRef.current = 1;
 
             if (!isMountedRef.current) return;
             roomIdRef.current = createdRoom.id;
@@ -377,7 +399,7 @@ export function useWatchTogether({
         } finally {
             if (isMountedRef.current) setIsBusy(false);
         }
-    }, [isAuthenticated, videoId, videoType, t]);
+    }, [isAuthenticated, videoId, videoType, videoTitle, t]);
 
     const createRoom = useCallback(() => doCreateRoom('replay'), [doCreateRoom]);
 
@@ -435,7 +457,17 @@ export function useWatchTogether({
         setIsBusy(true);
         try {
             if (roleRef.current === 'host') {
-                await watchTogetherService.endRoom(currentRoomId);
+                const edge = lastEdgeRef.current;
+                const local = getPlaybackStateRef.current?.() ?? null;
+                const edgeNow = edge
+                    ? (edge.isPlaying ? edge.currentTime + (Date.now() - edge.positionAt) / 1000 : edge.currentTime)
+                    : (local?.currentTime ?? room?.state?.currentTime ?? 0);
+                await watchTogetherService.endRoom(currentRoomId, {
+                    peakViewers: Math.max(peakViewersRef.current, viewerCount, 1),
+                    totalParticipants: participants.length || undefined,
+                    messageCount: messages.length || undefined,
+                    finalPositionSec: Math.max(0, edgeNow),
+                });
             }
             await watchTogetherService.leaveRoom(currentRoomId, uid);
         } catch (err) {
@@ -448,7 +480,7 @@ export function useWatchTogether({
                 resetRoomState();
             }
         }
-    }, [resetRoomState]);
+    }, [resetRoomState, messages.length, participants.length, room?.state?.currentTime, viewerCount]);
 
     // Ending a live stream is leaving as host (closes the room for everyone).
     const endLive = useCallback(() => leaveRoom(), [leaveRoom]);

@@ -6,7 +6,6 @@ import {
     getDocs,
     setDoc,
     updateDoc,
-    deleteDoc,
     query,
     where,
     limit,
@@ -14,6 +13,7 @@ import {
     onSnapshot,
     Timestamp,
     serverTimestamp,
+    arrayUnion,
 } from 'firebase/firestore';
 import {
     WatchRoom,
@@ -59,10 +59,18 @@ export const parseWatchRoom = (docData: any, roomId: string): WatchRoom => ({
     id: roomId,
     roomCode: docData.roomCode || '',
     hostUid: docData.hostUid || '',
+    hostName: docData.hostName || undefined,
+    videoTitle: docData.videoTitle || undefined,
     status: docData.status || 'ended',
     videoId: docData.videoId || '',
     videoType: docData.videoType || 'episode',
     mode: docData.mode === 'live' ? 'live' : 'replay',
+    participantUids: Array.isArray(docData.participantUids) ? docData.participantUids : undefined,
+    peakViewers: typeof docData.peakViewers === 'number' ? docData.peakViewers : undefined,
+    totalParticipants: typeof docData.totalParticipants === 'number' ? docData.totalParticipants : undefined,
+    messageCount: typeof docData.messageCount === 'number' ? docData.messageCount : undefined,
+    durationSec: typeof docData.durationSec === 'number' ? docData.durationSec : undefined,
+    finalPositionSec: typeof docData.finalPositionSec === 'number' ? docData.finalPositionSec : undefined,
     startedAt: docData.startedAt ? toDate(docData.startedAt) : undefined,
     endedAt: docData.endedAt ? toDate(docData.endedAt) : undefined,
     createdAt: toDate(docData.createdAt),
@@ -78,6 +86,7 @@ export const parseWatchParticipant = (docData: any, uid: string): WatchParticipa
     role: docData.role || 'guest',
     joinedAt: toDate(docData.joinedAt),
     lastSeen: toDate(docData.lastSeen),
+    ...(docData.leftAt ? { leftAt: toDate(docData.leftAt) } : {}),
 });
 
 // --- Room lifecycle ---
@@ -93,6 +102,7 @@ export const watchTogetherService = {
         videoId: string;
         videoType: 'movie' | 'episode';
         mode?: 'replay' | 'live';
+        videoTitle?: string;
     }): Promise<WatchRoom> {
         const now = Timestamp.now();
         const mode = params.mode === 'live' ? 'live' : 'replay';
@@ -100,10 +110,13 @@ export const watchTogetherService = {
         await setDoc(roomRef, {
             roomCode: params.roomCode,
             hostUid: params.hostUid,
+            hostName: params.hostName,
+            ...(params.videoTitle ? { videoTitle: params.videoTitle } : {}),
             status: 'active',
             videoId: params.videoId,
             videoType: params.videoType,
             mode,
+            participantUids: [params.hostUid],
             ...(mode === 'live' ? { startedAt: now } : {}),
             createdAt: now,
             updatedAt: now,
@@ -170,29 +183,75 @@ export const watchTogetherService = {
             role: 'guest' as WatchRole,
             joinedAt: now,
             lastSeen: now,
-        });
+        }, { merge: true });
+        // Keep a denormalized member list for history queries.
+        try {
+            await updateDoc(doc(roomsRef(), roomId), {
+                participantUids: arrayUnion(participant.uid),
+                updatedAt: serverTimestamp(),
+            });
+        } catch {
+            // Best effort: history query degrades to host-only.
+        }
     },
 
     async leaveRoom(roomId: string, uid: string): Promise<void> {
         try {
-            await deleteDoc(doc(participantsRef(roomId), uid));
+            // Preserve attendance: mark leftAt instead of deleting.
+            await updateDoc(doc(participantsRef(roomId), uid), {
+                leftAt: serverTimestamp(),
+                lastSeen: serverTimestamp(),
+            });
         } catch (error) {
             console.error('Error leaving room:', error);
         }
     },
 
-    async endRoom(roomId: string): Promise<void> {
+    async endRoom(roomId: string, stats?: {
+        peakViewers?: number;
+        totalParticipants?: number;
+        messageCount?: number;
+        finalPositionSec?: number;
+    }): Promise<void> {
         try {
+            const snap = await getDoc(doc(roomsRef(), roomId));
+            const data = snap.exists() ? (snap.data() as any) : null;
+            const prevState = data?.state ?? {
+                isPlaying: false,
+                currentTime: 0,
+                positionAt: Date.now(),
+                playbackRate: 1,
+            };
+            const finalPosition = typeof stats?.finalPositionSec === 'number'
+                ? Math.max(0, Math.round(stats.finalPositionSec))
+                : typeof prevState.currentTime === 'number'
+                    ? Math.max(0, Math.round(prevState.currentTime))
+                    : 0;
+            // Duration from startedAt when available (live rooms).
+            let durationSec: number | undefined;
+            try {
+                const start = data?.startedAt ? toDate(data.startedAt).getTime() : NaN;
+                if (Number.isFinite(start) && start > 0) {
+                    durationSec = Math.max(0, Math.round((Date.now() - start) / 1000));
+                }
+            } catch {}
             await updateDoc(doc(roomsRef(), roomId), {
                 status: 'ended',
                 updatedAt: serverTimestamp(),
                 endedAt: serverTimestamp(),
+                // Preserve the final edge (no reset to 0): history shows where
+                // the live stopped.
                 state: {
                     isPlaying: false,
-                    currentTime: 0,
+                    currentTime: finalPosition,
                     positionAt: Date.now(),
-                    playbackRate: 1,
+                    playbackRate: prevState.playbackRate ?? 1,
                 },
+                finalPositionSec: finalPosition,
+                ...(typeof durationSec === 'number' ? { durationSec } : {}),
+                ...(typeof stats?.peakViewers === 'number' ? { peakViewers: Math.max(0, Math.round(stats.peakViewers)) } : {}),
+                ...(typeof stats?.totalParticipants === 'number' ? { totalParticipants: Math.max(0, Math.round(stats.totalParticipants)) } : {}),
+                ...(typeof stats?.messageCount === 'number' ? { messageCount: Math.max(0, Math.round(stats.messageCount)) } : {}),
             });
         } catch (error) {
             console.error('Error ending room:', error);
@@ -233,6 +292,110 @@ export const watchTogetherService = {
         } catch (error) {
             console.error('Error updating participant last seen:', error);
         }
+    },
+
+    // --- Live history (persisted after 'ended') ---
+
+    async getMyHostedLives(hostUid: string, maxResults = 20): Promise<WatchRoom[]> {
+        try {
+            const q = query(
+                roomsRef(),
+                where('hostUid', '==', hostUid),
+                where('mode', '==', 'live'),
+                where('status', '==', 'ended'),
+                orderBy('endedAt', 'desc'),
+                limit(maxResults)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map((d) => parseWatchRoom(d.data(), d.id));
+        } catch (error) {
+            console.error('Error getting hosted lives:', error);
+            return [];
+        }
+    },
+
+    async getMyJoinedLives(uid: string, maxResults = 20): Promise<WatchRoom[]> {
+        try {
+            const q = query(
+                roomsRef(),
+                where('participantUids', 'array-contains', uid),
+                where('mode', '==', 'live'),
+                where('status', '==', 'ended'),
+                orderBy('endedAt', 'desc'),
+                limit(maxResults)
+            );
+            const snapshot = await getDocs(q);
+            const rooms = snapshot.docs.map((d) => parseWatchRoom(d.data(), d.id));
+            // Joined = attended but not hosted.
+            return rooms.filter((r) => r.hostUid !== uid);
+        } catch (error) {
+            console.error('Error getting joined lives:', error);
+            return [];
+        }
+    },
+
+    async getLiveHistoryByVideo(videoId: string, maxResults = 20): Promise<WatchRoom[]> {
+        try {
+            const q = query(
+                roomsRef(),
+                where('videoId', '==', videoId),
+                where('mode', '==', 'live'),
+                where('status', '==', 'ended'),
+                orderBy('endedAt', 'desc'),
+                limit(maxResults)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map((d) => parseWatchRoom(d.data(), d.id));
+        } catch (error) {
+            console.error('Error getting live history:', error);
+            return [];
+        }
+    },
+
+    // Admin: all lives (active + ended), newest first. Rules ignored for now
+    // per request — caller must gate on userProfile.isAdmin.
+    async getAllLives(maxResults = 50, onlyActive = false): Promise<WatchRoom[]> {
+        try {
+            const constraints: any[] = [where('mode', '==', 'live')];
+            if (onlyActive) constraints.push(where('status', '==', 'active'));
+            const q = query(
+                roomsRef(),
+                ...constraints,
+                orderBy('createdAt', 'desc'),
+                limit(maxResults)
+            );
+            const snapshot = await getDocs(q);
+            let rooms = snapshot.docs.map((d) => parseWatchRoom(d.data(), d.id));
+            if (!onlyActive) {
+                // Ended first is handled by createdAt desc; keep stable order.
+                rooms = rooms.sort((a, b) => {
+                    const at = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+                    const bt = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+                    return bt - at;
+                });
+            }
+            return rooms;
+        } catch (error) {
+            console.error('Error getting all lives:', error);
+            return [];
+        }
+    },
+
+    subscribeToMyLives(uid: string, callback: (rooms: WatchRoom[]) => void, maxResults = 20): () => void {
+        // Real-time lite version: poll hosted lives. Full merge (hosted +
+        // joined) is done by the consumer to avoid composite-index fan-out.
+        const q = query(
+            roomsRef(),
+            where('hostUid', '==', uid),
+            where('mode', '==', 'live'),
+            where('status', '==', 'ended'),
+            orderBy('endedAt', 'desc'),
+            limit(maxResults)
+        );
+        return onSnapshot(q,
+            (snapshot) => callback(snapshot.docs.map((d) => parseWatchRoom(d.data(), d.id))),
+            (error) => console.error('Error subscribing to lives:', error),
+        );
     },
 
     // --- Subscriptions ---

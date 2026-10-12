@@ -83,17 +83,17 @@ const ChangePasswordScreen: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-6 lg:py-12 sm:px-6 lg:px-8 animate-fadeIn">
             <AuthHeader />
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 text-center">
-                    <img src={cmfiLogo} alt="CMFI Replay" className="h-12 mx-auto rounded-lg" />
-                    <h2 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+                    <img src={cmfiLogo} alt="CMFI Replay" className="h-10 lg:h-12 mx-auto rounded-lg" />
+                    <h2 className="mt-3 lg:mt-4 text-xl lg:text-3xl font-extrabold text-gray-900 dark:text-white">
                         {t('changePassword') || 'Changer le mot de passe'}
                     </h2>
                 </div>
-                <div className="mt-8 px-4 sm:px-0">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="mt-5 lg:mt-8 px-4 sm:px-0">
+                    <form className="space-y-4 lg:space-y-6" onSubmit={handleSubmit}>
                         {error && (
                             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
                                 {error}
@@ -101,7 +101,7 @@ const ChangePasswordScreen: React.FC = () => {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                 {t('currentPassword') || 'Mot de passe actuel'}
                             </label>
                             <div className="relative">
@@ -109,7 +109,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showCurrentPassword ? 'text' : 'password'}
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 lg:py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                 />
@@ -124,7 +124,7 @@ const ChangePasswordScreen: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                 {t('newPassword') || 'Nouveau mot de passe'}
                             </label>
                             <div className="relative">
@@ -132,7 +132,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showNewPassword ? 'text' : 'password'}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 lg:py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                     minLength={6}
@@ -151,7 +151,7 @@ const ChangePasswordScreen: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                 {t('confirmNewPassword') || 'Confirmer le nouveau mot de passe'}
                             </label>
                             <div className="relative">
@@ -159,7 +159,7 @@ const ChangePasswordScreen: React.FC = () => {
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 lg:py-3 pr-12 rounded-xl bg-gray-100 dark:bg-black border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
                                     required
                                     placeholder="••••••••"
                                     minLength={6}

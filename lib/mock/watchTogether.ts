@@ -51,6 +51,7 @@ export const watchTogetherService = {
         videoId: string;
         videoType: 'movie' | 'episode';
         mode?: 'replay' | 'live';
+        videoTitle?: string;
     }): Promise<WatchRoom> {
         const roomId = makeRoomId();
         const mode = params.mode === 'live' ? 'live' : 'replay';
@@ -58,10 +59,13 @@ export const watchTogetherService = {
             id: roomId,
             roomCode: params.roomCode,
             hostUid: params.hostUid,
+            hostName: params.hostName,
+            ...(params.videoTitle ? { videoTitle: params.videoTitle } : {}),
             status: 'active',
             videoId: params.videoId,
             videoType: params.videoType,
             mode,
+            participantUids: [params.hostUid],
             ...(mode === 'live' ? { startedAt: now() } : {}),
             createdAt: now(),
             updatedAt: now(),
@@ -102,33 +106,55 @@ export const watchTogetherService = {
         const room = rooms.get(roomId);
         if (!room || room.status !== 'active') throw new Error('Room not available');
         if (!participants.has(roomId)) participants.set(roomId, new Map());
+        const existing = participants.get(roomId)!.get(participant.uid);
         participants.get(roomId)!.set(participant.uid, {
             uid: participant.uid,
             displayName: participant.displayName,
             photoUrl: participant.photoUrl,
-            role: 'guest',
-            joinedAt: now(),
+            role: existing?.role ?? 'guest',
+            joinedAt: existing?.joinedAt ?? now(),
             lastSeen: now(),
         });
+        if (!room.participantUids?.includes(participant.uid)) {
+            room.participantUids = [...(room.participantUids ?? []), participant.uid];
+        }
     },
 
     async leaveRoom(roomId: string, uid: string): Promise<void> {
         const roomParticipants = participants.get(roomId);
-        if (roomParticipants) {
-            roomParticipants.delete(uid);
-            if (roomParticipants.size === 0) {
-                participants.delete(roomId);
-            }
+        const p = roomParticipants?.get(uid);
+        if (p) {
+            p.leftAt = now();
+            p.lastSeen = now();
         }
     },
 
-    async endRoom(roomId: string): Promise<void> {
+    async endRoom(roomId: string, stats?: {
+        peakViewers?: number;
+        totalParticipants?: number;
+        messageCount?: number;
+        finalPositionSec?: number;
+    }): Promise<void> {
         const room = rooms.get(roomId);
         if (room) {
+            const prevPos = room.state?.currentTime ?? 0;
+            const finalPosition = typeof stats?.finalPositionSec === 'number'
+                ? Math.max(0, Math.round(stats.finalPositionSec))
+                : Math.max(0, Math.round(prevPos));
+            let durationSec: number | undefined;
+            const start = room.startedAt instanceof Date ? room.startedAt.getTime() : NaN;
+            if (Number.isFinite(start) && start > 0) {
+                durationSec = Math.max(0, Math.round((Date.now() - start) / 1000));
+            }
             room.status = 'ended';
             room.endedAt = now();
             room.updatedAt = now();
-            room.state = { isPlaying: false, currentTime: 0, positionAt: Date.now(), playbackRate: 1 };
+            room.state = { isPlaying: false, currentTime: finalPosition, positionAt: Date.now(), playbackRate: room.state?.playbackRate ?? 1 };
+            room.finalPositionSec = finalPosition;
+            if (typeof durationSec === 'number') room.durationSec = durationSec;
+            if (typeof stats?.peakViewers === 'number') room.peakViewers = Math.max(0, Math.round(stats.peakViewers));
+            if (typeof stats?.totalParticipants === 'number') room.totalParticipants = Math.max(0, Math.round(stats.totalParticipants));
+            if (typeof stats?.messageCount === 'number') room.messageCount = Math.max(0, Math.round(stats.messageCount));
         }
     },
 
@@ -161,6 +187,64 @@ export const watchTogetherService = {
         return subscribeWithPolling(
             () => [rooms.get(roomId) || null],
             (items) => callback(items[0] ?? null)
+        );
+    },
+
+    async getMyHostedLives(hostUid: string, maxResults = 20): Promise<WatchRoom[]> {
+        return [...rooms.values()]
+            .filter((r) => r.hostUid === hostUid && r.mode === 'live' && r.status === 'ended')
+            .sort((a, b) => {
+                const at = a.endedAt instanceof Date ? a.endedAt.getTime() : 0;
+                const bt = b.endedAt instanceof Date ? b.endedAt.getTime() : 0;
+                return bt - at;
+            })
+            .slice(0, maxResults);
+    },
+
+    async getMyJoinedLives(uid: string, maxResults = 20): Promise<WatchRoom[]> {
+        return [...rooms.values()]
+            .filter((r) => r.mode === 'live' && r.status === 'ended' && r.hostUid !== uid && (r.participantUids ?? []).includes(uid))
+            .sort((a, b) => {
+                const at = a.endedAt instanceof Date ? a.endedAt.getTime() : 0;
+                const bt = b.endedAt instanceof Date ? b.endedAt.getTime() : 0;
+                return bt - at;
+            })
+            .slice(0, maxResults);
+    },
+
+    async getLiveHistoryByVideo(videoId: string, maxResults = 20): Promise<WatchRoom[]> {
+        return [...rooms.values()]
+            .filter((r) => r.videoId === videoId && r.mode === 'live' && r.status === 'ended')
+            .sort((a, b) => {
+                const at = a.endedAt instanceof Date ? a.endedAt.getTime() : 0;
+                const bt = b.endedAt instanceof Date ? b.endedAt.getTime() : 0;
+                return bt - at;
+            })
+            .slice(0, maxResults);
+    },
+
+    async getAllLives(maxResults = 50, onlyActive = false): Promise<WatchRoom[]> {
+        return [...rooms.values()]
+            .filter((r) => r.mode === 'live' && (!onlyActive || r.status === 'active'))
+            .sort((a, b) => {
+                const at = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+                const bt = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+                return bt - at;
+            })
+            .slice(0, maxResults);
+    },
+
+    subscribeToMyLives(uid: string, callback: (roomsList: WatchRoom[]) => void, maxResults = 20): () => void {
+        return subscribeWithPolling(
+            () => [...rooms.values()]
+                .filter((r) => r.hostUid === uid && r.mode === 'live' && r.status === 'ended')
+                .sort((a, b) => {
+                    const at = a.endedAt instanceof Date ? a.endedAt.getTime() : 0;
+                    const bt = b.endedAt instanceof Date ? b.endedAt.getTime() : 0;
+                    return bt - at;
+                })
+                .slice(0, maxResults),
+            callback
         );
     },
 

@@ -144,13 +144,13 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                 isSidebarOpen={isSidebarOpen}
                 onToggleSidebar={handleToggleSidebar}
             />
-            <div className="p-4 space-y-8 animate-fadeIn">
-                <div className="flex flex-col items-center space-y-4">
+            <div className="p-4 space-y-4 lg:space-y-8 animate-fadeIn">
+                <div className="flex flex-col items-center space-y-2 lg:space-y-4">
                     <div className="relative">
                         <img 
                             src={photoUrl || 'https://picsum.photos/seed/defaultuser/200/200'} 
                             alt="Your avatar" 
-                            className="w-32 h-32 rounded-full border-4 border-amber-500 object-cover"
+                            className="w-20 h-20 lg:w-32 lg:h-32 rounded-full border-2 lg:border-4 border-amber-500 object-cover"
                         />
                         {loading && (
                             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
@@ -174,7 +174,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                     </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 lg:space-y-6">
                     {error && (
                         <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                             {error}
@@ -199,11 +199,11 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                     />
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2 lg:pt-4">
                     <button 
                         onClick={handleSave}
                         disabled={loading}
-                        className="w-full bg-amber-500 text-gray-900 font-bold py-3 px-6 rounded-lg hover:bg-amber-400 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-amber-500 text-gray-900 font-bold py-2.5 lg:py-3 px-6 rounded-lg hover:bg-amber-400 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? 'Sauvegarde...' : (t('saveChanges') || 'Sauvegarder les modifications')}
                     </button>

@@ -340,12 +340,24 @@ export interface WatchRoom {
     id: string;
     roomCode: string;
     hostUid: string;
+    hostName?: string;
+    videoTitle?: string;
     status: 'active' | 'ended';
     videoId: string;
     videoType: 'movie' | 'episode';
     // Premiere-style live: 'live' rooms treat the host position as the live
     // edge. Absent on older docs → treated as 'replay' (backward compatible).
     mode?: WatchRoomMode;
+    // Denormalized member list: enables "lives I joined" queries without a
+    // collectionGroup index. Maintained by create/joinRoom (arrayUnion).
+    participantUids?: string[];
+    // Live archive stats (filled at endRoom, preserved after 'ended').
+    // Absent on older docs → UI shows '—'.
+    peakViewers?: number;
+    totalParticipants?: number;
+    messageCount?: number;
+    durationSec?: number;
+    finalPositionSec?: number;
     startedAt?: Date | Timestamp;
     endedAt?: Date | Timestamp;
     createdAt: Date | Timestamp;
@@ -361,6 +373,9 @@ export interface WatchParticipant {
     role: WatchRole;
     joinedAt: Date | Timestamp;
     lastSeen: Date | Timestamp;
+    // Set on graceful leave instead of deleting the doc, so history keeps
+    // who attended. Absent = still present / legacy doc.
+    leftAt?: Date | Timestamp;
 }
 
 export interface WatchMessage {

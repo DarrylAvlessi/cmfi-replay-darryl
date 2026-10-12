@@ -406,22 +406,22 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
     return (
         <div className="min-h-screen bg-white dark:bg-black">
-            <div className="p-4 md:p-6 lg:p-8 space-y-6" data-tour="bookmarks-list">
+            <div className="p-4 md:p-6 lg:p-8 space-y-4 lg:space-y-6" data-tour="bookmarks-list">
                 {/* En-tête avec titre */}
-                <div className="pt-2">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                <div className="pt-0 lg:pt-2">
+                    <h1 className="text-xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">
                         {t('myFavorites')}
                     </h1>
-                    <div className="h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                    <div className="h-1 w-16 lg:h-1.5 lg:w-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500"></div>
                 </div>
 
                 {/* Tabs avec design amélioré */}
-                <div className="flex items-center justify-center md:justify-start pt-4">
-                    <div className="inline-flex items-center space-x-2 bg-white dark:bg-black p-1.5 rounded-full shadow-lg">
+                <div className="flex items-center justify-start pt-1 lg:pt-4">
+                    <div className="inline-flex items-center space-x-1.5 lg:space-x-2 bg-white dark:bg-black p-1.5 rounded-full shadow-lg max-w-full overflow-x-auto">
                         <button
                             onClick={() => setActiveTab('all')}
                             aria-pressed={activeTab === 'all'}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'all'
+                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'all'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -431,7 +431,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         <button
                             onClick={() => setActiveTab('movies')}
                             aria-pressed={activeTab === 'movies'}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'movies'
+                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'movies'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -441,7 +441,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         <button
                             onClick={() => setActiveTab('series')}
                             aria-pressed={activeTab === 'series'}
-                            className={`text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'series'
+                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'series'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
@@ -453,17 +453,17 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 {/* Loading State amélioré */}
                 {loading && (
-                    <div className="flex items-center justify-center py-32">
+                    <div className="flex items-center justify-center py-12 lg:py-32">
                         <div className="text-center">
                             <div className="relative">
-                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700 border-t-amber-500 mx-auto mb-6"></div>
+                                <div className="animate-spin rounded-full h-10 w-10 lg:h-16 lg:w-16 border-4 border-gray-200 dark:border-gray-700 border-t-amber-500 mx-auto mb-4 lg:mb-6"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-5 h-5 lg:w-8 lg:h-8 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                     </svg>
                                 </div>
                             </div>
-                            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">{t('loading')}</p>
+                            <p className="text-base lg:text-lg font-medium text-gray-700 dark:text-gray-300">{t('loading')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{t('myFavorites')}</p>
                         </div>
                     </div>
@@ -471,11 +471,11 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 {/* Empty State amélioré */}
                 {!loading && filteredContent.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-32 text-center px-4">
-                        <div className="relative mb-8">
-                            <div className="w-32 h-32 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-full flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center py-12 lg:py-32 text-center px-4">
+                        <div className="relative mb-5 lg:mb-8">
+                            <div className="w-20 h-20 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-full flex items-center justify-center">
                                 <svg
-                                    className="w-16 h-16 text-amber-500"
+                                    className="w-10 h-10 lg:w-16 lg:h-16 text-amber-500"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -492,13 +492,13 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                 <span className="text-2xl">📺</span>
                             </div>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                        <h3 className="text-lg lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 lg:mb-3">
                             {t('noBookmarks')}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 max-w-md text-lg leading-relaxed">
+                        <p className="text-gray-600 dark:text-gray-400 max-w-md text-sm lg:text-lg leading-relaxed">
                             {t('noBookmarksHint')}
                         </p>
-                        <div className="mt-8 flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="mt-4 lg:mt-8 flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
@@ -509,8 +509,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 {/* Content Grid amélioré */}
                 {!loading && filteredContent.length > 0 && (
-                    <div className="space-y-6">
-                        <div className="mb-6 pt-2">
+                    <div className="space-y-4 lg:space-y-6">
+                        <div className="mb-3 lg:mb-6 pt-0 lg:pt-2">
                             <p className="text-gray-600 dark:text-gray-400">
                                 {filteredContent.length} {filteredContent.length === 1 ? t('episode') : t('episodes')}
                                 {activeTab !== 'all' && (
@@ -522,7 +522,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         </div>
 
                         {/* Liste de favoris */}
-                        <div className="space-y-3">
+                        <div className="space-y-2 lg:space-y-3">
                             {filteredContent.map((item) => (
                                 <FavoriteRow
                                     key={item.id}

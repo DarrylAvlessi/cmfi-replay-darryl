@@ -6,7 +6,8 @@ import HistorySection from '../components/HistorySection';
 //import ViewModeSelector from '../components/ViewModeSelector';
 import SettingsItem from '../components/SettingsItem';
 import ToggleSwitch from '../components/ToggleSwitch';
-import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService } from '../lib/db';
+import LiveHistorySection from '../components/LiveHistorySection';
+import { statsVuesService, ContinueWatchingItem, movieService, episodeSerieService, watchTogetherService, WatchRoom } from '../lib/db';
 import { MediaContent, MediaType, User, Screen } from '../types';
 import {
     BookmarkIcon,
@@ -41,7 +42,7 @@ interface ProfileScreenProps {
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, onPlay }) => {
     const { t, setIsAuthenticated, userProfile, user, newReleaseNotes } = useAppContext();
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'help' | 'whatsnew'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'lives' | 'account' | 'admin' | 'editProfile' | 'preferences' | 'changePassword' | 'help' | 'whatsnew'>('overview');
     const [userReports, setUserReports] = useState<Report[]>([]);
     const [loadingReports, setLoadingReports] = useState(true);
 
@@ -66,6 +67,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
     const [historyItems, setHistoryItems] = useState<ContinueWatchingItem[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
+    const [hostedLives, setHostedLives] = useState<WatchRoom[]>([]);
+    const [joinedLives, setJoinedLives] = useState<WatchRoom[]>([]);
+    const [loadingLives, setLoadingLives] = useState(false);
 
     // Récupérer l'historique depuis Firebase
     useEffect(() => {
@@ -87,6 +91,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
         fetchHistory();
     }, [user]);
+
+    // Lives passés (hosted + joined) — chargé à la demande pour limiter les reads.
+    useEffect(() => {
+        if (activeTab !== 'lives') return;
+        const uid = userProfile?.uid ?? user?.uid;
+        if (!uid) return;
+        let cancelled = false;
+        setLoadingLives(true);
+        Promise.all([
+            watchTogetherService.getMyHostedLives(uid, 20),
+            watchTogetherService.getMyJoinedLives(uid, 20),
+        ]).then(([hosted, joined]) => {
+            if (cancelled) return;
+            setHostedLives(hosted);
+            setJoinedLives(joined);
+        }).catch((e) => console.error('Error fetching lives:', e))
+          .finally(() => { if (!cancelled) setLoadingLives(false); });
+        return () => { cancelled = true; };
+    }, [activeTab, user, userProfile?.uid]);
 
     // Charger les signalements de l'utilisateur en temps réel
     useEffect(() => {
@@ -205,6 +228,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                 label: 'Youtube',
                 action: () => navigateRouter('/manage-youtube')
             },
+            {
+                icon: SettingsIcon,
+                label: t('manageLives'),
+                action: () => navigateRouter('/manage-lives')
+            },
         ];
     }, [isAdminValue, navigateRouter, t]);
 
@@ -223,6 +251,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         const items: Array<{ id: string; label: string; icon: string }> = [
             { id: 'overview' as const, label: t('overview') || 'Vue d\'ensemble', icon: 'User' },
             { id: 'history' as const, label: t('continueWatching') || 'Historique', icon: 'History' },
+            { id: 'lives' as const, label: t('myLives') || 'Mes lives', icon: 'VideoCamera' },
             { id: 'account' as const, label: t('accountSettings') || 'Compte', icon: 'Settings' },
             { id: 'whatsnew' as const, label: t('whatsNew'), icon: 'Update' },
             { id: 'guides' as const, label: t('guides'), icon: 'Book' },
@@ -240,8 +269,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
         switch (activeTab) {
             case 'overview':
                 return (
-                    <div className="space-y-6">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="space-y-4 lg:space-y-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 lg:gap-6 p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                             <img
                                 src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                                 alt="Your avatar"
@@ -261,9 +290,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                         
-                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-serif font-bold mb-4">Liens rapides</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-base lg:text-lg font-serif font-bold mb-3">Liens rapides</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3">
                                 {settingsItems.map((item) => (
                                     <button
                                         key={item.label}
@@ -299,12 +328,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         />
                     </div>
                 );
+
+            case 'lives':
+                return (
+                    <LiveHistorySection
+                        hosted={hostedLives}
+                        joined={joinedLives}
+                        isLoading={loadingLives}
+                    />
+                );
             
             case 'account':
                 return (
-                    <div className="space-y-6" data-tour="profile-settings">
-                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-xl font-serif font-bold mb-4">{t('accountSettings')}</h3>
+                    <div className="space-y-4 lg:space-y-6" data-tour="profile-settings">
+                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg lg:text-xl font-serif font-bold mb-3 lg:mb-4">{t('accountSettings')}</h3>
                             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
                                 {settingsItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
@@ -312,7 +350,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                             </div>
                         </div>
                         
-                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
                             <SettingsItem 
                                 Icon={LogoutIcon} 
                                 label={t('logout')} 
@@ -325,9 +363,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             
             case 'admin':
                 return (
-                    <div className="space-y-6">
-                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-amber-200 dark:border-amber-800">
-                            <h3 className="text-xl font-serif font-bold mb-4 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
+                    <div className="space-y-4 lg:space-y-6">
+                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-amber-200 dark:border-amber-800">
+                            <h3 className="text-lg lg:text-xl font-serif font-bold mb-3 lg:mb-4 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden divide-y divide-amber-200 dark:divide-amber-800">
                                 {adminItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
@@ -345,10 +383,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
             case 'help':
                 return (
-                    <div className="space-y-6">
-                        <div className="p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-serif font-bold">{t('help')}</h3>
+                    <div className="space-y-4 lg:space-y-6">
+                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between gap-2 mb-3 lg:mb-4">
+                                <h3 className="text-lg lg:text-xl font-serif font-bold">{t('help')}</h3>
                                 <button
                                     onClick={() => navigateRouter('/help')}
                                     className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
@@ -433,26 +471,51 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
 
     return (
         <div className="pt-4">
-            {/* Mobile layout - unchanged */}
+            {/* Mobile layout — compact + tabbed (same tabs as desktop) */}
             <div className="lg:hidden">
-                <div className="flex flex-col items-center p-6 space-y-3 border-b border-gray-200 dark:border-black">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-black">
                     <img
                         src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                         alt="Your avatar"
-                        className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
+                        className="w-14 h-14 rounded-full border-2 border-amber-500 object-cover shrink-0"
                     />
-                    <h2 className="text-2xl font-serif font-bold">{userProfile?.display_name || 'User'}</h2>
-                    {userProfile?.email && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
-                    )}
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-serif font-bold truncate">{userProfile?.display_name || 'User'}</h2>
+                        {userProfile?.email && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userProfile.email}</p>
+                        )}
+                    </div>
                     <button
                         onClick={() => navigate('EditProfile')}
-                        className="bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
+                        className="shrink-0 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-1.5 px-4 rounded-full text-sm transition-colors duration-200"
                     >
                         {t('editProfile')}
                     </button>
                 </div>
 
+                <div className="sticky top-16 z-10 bg-white/95 dark:bg-black/95 backdrop-blur px-4 py-2 border-b border-gray-200 dark:border-black">
+                    <div className="flex gap-2 overflow-x-auto">
+                        {navItems.filter((item) => ['overview', 'history', 'lives', 'account'].includes(item.id) || (item.id === 'admin' && isAdminValue)).map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    if (item.id === 'guides') navigateRouter('/docs');
+                                    else setActiveTab(item.id as typeof activeTab);
+                                }}
+                                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                                    activeTab === item.id
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                }`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {activeTab === 'overview' ? (
+                <>
                 <div data-tour="profile-history">
                     <HistorySection
                         items={loadingHistory ? [] : historyItems}
@@ -462,67 +525,61 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     />
                 </div>
 
-                <section className="px-4 py-4" data-tour="profile-settings">
-                    <h3 className="text-xl font-serif font-bold mb-3">{t('accountSettings')}</h3>
+                <section className="px-4 py-3" data-tour="profile-settings">
+                    <h3 className="text-base font-serif font-bold mb-2">{t('accountSettings')}</h3>
                     <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
                         {mobileSettingsItems.map((item) => (
-                            <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                            <SettingsItem dense key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                         ))}
+                        <SettingsItem
+                            dense
+                            Icon={UpdateIcon}
+                            label={t('whatsNew')}
+                            onClick={() => navigateRouter('/whats-new')}
+                            adornment={newReleaseNotes.length > 0 ? (
+                                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                            ) : undefined}
+                        />
+                        <SettingsItem
+                            dense
+                            Icon={HelpIcon}
+                            label={t('guides')}
+                            onClick={() => navigateRouter('/docs')}
+                        />
+                        <SettingsItem
+                            dense
+                            Icon={HelpIcon}
+                            label={t('contactUs')}
+                            onClick={() => navigateRouter('/help')}
+                        />
                     </div>
                     {isAdminValue && (
-                        <div className="mt-4">
-                            <h3 className="text-lg font-serif font-bold mb-3 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
+                        <div className="mt-3">
+                            <h3 className="text-sm font-serif font-bold mb-2 text-amber-600 dark:text-amber-400">{t('administration')}</h3>
                             <div className="border border-amber-200 dark:border-amber-800 rounded-lg overflow-visible divide-y divide-amber-200 dark:divide-amber-800">
                                 {adminItems.map((item) => (
-                                    <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
+                                    <SettingsItem dense key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
-                                {/* <div className="relative overflow-visible">
-                                    <ViewModeSelector />
-                                </div> */}
                             </div>
                         </div>
                     )}
-                    <div className="mt-4">
-                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
-                            <SettingsItem
-                                Icon={UpdateIcon}
-                                label={t('whatsNew')}
-                                onClick={() => navigateRouter('/whats-new')}
-                                adornment={newReleaseNotes.length > 0 ? (
-                                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-                                ) : undefined}
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-4">
-                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
-                            <SettingsItem
-                                Icon={HelpIcon}
-                                label={t('guides')}
-                                onClick={() => navigateRouter('/docs')}
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-4">
-                        <h3 className="text-xl font-serif font-bold mb-3">{t('help')}</h3>
-                        <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden">
-                            <SettingsItem
-                                Icon={HelpIcon}
-                                label={t('contactUs')}
-                                onClick={() => navigateRouter('/help')}
-                            />
-                        </div>
-                    </div>
 
-                    <div className="mt-4 border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
-                        <SettingsItem 
-                            Icon={LogoutIcon} 
-                            label={t('logout')} 
-                            isDestructive 
-                            onClick={handleLogout} 
+                    <div className="mt-3 border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
+                        <SettingsItem
+                            dense
+                            Icon={LogoutIcon}
+                            label={t('logout')}
+                            isDestructive
+                            onClick={handleLogout}
                         />
                     </div>
                 </section>
+                </>
+                ) : (
+                <div className="px-4 py-3">
+                    {renderContent()}
+                </div>
+                )}
             </div>
 
             {/* Desktop dashboard layout */}

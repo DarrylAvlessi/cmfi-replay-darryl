@@ -84,9 +84,9 @@ const HistorySection: React.FC<HistorySectionProps> = ({
     }
 
     return (
-        <section className="px-4 py-4">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <section className="px-4 py-3 lg:py-4">
+            <div className="flex items-center justify-between mb-2 lg:mb-3">
+                <h3 className="text-base lg:text-xl font-bold text-gray-900 dark:text-white">
                     {title}
                 </h3>
                 {showViewAll && onViewAll && (
@@ -105,7 +105,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({
 
                 <div className="relative group overflow-hidden">
                     <div 
-                        className="overflow-x-auto pb-6 -mx-2 scrollbar-none"
+                        className="overflow-x-auto pb-3 lg:pb-6 -mx-2 scrollbar-none"
                         style={{
                             scrollBehavior: 'smooth',
                             WebkitOverflowScrolling: 'touch',
@@ -113,13 +113,13 @@ const HistorySection: React.FC<HistorySectionProps> = ({
                             scrollbarWidth: 'none',
                         }}
                     >
-                        <div className="flex space-x-4 px-2 py-1">
+                        <div className="flex space-x-3 lg:space-x-4 px-2 py-1">
                             {isLoading ? (
                                 // Skeleton loaders
                                 [...Array(5)].map((_, i) => (
                                     <div 
                                         key={`skeleton-${i}`} 
-                                        className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96"
+                                        className="flex-none w-40 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96"
                                     >
                                         <div className="h-full flex flex-col">
                                             <div className="relative aspect-video bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-700 dark:to-black rounded-lg overflow-hidden animate-shimmer bg-[length:200%_100%]">
@@ -142,7 +142,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({
                                 items.map((item) => (
                                     <div 
                                         key={item.id} 
-                                        className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96 transition-all duration-300 hover:scale-[1.02]"
+                                        className="flex-none w-40 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96 transition-all duration-300 hover:scale-[1.02]"
                                     >
                                         <HistoryCard
                                             item={item}

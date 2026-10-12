@@ -100,15 +100,15 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onSelectMedia, onPlay, on
     return (
         <div className="bg-white dark:bg-black min-h-screen animate-fadeIn">
             <div className="sticky top-0 z-10 bg-white dark:bg-black border-b border-gray-200 dark:border-black">
-                <div className="flex items-center px-4 py-4">
+                <div className="flex items-center px-4 py-3 lg:py-4">
                     <button
                         onClick={onBack}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-black transition-colors mr-4"
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-black transition-colors mr-3 lg:mr-4"
                         aria-label="Retour"
                     >
-                        <ArrowLeftIcon className="w-6 h-6" />
+                        <ArrowLeftIcon className="w-5 h-5 lg:w-6 lg:h-6" />
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                         {t('history') || 'Mon historique'}
                     </h1>
                 </div>
@@ -116,13 +116,13 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onSelectMedia, onPlay, on
 
             <div className="px-4 py-2 sm:p-4">
                 {loading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
                         {[...Array(10)].map((_, i) => (
                             <MediaCardSkeleton key={i} />
                         ))}
                     </div>
                 ) : historyItems.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
                         {historyItems.map((item) => (
                             <div key={item.id} className="w-full h-full">
                                 <div className="h-full flex flex-col">

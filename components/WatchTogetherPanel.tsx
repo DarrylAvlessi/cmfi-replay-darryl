@@ -101,6 +101,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
         videoId,
         videoType,
         enabled,
+        videoTitle,
         getPlaybackState: onGetPlaybackState,
         onApplyRemoteTarget,
     });

@@ -78,12 +78,12 @@ const RedeemVoucherScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto px-4 py-4 lg:py-8">
         {/* Header avec bouton retour */}
-        <div className="mb-8">
+        <div className="mb-4 lg:mb-8">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-6"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4 lg:mb-6"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -91,35 +91,35 @@ const RedeemVoucherScreen: React.FC = () => {
             <span className="font-medium">{t('back')}</span>
           </button>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">
             {t('redeemVoucherTitle')}
           </h1>
-          <div className="h-1 w-16 bg-amber-500 rounded-full mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <div className="h-1 w-16 bg-amber-500 rounded-full mb-3 lg:mb-4"></div>
+          <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
             {t('redeemVoucherSubtitle')}
           </p>
         </div>
 
         {/* Carte principale */}
-        <div className="bg-white dark:bg-black rounded-2xl shadow-lg overflow-hidden" data-tour="voucher-form">
-          <div className="p-6 md:p-10">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="bg-white dark:bg-black rounded-xl lg:rounded-2xl shadow-lg overflow-hidden" data-tour="voucher-form">
+          <div className="p-4 md:p-10">
+            <h1 className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">
               {t('redeemVoucherTitle')}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400 mb-4 lg:mb-6">
               {t('redeemVoucherSubtitle')}
             </p>
             {/* Input et bouton de vérification */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4 mb-4 lg:mb-6">
               <div className="md:col-span-2">
-                <label htmlFor="voucher-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="voucher-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 lg:mb-2">
                   {t('voucherCode')}
                 </label>
                 <div className="relative">
                   <input
                     id="voucher-code"
                     type="text"
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all font-mono"
+                    className="w-full px-4 py-2.5 lg:py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all font-mono"
                     placeholder={t('enterCodeWithoutSpaces')}
                     value={code}
                     onChange={(e) => setCode(e.target.value.trim())}
