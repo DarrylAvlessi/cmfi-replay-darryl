@@ -18,7 +18,7 @@ const Hero: React.FC<HeroProps> = ({ items: propItems, onSelectMedia, onPlay }) 
   const { t, bookmarkedIds, toggleBookmark, theme } = useAppContext();
   
   // Traductions
-  const playText = t('play') || 'Lire';
+  const playText = t('play');
 
   // Récupérer les 10 films les plus populaires depuis Firestore
   useEffect(() => {

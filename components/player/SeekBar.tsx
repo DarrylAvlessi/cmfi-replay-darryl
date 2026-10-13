@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAppContext } from '../../context/AppContext';
 
 interface SeekBarProps {
   duration: number;
@@ -50,6 +51,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
   ariaValueText,
   scrubProgress = null,
 }) {
+  const { t } = useAppContext();
   // Edge-anchored scaling: thumb sits at the far right when at the live edge.
   const edgeScale = liveMode && liveEdge && liveEdge > 0 ? liveEdge : 0;
   const displayProgress = edgeScale > 0
@@ -115,7 +117,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
         onTouchEnd={onSliderMouseUp}
         disabled={disabled}
         className={`absolute inset-0 w-full h-full opacity-0 z-10 ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
-        aria-label="Seek"
+        aria-label={t('seekAria')}
         aria-valuetext={ariaValueText}
       />
     </div>

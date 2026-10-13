@@ -222,7 +222,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
                         <input
                             type="text"
-                            placeholder={t('search') || 'Rechercher une série...'}
+                            placeholder={t('searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"

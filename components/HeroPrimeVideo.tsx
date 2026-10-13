@@ -430,7 +430,7 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                   className="group flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-white hover:bg-white/90 text-black font-bold rounded-lg md:rounded-xl transition-all duration-300 hover:scale-105 shadow-xl"
                 >
                   <PlayIcon className="w-6 h-6 md:w-7 md:h-7" />
-                  <span className="text-base md:text-lg">{t('play') || 'Regarder'}</span>
+                  <span className="text-base md:text-lg">{t('play')}</span>
                 </button>
 
                 <button

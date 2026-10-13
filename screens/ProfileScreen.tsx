@@ -24,6 +24,7 @@ import {
 } from '../components/icons';
 import { useAppContext } from '../context/AppContext';
 import { useTutorial } from '../context/TutorialContext';
+import { APP_VERSION } from '../lib/version';
 import { UserProfile, userService, reportService, Report } from '../lib/db';
 import WhatsNewScreen from './WhatsNewScreen';
 
@@ -291,7 +292,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         </div>
                         
                         <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-base lg:text-lg font-serif font-bold mb-3">Liens rapides</h3>
+                            <h3 className="text-base lg:text-lg font-serif font-bold mb-3">{t('quickLinks')}</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3">
                                 {settingsItems.map((item) => (
                                     <button
@@ -629,6 +630,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                 <LogoutIcon className="w-5 h-5" />
                                 <span className="font-medium">{t('logout')}</span>
                             </button>
+                            <p className="mt-2 px-4 text-[11px] text-gray-400 dark:text-gray-500">v{APP_VERSION}</p>
                         </div>
                     </nav>
                 </aside>

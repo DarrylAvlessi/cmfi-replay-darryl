@@ -449,7 +449,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                 <button
                     onClick={onBack}
                     className="group p-3 rounded-full text-white bg-black/70 hover:bg-black/90 backdrop-blur-md transition-all duration-300 hover:scale-110 shadow-xl border border-white/10"
-                    aria-label="Go back"
+                    aria-label={t('back')}
                 >
                     <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
                 </button>
@@ -497,7 +497,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); if (forceMini) navigate(`/watch/${item.id}`); else closeMiniPlayer(); }}
                                                 className="absolute bottom-2 right-2 z-50 w-8 h-8 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                                aria-label="Expand"
+                                                aria-label={t('expand')}
                                             >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -506,7 +506,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); if (forceMini) { onClose?.(); } else { closeMiniPlayer(); } }}
                                                 className="absolute top-2 right-2 z-50 w-7 h-7 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-lg backdrop-blur-sm border border-white/20"
-                                                aria-label="Close"
+                                                aria-label={t('dismiss')}
                                             >
                                                 ✕
                                             </button>

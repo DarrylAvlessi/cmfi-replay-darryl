@@ -56,6 +56,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import RGPDConsentModal from './components/RGPDConsentModal';
 import WhatsNewModal from './components/WhatsNewModal';
+import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 import RouteLoadingBar from './components/RouteLoadingBar';
 import { MiniPlayerProvider } from './context/MiniPlayerContext';
 import { PlaybackPreferencesProvider } from './context/PlaybackPreferencesContext';
@@ -634,6 +635,7 @@ const AppContent: React.FC = () => {
             )}
 
             <WhatsNewModal />
+            <PwaUpdatePrompt />
             <TutorialHost />
             <TutorialPromptModal />
             <PlayerScreenHost />

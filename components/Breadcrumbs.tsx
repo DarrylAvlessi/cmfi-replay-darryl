@@ -90,7 +90,7 @@ const Breadcrumbs: React.FC = () => {
     }
 
     return (
-        <nav className="px-4 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-black" aria-label="Breadcrumb">
+        <nav className="px-4 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-black" aria-label={t('breadcrumb')}>
             <ol className="flex items-center space-x-2 text-sm">
                 {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;

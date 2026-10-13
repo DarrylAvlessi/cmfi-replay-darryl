@@ -142,7 +142,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
           <input
             type="text"
             data-tour="search-input"
-            placeholder={t('searchPlaceholder') || 'Rechercher...'}
+            placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-gray-100 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"

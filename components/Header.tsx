@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAppContext } from '../context/AppContext';
 import { ArrowLeftIcon } from './icons';
 import HeaderMenu from './HeaderMenu';
 import HamburgerMenu from './HamburgerMenu';
@@ -23,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({
   isWatchRoute = false
 }) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const { t } = useAppContext();
 
   return (
     <>
@@ -71,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onBack}
                 className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                aria-label="Go back"
+                aria-label={t('back')}
               >
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>

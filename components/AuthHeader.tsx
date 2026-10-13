@@ -4,7 +4,7 @@ import { SunIcon, MoonIcon, ChevronDownIcon, GlobeIcon } from './icons';
 import { Language } from '../lib/i18n';
 
 const AuthHeader: React.FC = () => {
-    const { theme, setTheme, language, setLanguage } = useAppContext();
+    const { theme, setTheme, language, setLanguage, t } = useAppContext();
     const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +36,7 @@ const AuthHeader: React.FC = () => {
                 <button
                     onClick={toggleTheme}
                     className="p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    aria-label="Toggle theme"
+                    aria-label={t('theme')}
                 >
                     {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                 </button>
@@ -46,7 +46,7 @@ const AuthHeader: React.FC = () => {
                     <button
                         onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                         className="flex items-center space-x-2 p-2 rounded-full text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/50 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        aria-label="Select language"
+                        aria-label={t('language')}
                     >
                         <GlobeIcon className="w-5 h-5" />
                         <span className="text-sm font-semibold uppercase">{language}</span>

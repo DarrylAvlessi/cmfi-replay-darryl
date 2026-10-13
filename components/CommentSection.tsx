@@ -586,6 +586,7 @@ const CommentRow: React.FC<CommentRowProps> = React.memo(({
     onConfirmDelete,
     onCancelDelete,
 }) => {
+    const { t } = useAppContext();
     const isEditing = editingId === comment.id;
     const isConfirmingDelete = confirmDeleteId === comment.id;
     const isDeleting = deletingId === comment.id;
@@ -631,14 +632,14 @@ const CommentRow: React.FC<CommentRowProps> = React.memo(({
                                 onClick={onEditSave}
                                 disabled={!editText.trim() || editText.length > MAX_COMMENT_LENGTH}
                                 className="p-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Save"
+                                aria-label={t('saveChanges')}
                             >
                                 <CheckIcon className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={onEditCancel}
                                 className="p-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                                aria-label="Cancel"
+                                aria-label={t('cancel')}
                             >
                                 <XMarkIcon className="w-4 h-4" />
                             </button>
@@ -664,7 +665,7 @@ const CommentRow: React.FC<CommentRowProps> = React.memo(({
                                     ? 'text-amber-500'
                                     : 'text-gray-400 hover:text-amber-500'
                             }`}
-                            aria-label={isLiked ? 'Unlike' : 'Like'}
+                            aria-label={t('like')}
                         >
                         <LikeIcon className={`w-3.5 h-3.5 transition-all duration-200 ${
                             isLiked ? 'fill-current scale-110' : ''
@@ -684,7 +685,7 @@ const CommentRow: React.FC<CommentRowProps> = React.memo(({
                                 <button
                                     onClick={onEdit}
                                     className="text-xs font-medium text-gray-400 hover:text-amber-500 transition-colors"
-                                    aria-label="Edit"
+                                    aria-label={t('editProfile')}
                                 >
                                     {locale === 'fr-FR' ? 'Modifier' : 'Edit'}
                                 </button>
@@ -708,7 +709,7 @@ const CommentRow: React.FC<CommentRowProps> = React.memo(({
                                     <button
                                         onClick={onDelete}
                                         className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors"
-                                        aria-label="Delete"
+                                        aria-label={t('delete')}
                                     >
                                         <TrashIcon className="w-3.5 h-3.5" />
                                     </button>
@@ -741,6 +742,7 @@ const ReplyRow: React.FC<CommentRowProps> = React.memo(({
     onCancelDelete,
     onReply,
 }) => {
+    const { t } = useAppContext();
     const isEditing = editingId === comment.id;
     const isConfirmingDelete = confirmDeleteId === comment.id;
     const isDeleting = deletingId === comment.id;
@@ -786,14 +788,14 @@ const ReplyRow: React.FC<CommentRowProps> = React.memo(({
                                 onClick={onEditSave}
                                 disabled={!editText.trim() || editText.length > MAX_COMMENT_LENGTH}
                                 className="p-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Save"
+                                aria-label={t('saveChanges')}
                             >
                                 <CheckIcon className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={onEditCancel}
                                 className="p-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                                aria-label="Cancel"
+                                aria-label={t('cancel')}
                             >
                                 <XMarkIcon className="w-4 h-4" />
                             </button>
@@ -819,7 +821,7 @@ const ReplyRow: React.FC<CommentRowProps> = React.memo(({
                                     ? 'text-amber-500'
                                     : 'text-gray-400 hover:text-amber-500'
                             }`}
-                            aria-label={isLiked ? 'Unlike' : 'Like'}
+                            aria-label={t('like')}
                         >
                             <LikeIcon className={`w-3.5 h-3.5 transition-all duration-200 ${
                                 isLiked ? 'fill-current scale-110' : ''
@@ -839,7 +841,7 @@ const ReplyRow: React.FC<CommentRowProps> = React.memo(({
                                 <button
                                     onClick={onEdit}
                                     className="text-xs font-medium text-gray-400 hover:text-amber-500 transition-colors"
-                                    aria-label="Edit"
+                                    aria-label={t('editProfile')}
                                 >
                                     {locale === 'fr-FR' ? 'Modifier' : 'Edit'}
                                 </button>
@@ -863,7 +865,7 @@ const ReplyRow: React.FC<CommentRowProps> = React.memo(({
                                     <button
                                         onClick={onDelete}
                                         className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors"
-                                        aria-label="Delete"
+                                        aria-label={t('delete')}
                                     >
                                         <TrashIcon className="w-3.5 h-3.5" />
                                     </button>

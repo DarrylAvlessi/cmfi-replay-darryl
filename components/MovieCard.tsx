@@ -94,7 +94,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, variant = 'poster', onSele
         >
           <div className="flex items-center gap-2 px-4 py-2 bg-white/95 rounded-full shadow-xl">
             <PlayIcon className="w-5 h-5 text-gray-900" />
-            <span className="text-gray-900 text-sm font-bold">{t('play') || 'Regarder'}</span>
+            <span className="text-gray-900 text-sm font-bold">{t('play')}</span>
           </div>
           <h3 className="mt-3 text-white font-bold text-xs sm:text-sm text-center leading-tight break-words line-clamp-2">
             {title}

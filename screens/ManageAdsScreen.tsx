@@ -140,7 +140,7 @@ const ManageAdsScreen: React.FC = () => {
     };
 
     const handleDeleteAd = async (adId: string) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette publicité ?')) {
+        if (!window.confirm(t('confirmDeleteAd'))) {
             return;
         }
 
@@ -220,7 +220,7 @@ const ManageAdsScreen: React.FC = () => {
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center py-8">
-                        <div className="text-gray-600 dark:text-gray-400">Chargement...</div>
+                        <div className="text-gray-600 dark:text-gray-400">{t('loading')}</div>
                     </div>
                 </div>
             </div>

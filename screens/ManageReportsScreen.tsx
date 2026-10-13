@@ -19,7 +19,7 @@ const statusColors: Record<string, string> = {
 
 const ManageReportsScreen: React.FC = () => {
     const navigate = useNavigate();
-    const { userProfile } = useAppContext();
+    const { userProfile, t } = useAppContext();
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -110,12 +110,12 @@ const ManageReportsScreen: React.FC = () => {
                     <span>Retour</span>
                 </button>
 
-                <h1 className="text-2xl font-serif font-bold mb-6">Gérer les signalements</h1>
+                <h1 className="text-2xl font-serif font-bold mb-6">{t('manageReports')}</h1>
 
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Chargement...</div>
+                    <div className="text-center py-12 text-gray-500">{t('loading')}</div>
                 ) : reports.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">Aucun signalement</div>
+                    <div className="text-center py-12 text-gray-500">{t('noReports')}</div>
                 ) : (
                     <div className="space-y-4">
                         {reports.map((report) => (

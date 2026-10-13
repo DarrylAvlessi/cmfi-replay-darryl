@@ -104,7 +104,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onSelectMedia, onPlay, on
                     <button
                         onClick={onBack}
                         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-black transition-colors mr-3 lg:mr-4"
-                        aria-label="Retour"
+                        aria-label={t('back')}
                     >
                         <ArrowLeftIcon className="w-5 h-5 lg:w-6 lg:h-6" />
                     </button>
@@ -136,12 +136,18 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ onSelectMedia, onPlay, on
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">
-                            Aucun historique disponible
+                        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+                            {t('noHistory')}
                         </p>
-                        <p className="text-gray-400 dark:text-gray-500 text-sm">
-                            Votre historique de visionnage apparaîtra ici
+                        <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">
+                            {t('discoverHint')}
                         </p>
+                        <button
+                            onClick={onBack}
+                            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600"
+                        >
+                            {t('discover')}
+                        </button>
                     </div>
                 )}
             </div>

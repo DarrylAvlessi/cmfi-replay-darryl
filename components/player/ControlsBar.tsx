@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAppContext } from '../../context/AppContext';
 import { PlayIcon, PauseIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon } from '../icons';
 import VolumeControl from './VolumeControl';
 
@@ -66,7 +67,9 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
   behindBySec = 0,
   onJumpToLive,
   liveBadgeText = 'LIVE',
-}) => (
+}) => {
+  const { t } = useAppContext();
+  return (
   <div className="px-2 sm:px-4 pb-2 sm:pb-3" data-tour="player-controls">
       <div className="flex items-center justify-between text-white text-sm font-medium">
         <div className="flex items-center space-x-1 sm:space-x-2">
@@ -94,7 +97,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
               <button
                 onClick={onJumpToLive}
                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/15 text-white/70 text-[11px] font-bold tracking-widest hover:bg-white/25 transition-colors"
-                aria-label="Jump to live"
+                aria-label={t('jumpToLiveAria')}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
                 {liveBadgeText}
@@ -147,7 +150,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
           onClick={onCyclePlaybackSpeed}
           disabled={disabled || lockSpeed}
           className="px-2 py-1 rounded-full bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/50 transition-colors leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)] disabled:opacity-40 disabled:hover:bg-black/40 disabled:cursor-default"
-          aria-label="Playback speed"
+          aria-label={t('playbackSpeedAria')}
         >
           {playbackRate % 1 === 0
             ? playbackRate.toFixed(0)
@@ -176,6 +179,7 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ControlsBar;

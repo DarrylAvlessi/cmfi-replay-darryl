@@ -4,7 +4,7 @@ import { serieCategoryService, SerieCategory, getCategoryName } from '../lib/db'
 import { useAppContext } from '../context/AppContext';
 
 const CategoriesTab: React.FC = () => {
-    const { language } = useAppContext();
+    const { language, t } = useAppContext();
     const [categories, setCategories] = useState<SerieCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingCategory, setEditingCategory] = useState<SerieCategory | null>(null);
@@ -71,7 +71,7 @@ const CategoriesTab: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+        if (!window.confirm(t('confirmDeleteCategory'))) {
             return;
         }
 
@@ -97,13 +97,13 @@ const CategoriesTab: React.FC = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Chargement...</div>;
+        return <div className="text-center py-8">{t('loading')}</div>;
     }
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestion des catégories</h2>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestion des catégories</h1>
                 <button
                     onClick={() => {
                         setShowCreateModal(true);

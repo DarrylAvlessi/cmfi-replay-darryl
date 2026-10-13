@@ -105,7 +105,7 @@ const ManageInfoBarScreen: React.FC = () => {
     };
 
     const handleDeleteMessage = async (messageId: string) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+        if (!window.confirm(t('confirmDeleteMessage'))) {
             return;
         }
 
@@ -132,7 +132,7 @@ const ManageInfoBarScreen: React.FC = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
-                <div className="text-gray-600 dark:text-gray-400">Chargement...</div>
+                <div className="text-gray-600 dark:text-gray-400">{t('loading')}</div>
             </div>
         );
     }

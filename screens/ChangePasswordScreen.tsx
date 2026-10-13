@@ -45,7 +45,7 @@ const ChangePasswordScreen: React.FC = () => {
         }
 
         if (currentPassword === newPassword) {
-            setError('Le nouveau mot de passe doit être différent de l\'ancien');
+            setError(t('newPasswordDifferent'));
             return;
         }
 
@@ -67,7 +67,7 @@ const ChangePasswordScreen: React.FC = () => {
                 if (error.code === 'auth/wrong-password') {
                     setError(t('wrongPassword') || 'Mot de passe actuel incorrect');
                 } else if (error.code === 'auth/weak-password') {
-                    setError('Le mot de passe est trop faible');
+                    setError(t('passwordTooWeak'));
                 } else if (error.code === 'auth/requires-recent-login') {
                     setError('Veuillez vous reconnecter pour changer votre mot de passe');
                 } else {

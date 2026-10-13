@@ -127,13 +127,13 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
                 className="group flex items-center gap-2 md:gap-3 px-6 md:px-8 py-2.5 md:py-3.5 bg-white hover:bg-white/90 text-black font-bold rounded text-sm md:text-base transition-all duration-200 hover:scale-105 shadow-lg"
               >
                 <PlayIcon className="w-5 h-5 md:w-6 md:h-6" />
-                <span>{t('play') || 'Lecture'}</span>
+                <span>{t('play')}</span>
               </button>
 
               <button
                 onClick={handleBookmark}
                 className="group flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold rounded text-sm md:text-base border border-white/30 transition-all duration-200 hover:scale-105"
-                aria-label={isBookmarked ? 'Retirer de Ma liste' : 'Ajouter à Ma liste'}
+                aria-label={isBookmarked ? t('removeFromFavorites') : t('addToFavorites')}
               >
                 {isBookmarked ? (
                   <>
@@ -151,7 +151,7 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
               <button
                 onClick={() => onSelectMedia(currentItem)}
                 className="group p-2.5 md:p-3.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full border border-white/30 transition-all duration-200 hover:scale-110"
-                aria-label="Plus d'infos"
+                aria-label={t('moreInfo')}
               >
                 <InfoIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </button>
@@ -168,7 +168,7 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 md:p-3 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-200 hover:scale-110 opacity-0 group-hover:opacity-100"
-            aria-label="Précédent"
+            aria-label={t('previousSlide')}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -180,7 +180,7 @@ const HeroNetflix: React.FC<HeroNetflixProps> = ({ items: propItems, onSelectMed
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 md:p-3 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-200 hover:scale-110 opacity-0 group-hover:opacity-100"
-            aria-label="Suivant"
+            aria-label={t('nextSlide')}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
