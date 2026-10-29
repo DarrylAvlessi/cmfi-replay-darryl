@@ -7,7 +7,7 @@ import { Movie, movieService, likeService, viewService, getLastWatchedPositionFo
 import { updateMetaTags, clearMetaTags } from '../lib/metaTags';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon,
-    LikeIcon, ShareIcon, PlusIcon,
+    LikeIcon, ShareIcon, PlusIcon, WatchTogetherIcon, EllipsisVerticalIcon,
     VolumeHighIcon, VolumeMuteIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon,
     BackwardIcon, ForwardPlaybackIcon, CheckIcon, PencilIcon
 } from '../components/icons';
@@ -54,6 +54,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
     const [authAction, setAuthAction] = useState('');
     const [showSuggestModal, setShowSuggestModal] = useState(false);
+    const [showWatchTogether, setShowWatchTogether] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [videoIsPlaying, setVideoIsPlaying] = useState(false);
     const [watchState, setWatchState] = useState<{ role: WatchRole | null; isLive: boolean; liveEdge: number | null; behindBySec: number; isBehind: boolean; jumpToLive: () => void }>({ role: null, isLive: false, liveEdge: null, behindBySec: 0, isBehind: false, jumpToLive: () => {} });
     const { activeTourId } = useTutorial();
@@ -359,8 +361,8 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
         </button>
     );
 
-    const ActionButton: React.FC<{ Icon: React.FC<any>, label: string, value?: string | number, onClick?: () => void, isActive?: boolean }> = ({ Icon, label, value, onClick, isActive }) => (
-        <button onClick={onClick} className={`flex flex-col items-center space-y-1 hover:text-amber-500 dark:hover:text-amber-400 ${isActive ? 'text-amber-500 dark:text-amber-400' : 'text-gray-600 dark:text-gray-400'}`}>
+    const ActionButton: React.FC<{ Icon: React.FC<any>, label: string, value?: string | number, onClick?: () => void, isActive?: boolean, className?: string }> = ({ Icon, label, value, onClick, isActive, className }) => (
+        <button onClick={onClick} className={`flex flex-col items-center space-y-1 hover:text-amber-500 dark:hover:text-amber-400 ${isActive ? 'text-amber-500 dark:text-amber-400' : 'text-gray-600 dark:text-gray-400'} ${className || ''}`}>
             <Icon className="w-7 h-7" />
             <span className="text-xs font-semibold">{value ? formatNumber(Number(value)) : label}</span>
         </button>
@@ -561,7 +563,7 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-around py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-black/50 shadow-lg">
+                            <div className="relative flex flex-wrap items-center justify-center gap-2 py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-black/50 shadow-lg">
                                 <LikeButton
                                     label={t('likeVideo')}
                                     value={likeCount}
@@ -579,22 +581,62 @@ const MoviePlayerScreen: React.FC<MoviePlayerScreenProps> = ({ item, onBack, onR
                                     label={t('share')}
                                     onClick={handleShare}
                                 />
+
+                                {/* Desktop: boutons séparés */}
                                 <ActionButton
                                     Icon={PencilIcon}
                                     label={t('suggest')}
                                     onClick={() => setShowSuggestModal(true)}
+                                    className="hidden md:flex"
                                 />
+                                <ActionButton
+                                    Icon={WatchTogetherIcon}
+                                    label={t('watchTogether')}
+                                    onClick={() => setShowWatchTogether(prev => !prev)}
+                                    isActive={showWatchTogether}
+                                    className="hidden md:flex"
+                                />
+
+                                {/* Mobile: bouton Plus */}
+                                <ActionButton
+                                    Icon={EllipsisVerticalIcon}
+                                    label={t('more')}
+                                    onClick={() => setShowMoreMenu(prev => !prev)}
+                                    className="flex md:hidden"
+                                />
+
+                                {/* Menu dropdown mobile */}
+                                {showMoreMenu && (
+                                    <div className="absolute z-50 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200/50 dark:border-black/50">
+                                        <button
+                                            onClick={() => { setShowMoreMenu(false); setShowSuggestModal(true); }}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                        >
+                                            {t('suggest')}
+                                        </button>
+                                        <button
+                                            onClick={() => { setShowMoreMenu(false); setShowWatchTogether(prev => !prev); }}
+                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 ${showWatchTogether ? 'text-amber-500' : 'text-gray-600 dark:text-gray-400'}`}
+                                        >
+                                            {t('watchTogether')}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
-                            <WatchTogetherPanel
-                                videoId={movieData?.uid || item.id}
-                                videoType="movie"
-                                onGetPlaybackState={handleGetPlaybackState}
-                                onApplyRemoteTarget={handleApplyRemoteTarget}
-                                onWatchStateChange={setWatchState}
-                                videoTitle={item.title}
-                                initialCode={inviteRoomCode}
-                            />
+                            {showWatchTogether && (
+                                <div className="watch-together-enter">
+                                    <WatchTogetherPanel
+                                        videoId={movieData?.uid || item.id}
+                                        videoType="movie"
+                                        onGetPlaybackState={handleGetPlaybackState}
+                                        onApplyRemoteTarget={handleApplyRemoteTarget}
+                                        onWatchStateChange={setWatchState}
+                                        videoTitle={item.title}
+                                        initialCode={inviteRoomCode}
+                                    />
+                                </div>
+                            )}
                         </div>
                         )}
                     </div>
