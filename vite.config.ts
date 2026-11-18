@@ -64,6 +64,9 @@ export default defineConfig(({ mode }) => {
             lang: 'fr',
             description: 'Replay application for CMFI',
             theme_color: '#ffffff',
+            background_color: '#ffffff',
+            display: 'standalone',
+            start_url: '/',
             icons: [
               {
                 src: 'pwa-192x192.png',
