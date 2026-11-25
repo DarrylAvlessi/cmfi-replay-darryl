@@ -44,14 +44,17 @@ function SourceRail({
     const width = kind === 'channel' ? 'w-36 md:w-44' : 'w-48 md:w-64';
     return (
         <div className="mt-4 first:mt-0">
-            <div className="px-4 md:px-6 lg:px-8 mb-3 flex items-center justify-between">
-                <h4 className="text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    {title}
-                </h4>
+            <div className="px-4 md:px-6 lg:px-8 mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <span className="w-1 h-6 rounded-full bg-gradient-to-b from-rose-500 to-sky-400" />
+                    <h4 className="rail-title text-xl md:text-2xl text-slate-900 dark:text-white">
+                        {title}
+                    </h4>
+                </div>
                 {seasons.length > RAIL_LIMIT && (
                     <button
                         onClick={onSeeAll}
-                        className="text-sm md:text-base text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold transition-colors"
+                        className="px-3.5 py-1.5 rounded-xl bg-blue-600/10 dark:bg-sky-500/10 border border-blue-500/20 text-xs md:text-sm text-blue-600 dark:text-sky-400 hover:bg-blue-600 hover:text-white dark:hover:bg-sky-500 dark:hover:text-slate-950 font-semibold transition-all"
                     >
                         {seeAllLabel} →
                     </button>

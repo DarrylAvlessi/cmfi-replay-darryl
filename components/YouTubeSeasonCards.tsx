@@ -19,16 +19,12 @@ export interface SeasonCardProps {
 }
 
 function cardFrame(selected: boolean | undefined, clickable: boolean): string {
-    // h-full: in flex rails the wrapper stretches to the tallest card, so all
-    // cards in a rail share the tallest height. (Grid layouts stretch already.)
-    // No translate lift on hover: these cards sit right under rail headers, so
-    // moving up would overlap the title — border + shadow feedback only.
-    return `relative text-left w-full h-full p-3 rounded-2xl border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none ${
+    return `relative text-left w-full h-full p-3 rounded-2xl border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none ${
         selected
-            ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/15'
+            ? 'border-blue-500 bg-blue-50 dark:bg-sky-500/15'
             : clickable
-                ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 cursor-pointer hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10'
-                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50'
+                ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] cursor-pointer hover:border-blue-500/60 dark:hover:border-sky-400/60 hover:shadow-xl hover:shadow-blue-600/15'
+                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a]'
     }`;
 }
 

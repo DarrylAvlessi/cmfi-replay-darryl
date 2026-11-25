@@ -165,8 +165,11 @@ const WatchScreen: React.FC<WatchScreenProps> = ({ onReturnHome }) => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-white text-xl">{t('loading') || 'Chargement...'}</div>
+            <div className="min-h-screen bg-[#060911] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 rounded-full border-2 border-slate-700 border-t-sky-400 animate-spin" />
+                    <div className="text-slate-300 text-sm font-mono-meta">{t('loading') || 'Chargement...'}</div>
+                </div>
             </div>
         );
     }

@@ -33,7 +33,7 @@ const ParticipantRow: React.FC<{ participant: WatchParticipant; isSelf: boolean 
 }) => (
     <div className="flex items-center gap-3 py-2">
         <div className="relative shrink-0">
-            <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                 {participant.photoUrl ? (
                     <img
                         src={participant.photoUrl}
@@ -46,7 +46,7 @@ const ParticipantRow: React.FC<{ participant: WatchParticipant; isSelf: boolean 
                     />
                 ) : null}
                 {!participant.photoUrl && (
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                         {(participant.displayName || 'U').charAt(0).toUpperCase()}
                     </span>
                 )}
@@ -58,9 +58,9 @@ const ParticipantRow: React.FC<{ participant: WatchParticipant; isSelf: boolean 
             )}
         </div>
         <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
                 {participant.displayName}
-                {isSelf && <span className="text-gray-500 dark:text-gray-400"> (vous)</span>}
+                {isSelf && <span className="text-slate-500 dark:text-slate-400"> (vous)</span>}
             </p>
         </div>
         {participant.role === 'host' && (
@@ -218,11 +218,11 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
     };
 
     return (
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-gray-200/50 dark:border-black/50 shadow-xl">
+        <div className="broadcast-panel rounded-2xl p-4 shadow-sm md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
-                    <UserGroupIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">
+                    <UserGroupIcon className="h-5 w-5 text-blue-600 dark:text-sky-400" />
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white md:text-lg">
                         {t('watchTogether')}
                     </h3>
                 </div>
@@ -252,7 +252,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
             </div>
 
             {!isAuthenticated ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('loginToWatchTogether')}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('loginToWatchTogether')}</p>
             ) : !isInRoom ? (
                 <div className="space-y-3">
                     {initialCode && (
@@ -260,12 +260,12 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                             {t('invitedViaLink')}
                         </p>
                     )}
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('watchTogetherDesc')}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('watchTogetherDesc')}</p>
 
                     <button
                         onClick={createRoom}
                         disabled={isBusy}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition-all hover:from-blue-500 hover:to-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <UserGroupIcon className="w-4 h-4" />
                         {isBusy ? t('creatingRoom') : t('createRoom')}
@@ -274,16 +274,16 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                     <button
                         onClick={createLiveRoom}
                         disabled={isBusy}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-rose-500 hover:to-red-400 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <VideoCameraIcon className="w-4 h-4" />
                         {isBusy ? t('goingLive') : t('goLive')}
                     </button>
 
                     <div className="flex items-center gap-3">
-                        <div className="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
-                        <div className="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
+                        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                        <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
+                        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                     </div>
 
                     <div className="flex gap-2">
@@ -292,13 +292,13 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                             onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
                             placeholder={t('joinCodePlaceholder')}
-                            className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 uppercase tracking-widest"
+                            className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm uppercase tracking-widest text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500 dark:focus:ring-sky-400"
                             maxLength={8}
                         />
                         <button
                             onClick={handleJoin}
                             disabled={isBusy || joinCode.trim().length < 4}
-                            className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="shrink-0 flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                         >
                             {isBusy ? t('joiningRoom') : t('joinRoom')}
                             <ArrowRightIcon className="w-4 h-4" />
@@ -320,16 +320,16 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({ videoId, videoT
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between gap-3 bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/70">
                         <div>
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 dark:text-gray-400">{t('roomCode')}</p>
-                            <p className="text-xl md:text-2xl font-black tracking-[0.3em] text-gray-900 dark:text-white">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400">{t('roomCode')}</p>
+                            <p className="font-mono-meta text-xl font-bold tracking-[0.3em] text-slate-900 dark:text-white md:text-2xl">
                                 {room?.roomCode}
                             </p>
                         </div>
                         <button
                             onClick={handleCopyInviteLink}
-                            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-semibold transition-colors"
+                            className="shrink-0 flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-500/15 dark:text-sky-300"
                         >
                             {copied ? <CheckIcon className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
                             {copied ? t('inviteLinkCopied') : t('copyInviteLink')}

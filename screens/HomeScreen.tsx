@@ -210,7 +210,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
     }, [continueWatchingItems, handleContinueWatchingClick]);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
+        <div className="min-h-screen bg-transparent">
 
             <div className="animate-fadeIn">
                 <HeroPrimeVideo items={featuredContent} onSelectMedia={onSelectMedia} onPlay={onPlay} />
@@ -219,24 +219,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             <InfoBar />
 
             {connectionQuality === 'slow' && (
-                <div className="px-4 md:px-6 lg:px-8 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-                    <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 text-center">
+                <div className="px-4 md:px-6 lg:px-8 py-2 bg-blue-500/10 border-b border-blue-500/20">
+                    <p className="text-xs md:text-sm text-blue-600 dark:text-sky-300 text-center font-medium">
                         {'Connexion lente détectée — certains contenus sont masqués pour économiser les données.'}
                     </p>
                 </div>
             )}
 
-            <div className="bg-white dark:bg-black">
+            <div className="pt-2">
                 {loadingContinueWatching && (
-                    <div className="py-8 md:py-12">
-                        <div className="px-4 md:px-6 lg:px-8 mb-6">
-                            <div className="h-8 w-64 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
+                    <div className="py-6 md:py-8">
+                        <div className="px-4 md:px-6 lg:px-8 mb-5">
+                            <div className="h-7 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
                         </div>
                         <div className="flex space-x-4 overflow-x-auto px-4 md:px-6 lg:px-8 scrollbar-hide pb-4">
                             {[...Array(3)].map((_, i) => (
                                  <div key={i} className="flex-shrink-0 w-36 md:w-48 lg:w-72">
-                                    <div className="aspect-video bg-gray-200 dark:bg-black rounded-2xl animate-pulse mb-3"></div>
-                                    <div className="h-4 w-3/4 bg-gray-200 dark:bg-black rounded animate-pulse"></div>
+                                    <div className="aspect-video bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse mb-3" />
+                                    <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                                 </div>
                             ))}
                         </div>
@@ -245,10 +245,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
                 {continueWatchingMedia.length > 0 && (
                     <div style={{ contentVisibility: 'auto', containIntrinsicSize: '500px' }}>
                     <ScrollReveal>
-                        <div className="py-8 md:py-12">
-                            <div className="px-4 md:px-6 lg:px-8 mb-6">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                        <div className="py-6 md:py-8">
+                            <div className="px-4 md:px-6 lg:px-8 mb-5">
+                                <div className="flex items-center gap-3">
+                                    <span className="w-1 h-7 rounded-full bg-gradient-to-b from-blue-600 to-sky-400" />
+                                    <h3 className="rail-title text-2xl md:text-[1.85rem] text-slate-900 dark:text-white">
                                         {t('continueWatching') || 'Continuer à regarder'}
                                     </h3>
                                 </div>
@@ -397,7 +398,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectMedia, onPlay, navigate
             {showScrollTop && (
                 <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="fixed bottom-20 md:bottom-8 right-8 z-50 p-3 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all duration-200 hover:scale-110"
+                    className="fixed bottom-24 lg:bottom-8 right-6 z-40 p-3 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-xl shadow-blue-600/30 transition-transform duration-200 hover:scale-105"
                     aria-label="Scroll to top"
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

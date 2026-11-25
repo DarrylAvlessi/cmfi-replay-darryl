@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MediaContent, MediaType } from '../types';
+import { MediaContent } from '../types';
 import CategoryScreen from './CategoryScreen';
 
 interface PodcastsScreenProps {
@@ -17,7 +17,6 @@ const PodcastsScreen: React.FC<PodcastsScreenProps> = ({ onSelectMedia, onPlay }
 
     return (
         <CategoryScreen
-            mediaType={MediaType.Podcast}
             onBack={handleBack}
             onSelectMedia={onSelectMedia}
             onPlay={onPlay}

@@ -13,9 +13,9 @@ export function useUIState(userProfile: UserProfile | null, user: any) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
         if (typeof window !== 'undefined') {
             const savedState = window.localStorage.getItem('sidebarCollapsed');
-            return savedState === 'true';
+            return savedState === null ? true : savedState === 'true';
         }
-        return false;
+        return true;
     });
 
     const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.Home);
@@ -89,7 +89,13 @@ export function useUIState(userProfile: UserProfile | null, user: any) {
     };
 
     const toggleSidebarCollapse = () => {
-        setIsSidebarCollapsed(!isSidebarCollapsed);
+        setIsSidebarCollapsed(prev => {
+            const next = !prev;
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('sidebarCollapsed', String(next));
+            }
+            return next;
+        });
     };
 
     const [showWhatsNew, setShowWhatsNew] = useState(false);

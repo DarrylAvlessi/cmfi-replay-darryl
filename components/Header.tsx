@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { ArrowLeftIcon } from './icons';
+import { ArrowLeftIcon, SunIcon, MoonIcon } from './icons';
 import HeaderMenu from './HeaderMenu';
 import HamburgerMenu from './HamburgerMenu';
 import NotificationBell from './NotificationBell';
-import Navbar from './Navbar';
 import DesktopSearchBar from './DesktopSearchBar';
 import cmfiLogo from '../cmfireplay.svg';
 
@@ -21,82 +21,108 @@ const Header: React.FC<HeaderProps> = ({
   onBack,
   isSidebarOpen,
   onToggleSidebar,
-  isWatchRoute = false
+  isWatchRoute = false,
 }) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const { t } = useAppContext();
+  const { t, theme, setTheme, isSidebarCollapsed } = useAppContext();
+
+  const railOffset = isWatchRoute
+    ? 'lg:left-0'
+    : isSidebarCollapsed
+      ? 'lg:left-[76px]'
+      : 'lg:left-[244px]';
 
   return (
     <>
-      {/* Header pour les écrans mobiles */}
-      <div className="fixed top-0 left-0 right-0 z-20 bg-white dark:bg-black p-4 border-b border-gray-200 dark:border-black md:hidden">
-        <div className="relative w-full flex items-center justify-between">
-          {/* Menu burger à gauche */}
+      {/* ================= MOBILE COMPACT TOP BAR ================= */}
+      <div className="fixed top-0 left-0 right-0 z-20 px-3 pt-2.5 md:hidden">
+        <div className="shell-bar relative flex items-center justify-between h-14 px-2.5 rounded-2xl">
           <HamburgerMenu
             isOpen={isSidebarOpen}
             onClick={onToggleSidebar}
-            className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-900/5 dark:hover:bg-white/10"
             data-tour="mobile-menu-btn"
           />
 
-          {/* Logo centré */}
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <img src={cmfiLogo} alt="CMFI Replay" className="h-8 rounded-md" />
-          </div>
+          <Link to="/home" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <img src={cmfiLogo} alt="CMFI Replay" className="h-7 w-7 rounded-lg object-cover" />
+            <span className="font-display font-bold text-sm tracking-tight text-slate-900 dark:text-white">
+              CMFI <span className="text-sky-500">Replay</span>
+            </span>
+          </Link>
 
-          {/* Contrôles à droite */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1">
             <NotificationBell />
-            <div className="relative">
-              <HeaderMenu />
-            </div>
+            <HeaderMenu />
           </div>
         </div>
       </div>
 
-      {/* Header pour les écrans plus larges */}
-      <header className={`bg-white dark:bg-black hidden md:block fixed top-0 right-0 left-0 z-10 transition-all duration-500 ease-in-out ${isWatchRoute ? 'lg:left-0 bg-black/60 backdrop-blur-md' : 'lg:left-0'
-        } ${isWatchRoute ? 'bg-opacity-60' : ''}`}>
-        <div className="relative flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-black">
-          {/* Logo et titre */}
-          <div className="flex items-center space-x-4 z-10">
-            {/* Hamburger pour tablette (quand la Navbar est cachée) */}
-            <div className="md:flex lg:hidden">
+      {/* ================= DESKTOP / TABLET BROADCAST TOP BAR ================= */}
+      <header className={`hidden md:block fixed top-0 right-0 left-0 z-20 transition-all duration-300 ${railOffset}`}>
+        <div
+          className={`h-16 px-5 lg:px-7 flex items-center justify-between border-b backdrop-blur-xl transition-colors ${
+            isWatchRoute
+              ? 'bg-[#060911]/85 border-slate-800/80 text-white'
+              : 'bg-white/80 dark:bg-[#060911]/80 border-slate-200/80 dark:border-slate-800/80'
+          }`}
+        >
+          {/* Left: Tablet hamburger / Back button / Page Context */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex lg:hidden items-center gap-2">
               <HamburgerMenu
                 isOpen={isSidebarOpen}
                 onClick={onToggleSidebar}
-                className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-900/5 dark:hover:bg-white/10"
                 data-tour="mobile-menu-btn"
               />
+              <Link to="/home" className="flex items-center gap-2">
+                <img src={cmfiLogo} alt="CMFI Replay" className="h-7 w-7 rounded-lg object-cover" />
+                <span className="font-display font-bold text-sm text-slate-900 dark:text-white">
+                  CMFI <span className="text-sky-500">Replay</span>
+                </span>
+              </Link>
             </div>
-            {onBack ? (
+
+            {onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors"
                 aria-label={t('back')}
               >
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
-            ) : null}
-            {/* Logo - left on desktop */}
-            <img src={cmfiLogo} alt="CMFI Replay" className="hidden lg:block h-8 rounded-md" />
+            )}
+
+            {!isWatchRoute && title && (
+              <div className="hidden lg:flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(39,167,222,0.7)]" />
+                <span className="font-display font-semibold text-sm tracking-tight text-slate-800 dark:text-slate-100 truncate">
+                  {title}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Logo - centered on tablet */}
-          <div className="absolute left-1/2 -translate-x-1/2 md:block lg:hidden">
-            <img src={cmfiLogo} alt="CMFI Replay" className="h-8 rounded-md" />
-          </div>
-
-          {/* Navbar central (caché quand la recherche est active) */}
-          {!isWatchRoute && !isSearchActive && <Navbar />}
-          {!isWatchRoute && isSearchActive && <div className="flex-1" />}
-
-          {/* Contrôles alignés à droite */}
-          <div className="flex items-center space-x-4 z-10">
-            <div className={`${isSearchActive ? 'absolute left-0 right-0 flex justify-center px-6' : ''}`}>
+          {/* Right: Search + Quick Theme + Notifications + Profile */}
+          <div className="flex items-center gap-2.5 z-10">
+            <div className={isSearchActive ? 'w-72 md:w-96' : ''}>
               <DesktopSearchBar onActiveChange={setIsSearchActive} fullWidth={isSearchActive} />
             </div>
-            {!isSearchActive && !isWatchRoute && <NotificationBell />}
+
+            {!isWatchRoute && (
+              <button
+                type="button"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors"
+                aria-label={theme === 'dark' ? t('light') : t('dark')}
+                title={theme === 'dark' ? t('light') : t('dark')}
+              >
+                {theme === 'dark' ? <SunIcon className="w-5 h-5 text-sky-400" /> : <MoonIcon className="w-5 h-5" />}
+              </button>
+            )}
+
+            {!isWatchRoute && <NotificationBell />}
             {!isWatchRoute && <HeaderMenu />}
           </div>
         </div>

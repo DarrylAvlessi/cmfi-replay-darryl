@@ -271,49 +271,59 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             case 'overview':
                 return (
                     <div className="space-y-4 lg:space-y-6">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 lg:gap-6 p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <img
-                                src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
-                                alt="Your avatar"
-                                className="w-24 h-24 rounded-full border-4 border-amber-500 object-cover"
-                            />
-                            <div className="flex-1 text-center sm:text-left">
-                                <h2 className="text-2xl font-serif font-bold mb-2">{userProfile?.display_name || 'User'}</h2>
-                                {userProfile?.email && (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.email}</p>
-                                )}
-                                <button
-                                    onClick={() => navigate('EditProfile')}
-                                    className="mt-4 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-2 px-6 rounded-full transition-colors duration-200"
-                                >
-                                    {t('editProfile')}
-                                </button>
-                            </div>
-                        </div>
+                                <div className="broadcast-panel relative flex flex-col items-center gap-5 overflow-hidden rounded-3xl p-5 sm:flex-row sm:items-start lg:gap-6 lg:p-7">
+                                    <div className="pointer-events-none absolute -right-10 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl dark:bg-sky-400/10" />
+                                    <img
+                                        src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
+                                        alt="Your avatar"
+                                        className="relative h-24 w-24 rounded-3xl border border-white/30 object-cover shadow-xl ring-4 ring-blue-500/10 dark:ring-sky-400/10"
+                                    />
+                                    <div className="relative flex-1 text-center sm:text-left">
+                                        <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-sky-400">{t('profileScreenTitle')}</p>
+                                        <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white lg:text-3xl">{userProfile?.display_name || 'User'}</h2>
+                                        {userProfile?.email && (
+                                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{userProfile.email}</p>
+                                        )}
+                                        <button
+                                            onClick={() => navigate('EditProfile')}
+                                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:from-blue-500 hover:to-sky-400"
+                                        >
+                                            {t('editProfile')}
+                                            <ChevronRightIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
                         
-                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-base lg:text-lg font-serif font-bold mb-3">{t('quickLinks')}</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3">
-                                {settingsItems.map((item) => (
-                                    <button
-                                        key={item.label}
-                                        onClick={item.action}
-                                        className="flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                    >
-                                        <item.icon className="w-5 h-5 text-gray-500" />
-                                        <span className="text-gray-900 dark:text-white">{item.label}</span>
-                                        <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setActiveTab('editProfile')}
-                                    className="flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    <SettingsIcon className="w-5 h-5 text-gray-500" />
-                                    <span className="text-gray-900 dark:text-white">{t('editProfile')}</span>
-                                    <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
-                                </button>
-                            </div>
+                                <div className="broadcast-panel rounded-3xl p-4 lg:p-6">
+                                    <div className="mb-4">
+                                        <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-sky-400">{t('accountSettings')}</p>
+                                        <h3 className="mt-1 font-display text-lg font-bold text-slate-900 dark:text-white lg:text-xl">{t('quickLinks')}</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3">
+                                        {settingsItems.map((item) => (
+                                            <button
+                                                key={item.label}
+                                                onClick={item.action}
+                                                className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 text-left transition hover:border-blue-500/30 hover:bg-blue-50/60 dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-sky-400/25 dark:hover:bg-sky-500/5"
+                                            >
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-sky-400">
+                                                    <item.icon className="h-5 w-5" />
+                                                </span>
+                                                <span className="flex-1 font-medium text-slate-800 dark:text-slate-100">{item.label}</span>
+                                                <ChevronRightIcon className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500" />
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setActiveTab('editProfile')}
+                                            className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 text-left transition hover:border-blue-500/30 hover:bg-blue-50/60 dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-sky-400/25 dark:hover:bg-sky-500/5"
+                                        >
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-sky-400">
+                                                <SettingsIcon className="h-5 w-5" />
+                                            </span>
+                                            <span className="flex-1 font-medium text-slate-800 dark:text-slate-100">{t('editProfile')}</span>
+                                            <ChevronRightIcon className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500" />
+                                        </button>
+                                    </div>
                         </div>
                     </div>
                 );
@@ -342,16 +352,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             case 'account':
                 return (
                     <div className="space-y-4 lg:space-y-6" data-tour="profile-settings">
-                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg lg:text-xl font-serif font-bold mb-3 lg:mb-4">{t('accountSettings')}</h3>
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
+                        <div className="broadcast-panel rounded-3xl p-4 lg:p-6">
+                            <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-sky-400">{t('profileScreenTitle')}</p>
+                            <h3 className="mb-4 mt-1 font-display text-lg font-bold text-slate-900 dark:text-white lg:text-xl">{t('accountSettings')}</h3>
+                            <div className="overflow-hidden rounded-2xl border border-slate-200 divide-y divide-slate-200 dark:border-slate-800 dark:divide-slate-800">
                                 {settingsItems.map((item) => (
                                     <SettingsItem key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                                 ))}
                             </div>
                         </div>
                         
-                        <div className="p-4 lg:p-6 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="broadcast-panel rounded-3xl p-4 lg:p-6">
                             <SettingsItem 
                                 Icon={LogoutIcon} 
                                 label={t('logout')} 
@@ -471,30 +482,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
     };
 
     return (
-        <div className="pt-4">
+        <div className="broadcast-canvas min-h-screen pb-12 pt-4 lg:pt-7">
             {/* Mobile layout — compact + tabbed (same tabs as desktop) */}
             <div className="lg:hidden">
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-black">
+                <div className="shell-bar mx-3 flex items-center gap-3 rounded-2xl px-4 py-3">
                     <img
                         src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                         alt="Your avatar"
-                        className="w-14 h-14 rounded-full border-2 border-amber-500 object-cover shrink-0"
+                        className="h-12 w-12 shrink-0 rounded-2xl border border-white/30 object-cover shadow-md ring-2 ring-blue-500/10"
                     />
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-serif font-bold truncate">{userProfile?.display_name || 'User'}</h2>
+                        <h2 className="truncate font-display text-base font-bold text-slate-900 dark:text-white">{userProfile?.display_name || 'User'}</h2>
                         {userProfile?.email && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userProfile.email}</p>
+                            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userProfile.email}</p>
                         )}
                     </div>
                     <button
                         onClick={() => navigate('EditProfile')}
-                        className="shrink-0 bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-black font-semibold py-1.5 px-4 rounded-full text-sm transition-colors duration-200"
+                        className="shrink-0 rounded-xl border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-500/10 dark:text-sky-300"
                     >
                         {t('editProfile')}
                     </button>
                 </div>
 
-                <div className="sticky top-16 z-10 bg-white/95 dark:bg-black/95 backdrop-blur px-4 py-2 border-b border-gray-200 dark:border-black">
+                <div className="sticky top-16 z-10 px-3 py-2">
                     <div className="flex gap-2 overflow-x-auto">
                         {navItems.filter((item) => ['overview', 'history', 'lives', 'account'].includes(item.id) || (item.id === 'admin' && isAdminValue)).map((item) => (
                             <button
@@ -503,10 +514,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                     if (item.id === 'guides') navigateRouter('/docs');
                                     else setActiveTab(item.id as typeof activeTab);
                                 }}
-                                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                                className={`shrink-0 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${
                                     activeTab === item.id
-                                        ? 'bg-amber-500 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                        ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                        : 'border-slate-200 bg-white/90 text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300'
                                 }`}
                             >
                                 {item.label}
@@ -526,9 +537,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                     />
                 </div>
 
-                <section className="px-4 py-3" data-tour="profile-settings">
-                    <h3 className="text-base font-serif font-bold mb-2">{t('accountSettings')}</h3>
-                    <div className="border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
+                <section className="px-3 py-3" data-tour="profile-settings">
+                    <div className="mb-3 flex items-end justify-between">
+                        <div>
+                            <p className="font-mono-meta text-[9px] font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-sky-400">{t('profileScreenTitle')}</p>
+                            <h3 className="mt-1 font-display text-base font-bold text-slate-900 dark:text-white">{t('accountSettings')}</h3>
+                        </div>
+                    </div>
+                    <div className="broadcast-panel overflow-hidden rounded-2xl divide-y divide-slate-200 dark:divide-slate-800">
                         {mobileSettingsItems.map((item) => (
                             <SettingsItem dense key={item.label} Icon={item.icon} label={item.label} onClick={item.action} />
                         ))}
@@ -565,7 +581,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                         </div>
                     )}
 
-                    <div className="mt-3 border border-gray-200 dark:border-black rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-black">
+                    <div className="broadcast-panel mt-3 overflow-hidden rounded-2xl divide-y divide-slate-200 dark:divide-slate-800">
                         <SettingsItem
                             dense
                             Icon={LogoutIcon}
@@ -584,23 +600,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
             </div>
 
             {/* Desktop dashboard layout */}
-            <div className="hidden lg:flex gap-6 px-6 py-4">
+            <div className="mx-auto hidden max-w-[1440px] gap-6 px-6 py-4 lg:flex xl:gap-8">
                 {/* Sidebar navigation */}
                 <aside className="w-64 flex-shrink-0">
-                    <nav className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <nav className="broadcast-panel sticky top-20 overflow-hidden rounded-3xl">
+                        <div className="border-b border-slate-200/80 p-5 dark:border-slate-800">
                             <div className="flex items-center gap-3">
                                 <img
                                     src={userProfile?.photo_url || 'https://picsum.photos/seed/defaultuser/200/200'}
                                     alt="Your avatar"
-                                    className="w-12 h-12 rounded-full border-2 border-amber-500 object-cover"
+                                    className="h-12 w-12 rounded-2xl border border-white/30 object-cover shadow-md ring-2 ring-blue-500/10"
                                 />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">{userProfile?.display_name || 'User'}</p>
+                                    <p className="font-display font-bold text-slate-900 dark:text-white">{userProfile?.display_name || 'User'}</p>
+                                    <p className="mt-0.5 font-mono-meta text-[9px] uppercase tracking-wider text-blue-600 dark:text-sky-400">{t('profileScreenTitle')}</p>
                                 </div>
                             </div>
                         </div>
-                        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <ul className="space-y-1 p-2">
                             {navItems.map((item) => (
                                 <li key={item.id}>
                                     <button
@@ -611,26 +628,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigate, onSelectMedia, 
                                                 setActiveTab(item.id as typeof activeTab);
                                             }
                                         }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                                        className={`group flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-colors ${
                                             activeTab === item.id
-                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-l-4 border-amber-500'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/15'
+                                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
                                         }`}
                                     >
+                                        <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${activeTab === item.id ? 'bg-white/15' : 'bg-slate-100 text-blue-600 dark:bg-slate-800 dark:text-sky-400'}`}>
+                                            {item.id === 'overview' ? <SettingsIcon className="h-4 w-4" /> : item.id === 'history' ? <UpdateIcon className="h-4 w-4" /> : item.id === 'lives' ? <CommentIcon className="h-4 w-4" /> : item.id === 'help' ? <HelpIcon className="h-4 w-4" /> : <SettingsIcon className="h-4 w-4" />}
+                                        </span>
                                         <span className="font-medium">{item.label}</span>
                                     </button>
                                 </li>
                             ))}
                         </ul>
-                        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="border-t border-slate-200/80 p-3 dark:border-slate-800">
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-400"
                             >
                                 <LogoutIcon className="w-5 h-5" />
                                 <span className="font-medium">{t('logout')}</span>
                             </button>
-                            <p className="mt-2 px-4 text-[11px] text-gray-400 dark:text-gray-500">v{APP_VERSION}</p>
+                            <p className="mt-2 px-3.5 font-mono-meta text-[10px] text-slate-400 dark:text-slate-500">v{APP_VERSION}</p>
                         </div>
                     </nav>
                 </aside>

@@ -122,139 +122,139 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-20">
-
-      {/* Titre de la page */}
-      <div className="px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('searchScreenTitle')}</h1>
-        <button
-          onClick={() => startTour('search')}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-amber-500 hover:text-white transition-colors"
-          aria-label={t('startTour')}
-        >
-          <HelpIcon className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Barre de recherche */}
-      <div className="px-4 py-2 sticky top-0 bg-white dark:bg-black z-10">
-        <div className="relative">
-          <input
-            type="text"
-            data-tour="search-input"
-            placeholder={t('searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-100 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
-          />
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <SearchIcon className="w-5 h-5 text-gray-500" />
+    <div className="min-h-screen broadcast-canvas pb-20">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 pt-6">
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <span className="w-1 h-7 rounded-full bg-gradient-to-b from-blue-600 to-sky-400" />
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+              {t('searchScreenTitle')}
+            </h1>
           </div>
-          {isLoading && (
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-500"></div>
+          <button
+            onClick={() => startTour('search')}
+            className="p-2.5 rounded-xl broadcast-panel text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-colors"
+            aria-label={t('startTour')}
+          >
+            <HelpIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Barre de recherche & Filtres */}
+        <div className="p-3.5 rounded-2xl broadcast-panel sticky top-16 z-10 mb-6 space-y-3">
+          <div className="relative">
+            <input
+              type="text"
+              data-tour="search-input"
+              placeholder={t('searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-11 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <SearchIcon className="w-5 h-5 text-slate-400" />
+            </div>
+            {isLoading && (
+              <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-600 border-t-sky-400" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" data-tour="search-filters">
+            {filters.map(filter => (
+              <button
+                key={filter.value}
+                onClick={() => setSelectedFilter(filter.value)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${selectedFilter === filter.value
+                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/20'
+                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Résultats */}
+        <div>
+          {searchTerm && (
+            <h3 className="text-sm font-mono-meta uppercase tracking-wider mb-4 text-slate-500 dark:text-slate-400">
+              {results.length > 0
+                ? `${t('resultsFor', { term: searchTerm })} (${results.length} ${results.length === 1 ? t('result') : t('results')})`
+                : !isLoading && t('noResultsFor', { term: searchTerm })
+              }
+            </h3>
+          )}
+
+          <div className="space-y-3">
+            {results.map((result) => (
+              <div
+                key={`${result.type}-${result.id}`}
+                onClick={() => handleResultClick(result)}
+                className="broadcast-card rounded-2xl overflow-hidden cursor-pointer group"
+              >
+                <div className="flex gap-4 p-3.5">
+                  <div className="flex-shrink-0 w-20 h-28 sm:w-24 sm:h-32 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    {result.imageUrl ? (
+                      <img
+                        src={result.imageUrl}
+                        alt={result.title}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2796%27 height=%27144%27%3E%3Crect fill=%27%231e293b%27 width=%2796%27 height=%27144%27/%3E%3Ctext fill=%27%2394a3b8%27 font-family=%27sans-serif%27 font-size=%2712%27 text-anchor=%27middle%27 x=%2748%27 y=%2776%27%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <SearchIcon className="w-7 h-7" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <h4 className="font-display font-bold text-base text-slate-900 dark:text-white line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
+                        {result.title}
+                      </h4>
+                      <span className={`text-[11px] font-mono-meta font-semibold px-2.5 py-0.5 rounded-lg border flex-shrink-0 ${getTypeBadgeColor(result.type)}`}>
+                        {getTypeLabel(result.type)}
+                      </span>
+                    </div>
+
+                    {result.serieTitle && (
+                      <p className="text-xs font-mono-meta text-sky-600 dark:text-sky-400 mb-1.5">
+                        {getTypeLabel(result.type)} {result.seasonNumber && ` · Saison ${result.seasonNumber}`}
+                        {result.episodeNumber && ` · Épisode ${result.episodeNumber}`}
+                      </p>
+                    )}
+
+                    {result.description && (
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                        {result.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!searchTerm && !isLoading && (
+            <div className="text-center py-16 broadcast-panel rounded-3xl">
+              <SearchIcon className="w-12 h-12 text-blue-500/40 dark:text-sky-400/40 mx-auto mb-3" />
+              <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white mb-1">
+                {t('noSearchTerm')}
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {t('searchPlaceholder')}
+              </p>
             </div>
           )}
         </div>
-
-        {/* Filtres */}
-        <div className="flex gap-2 mt-2 mb-2 overflow-x-auto pb-2 scrollbar-hide" data-tour="search-filters">
-          {filters.map(filter => (
-            <button
-              key={filter.value}
-              onClick={() => setSelectedFilter(filter.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedFilter === filter.value
-                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                : 'bg-gray-200 dark:bg-black text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
-                }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Résultats */}
-      <div className="px-4 py-2">
-        {searchTerm && (
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-            {results.length > 0
-              ? `${t('resultsFor', { term: searchTerm })} (${results.length} ${results.length === 1 ? t('result') : t('results')})`
-              : !isLoading && t('noResultsFor', { term: searchTerm })
-            }
-          </h3>
-        )}
-
-        <div className="space-y-3">
-          {results.map((result) => (
-            <div
-              key={`${result.type}-${result.id}`}
-              onClick={() => handleResultClick(result)}
-              className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-black rounded-xl overflow-hidden hover:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all cursor-pointer group"
-            >
-              <div className="flex gap-3 p-3">
-                {/* Image */}
-                <div className="flex-shrink-0 w-24 h-36 rounded-lg overflow-hidden bg-gray-200 dark:bg-black">
-                  {result.imageUrl ? (
-                    <img
-                      src={result.imageUrl}
-                      alt={result.title}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2796%27 height=%27144%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2796%27 height=%27144%27/%3E%3Ctext fill=%27%239ca3af%27 font-family=%27sans-serif%27 font-size=%2712%27 text-anchor=%27middle%27 x=%2748%27 y=%2776%27%3ENo Image%3C/text%3E%3C/svg%3E';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <SearchIcon className="w-8 h-8" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Informations */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-amber-500 transition-colors">
-                      {result.title}
-                    </h4>
-                    <span className={`text-xs px-2 py-1 rounded-full border ${getTypeBadgeColor(result.type)}`}>
-                      {getTypeLabel(result.type)}
-                    </span>
-                  </div>
-
-                  {/* Informations supplémentaires */}
-                  {result.serieTitle && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      {getTypeLabel(result.type)} {result.seasonNumber && ` - Saison ${result.seasonNumber}`}
-                      {result.episodeNumber && ` - Épisode ${result.episodeNumber}`}
-                    </p>
-                  )}
-
-                  {/* Description */}
-                  {result.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                      {result.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Message d'aide initial */}
-        {!searchTerm && !isLoading && (
-          <div className="text-center py-12">
-            <SearchIcon className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {t('noSearchTerm')}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              {t('searchPlaceholder')}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

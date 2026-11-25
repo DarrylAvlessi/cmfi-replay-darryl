@@ -87,7 +87,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert, onRemove }) => {
 
   return (
     <div
-      className={`pointer-events-auto flex items-center gap-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-4 rounded-2xl shadow-2xl transition-all duration-300 ${
+      className={`pointer-events-auto flex items-center gap-4 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-6 py-4 rounded-2xl shadow-2xl border border-white/20 transition-all duration-300 ${
         visible && !exiting
           ? 'translate-x-0 opacity-100 scale-100'
           : 'translate-x-full opacity-0 scale-95'

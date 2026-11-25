@@ -55,36 +55,41 @@ const ForgotPasswordScreen: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen broadcast-canvas flex flex-col justify-center py-16 px-4 sm:px-6 lg:px-8 animate-fadeIn overflow-hidden">
+            <div className="absolute inset-0 broadcast-grid-bg pointer-events-none opacity-50" />
             <AuthHeader />
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="px-4 text-center">
-                    <img src={cmfiLogo} alt="CMFI Replay" className="h-12 mx-auto rounded-lg" />
-                    <h2 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+            <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden shadow-lg shadow-blue-600/20 ring-1 ring-slate-900/10 dark:ring-white/15">
+                        <img src={cmfiLogo} alt="CMFI Replay" className="w-full h-full object-cover" />
+                    </div>
+                    <h2 className="mt-5 font-display text-3xl font-bold text-slate-900 dark:text-white">
                         {resetRequested ? t('resetLinkSent') : t('forgotPasswordScreenTitle')}
                     </h2>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                         {resetRequested ? t('resetLinkSentInstruction') : t('forgotPasswordInstruction')}
                     </p>
                 </div>
-                <div className="mt-8 px-4 sm:px-0">
+                <div className="mt-8 p-6 sm:p-7 rounded-3xl broadcast-panel">
                     <div className="space-y-6">
                         {error && (
-                            <div className="text-red-500 text-sm text-center mb-4">
+                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-medium text-center">
                                 {error}
                             </div>
                         )}
                         {resetRequested ? (
-                            <div className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-600 dark:text-sky-300 text-sm text-center">
+                                    {t('resetLinkSentInstruction')}
+                                </div>
                                 <AuthButton onClick={() => navigate('/login')}>
                                     {t('backToLogin')}
                                 </AuthButton>
                             </div>
                         ) : (
                             <>
-                                <form className="space-y-8" onSubmit={handleForgotPassword} >
+                                <form className="space-y-6" onSubmit={handleForgotPassword}>
                                     <InputField
-                                        
                                         label={t('email')}
                                         id="email-reset"
                                         name="email"
@@ -95,14 +100,12 @@ const ForgotPasswordScreen: React.FC = () => {
                                         required
                                         placeholder="e.g. howard.thurman@gmail.com"
                                     />
-                                    <div >
-                                        <AuthButton type="submit" disabled={authLoading}>
-                                            {authLoading ? t('loading') || 'Envoi...' : t('sendResetLink')}
-                                        </AuthButton>
-                                    </div>
+                                    <AuthButton type="submit" disabled={authLoading}>
+                                        {authLoading ? t('loading') || 'Envoi...' : t('sendResetLink')}
+                                    </AuthButton>
                                 </form>
-                                <div className="mt-6 text-center text-sm">
-                                    <button type="button" onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500" >
+                                <div className="text-center text-sm">
+                                    <button type="button" onClick={() => navigate('/login')} className="font-semibold text-blue-600 dark:text-sky-400 hover:underline">
                                         {t('backToLogin')}
                                     </button>
                                 </div>

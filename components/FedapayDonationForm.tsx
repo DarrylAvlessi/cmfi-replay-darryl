@@ -154,8 +154,8 @@ const FedapayDonationForm: React.FC<FedapayDonationFormProps> = ({
               }}
               className={`py-2.5 sm:py-3 px-1.5 sm:px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                 selectedAmount === amount && !customAmount
-                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                  : 'bg-slate-100 text-slate-700 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               {formatAmount(amount)}
@@ -179,7 +179,7 @@ const FedapayDonationForm: React.FC<FedapayDonationFormProps> = ({
               if (e.target.value) setSelectedAmount(null);
             }}
             placeholder={t('donationCustomAmount') || 'Custom amount'}
-            className="w-full pl-16 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-16 pr-4 text-slate-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           />
         </div>
       </div>
@@ -190,7 +190,7 @@ const FedapayDonationForm: React.FC<FedapayDonationFormProps> = ({
         className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-200 ${
           processing || !currentAmount
             ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg hover:shadow-amber-500/30 transform hover:scale-[1.02]'
+            : 'bg-gradient-to-r from-blue-600 to-sky-500 shadow-lg shadow-blue-600/15 hover:brightness-110'
         }`}
       >
         {processing ? (

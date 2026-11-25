@@ -34,7 +34,7 @@ const DesktopSearchBar: React.FC<DesktopSearchBarProps> = ({ onActiveChange, ful
 
   const handleExpand = () => {
     setIsExpanded(true);
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 80);
   };
 
   const handleClear = () => {
@@ -69,62 +69,73 @@ const DesktopSearchBar: React.FC<DesktopSearchBarProps> = ({ onActiveChange, ful
     }
   };
 
-  const handleOverlayClick = () => {
-    setIsExpanded(false);
-    inputRef.current?.blur();
-  };
-
   return (
     <>
       {isExpanded && (
         <div
-          className="fixed inset-0 bg-black/30 z-30"
-          onClick={handleOverlayClick}
+          className="fixed inset-0 bg-slate-950/35 backdrop-blur-[2px] z-30"
+          onClick={() => {
+            setIsExpanded(false);
+            inputRef.current?.blur();
+          }}
           aria-hidden="true"
         />
       )}
       <form
         role="search"
         onSubmit={(e) => e.preventDefault()}
-        className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full relative z-40 ${
+        className={`flex items-center overflow-hidden transition-all duration-200 rounded-xl relative z-40 border ${
           isExpanded
-            ? `${fullWidth ? 'w-full' : 'w-64'} bg-gray-100 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700`
-            : 'w-10 border border-transparent'
+            ? `${fullWidth ? 'w-full' : 'w-72'} bg-white dark:bg-[#0f172a] border-blue-500/50 ring-2 ring-blue-500/20 shadow-lg`
+            : 'w-auto border-slate-200/80 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 hover:border-slate-300 dark:hover:border-slate-700'
         }`}
       >
         <button
           type="button"
           onClick={handleExpand}
-          className="flex-shrink-0 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className={`flex items-center gap-2 px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors ${
+            isExpanded ? 'pr-2' : ''
+          }`}
           aria-label={t('search')}
         >
-          <SearchIcon className="w-5 h-5" />
-        </button>
-        <div className={`flex items-center flex-1 min-w-0 transition-opacity duration-300 ${
-          isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchTerm}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            placeholder={t('searchPlaceholder')}
-            className="w-full bg-transparent border-none outline-none py-2 text-gray-900 dark:text-white placeholder-gray-500 text-sm"
-            autoComplete="off"
-          />
-          {isExpanded && searchTerm && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="flex-shrink-0 p-1 mr-1.5 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label={t('clearSearch')}
-            >
-              <XMarkIcon className="w-4 h-4" />
-            </button>
+          <SearchIcon className="w-4 h-4 flex-shrink-0" />
+          {!isExpanded && (
+            <>
+              <span className="hidden xl:inline text-xs font-medium text-slate-500 dark:text-slate-400 pr-2">
+                {t('search')}...
+              </span>
+              <kbd className="hidden xl:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono-meta font-semibold rounded bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">
+                /
+              </kbd>
+            </>
           )}
-        </div>
+        </button>
+
+        {isExpanded && (
+          <div className="flex items-center flex-1 min-w-0 pr-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchTerm}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              placeholder={t('searchPlaceholder')}
+              className="w-full bg-transparent border-none outline-none py-1.5 text-slate-900 dark:text-white placeholder-slate-400 text-sm"
+              autoComplete="off"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="flex-shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                aria-label={t('clearSearch')}
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </form>
     </>
   );

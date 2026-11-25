@@ -38,10 +38,11 @@ const MostWatchedSection: React.FC<MostWatchedSectionProps> = React.memo(({
     if (items.length === 0) return null;
 
     return (
-        <div className="py-6 md:py-8 lg:py-10 mt-4 md:mt-6">
-            <div className="px-4 md:px-6 lg:px-8 mb-6">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="py-6 md:py-8">
+            <div className="px-4 md:px-6 lg:px-8 mb-5">
+                <div className="flex items-center gap-3">
+                    <span className="w-1 h-7 rounded-full bg-gradient-to-b from-blue-600 to-sky-400" />
+                    <h3 className="rail-title text-2xl md:text-[1.85rem] text-slate-900 dark:text-white">
                         {t('mostWatched') || 'Les plus regardés'}
                     </h3>
                 </div>

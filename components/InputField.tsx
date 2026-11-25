@@ -14,34 +14,34 @@ const InputField: React.FC<InputFieldProps> = ({ label, type = 'text', ...props 
   const inputType = isPasswordField && isPasswordVisible ? 'text' : type;
 
   return (
-    <div className="relative">
-      <label 
-          htmlFor={props.id || props.name} 
-          className="absolute -top-2.5 left-3 px-1 bg-white dark:bg-black text-sm font-bold text-black dark:text-gray-200"
+    <div>
+      <label
+        htmlFor={props.id || props.name}
+        className="block mb-1.5 text-[11px] font-mono-meta font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400"
       >
-          {label}
+        {label}
       </label>
-      <div className="flex items-center border border-gray-400/50 dark:border-gray-600 rounded-xl focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
-          <input
-              type={inputType}
-              className="w-full bg-transparent px-4 py-2.5 lg:py-3.5 focus:outline-none text-gray-700 dark:text-gray-300 placeholder-gray-500/80"
-              {...props}
-          />
-          {isPasswordField && (
-              <button
-                  type="button"
-                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                  className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 font-semibold pr-4"
-                  aria-label={isPasswordVisible ? t('hide') : t('show')}
-              >
-                  {isPasswordVisible ? (
-                      <EyeSlashIcon className="w-5 h-5" />
-                  ) : (
-                      <EyeIcon className="w-5 h-5" />
-                  )}
-                  <span className="hidden sm:inline">{isPasswordVisible ? t('hide') : t('show')}</span>
-              </button>
-          )}
+      <div className="flex items-center border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50/80 dark:bg-slate-900/70 focus-within:border-blue-500 dark:focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-blue-500/20 dark:focus-within:ring-sky-400/20 transition-all duration-200">
+        <input
+          type={inputType}
+          className="w-full bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+          {...props}
+        />
+        {isPasswordField && (
+          <button
+            type="button"
+            onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+            className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-medium pr-3.5 transition-colors"
+            aria-label={isPasswordVisible ? t('hide') : t('show')}
+          >
+            {isPasswordVisible ? (
+              <EyeSlashIcon className="w-4 h-4" />
+            ) : (
+              <EyeIcon className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">{isPasswordVisible ? t('hide') : t('show')}</span>
+          </button>
+        )}
       </div>
     </div>
   );

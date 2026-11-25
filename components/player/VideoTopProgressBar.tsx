@@ -12,7 +12,7 @@ const VideoTopProgressBar: React.FC<VideoTopProgressBarProps> = ({ isBuffering, 
     }`}
   >
     <div
-      className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] animate-shimmer"
+      className="h-full bg-gradient-to-r from-blue-600 via-sky-400 to-blue-600 bg-[length:200%_100%] animate-shimmer"
       style={{ width: `${bufferedPercent}%`, transition: 'width 0.3s ease' }}
     />
   </div>

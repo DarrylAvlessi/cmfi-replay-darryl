@@ -70,17 +70,16 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
 }) => {
   const { t } = useAppContext();
   return (
-  <div className="px-2 sm:px-4 pb-2 sm:pb-3" data-tour="player-controls">
-      <div className="flex items-center justify-between text-white text-sm font-medium">
-        <div className="flex items-center space-x-1 sm:space-x-2">
-          <button
-            onClick={onTogglePlay}
-            disabled={disabled}
-            className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-default"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? <PauseIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" /> : <PlayIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />}
-          </button>
+    <div className="flex min-h-11 items-center justify-between gap-2 px-1 py-1 text-white sm:gap-4 sm:px-2" data-tour="player-controls">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+        <button
+          onClick={onTogglePlay}
+          disabled={disabled}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-sky-400 text-white shadow-lg shadow-blue-950/30 transition hover:brightness-110 disabled:cursor-default disabled:opacity-40"
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+        >
+          {isPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="ml-0.5 h-4 w-4" />}
+        </button>
         <VolumeControl
           isMuted={isMuted}
           volume={volume}
@@ -93,63 +92,55 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
         />
         {liveMode ? (
           isBehindLive && onJumpToLive ? (
-            <span className="flex items-center gap-1.5 leading-none">
+            <span className="flex items-center gap-1.5 whitespace-nowrap leading-none">
               <button
                 onClick={onJumpToLive}
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/15 text-white/70 text-[11px] font-bold tracking-widest hover:bg-white/25 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/10 px-2 py-1.5 font-mono-meta text-[10px] font-bold tracking-wider text-white/80 transition hover:bg-white/20"
                 aria-label={t('jumpToLiveAria')}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
                 {liveBadgeText}
               </button>
-              <span className="text-[13px] text-white/90 font-medium tabular-nums drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
+              <span className="font-mono-meta text-[11px] font-medium tabular-nums text-white/70 sm:text-xs">
                 -{formatTime(Math.max(0, Math.round(behindBySec)))}
               </span>
             </span>
           ) : (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-600 text-white text-[11px] font-bold tracking-widest leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-rose-400/20 bg-rose-500/15 px-2 py-1.5 font-mono-meta text-[10px] font-bold tracking-wider text-rose-100">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
               {liveBadgeText}
             </span>
           )
         ) : (
-          <span className="text-[13px] text-white/90 font-medium tabular-nums leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]">
-            {formatTime(currentTime)} / {formatTime(duration)}
+          <span className="hidden whitespace-nowrap font-mono-meta text-[11px] font-medium tabular-nums text-white/70 sm:inline sm:text-xs">
+            {formatTime(currentTime)} <span className="text-white/30">/</span> {formatTime(duration)}
           </span>
         )}
       </div>
-      <div className="flex items-center space-x-1 sm:space-x-2">
+
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {showAutoplayToggle && !disabled && !lockSpeed && (
           <button
             onClick={onToggleAutoplay}
-            className={`relative w-11 h-5 rounded-full p-0.5 transition-colors duration-200 ${
-              autoplayEnabled ? 'bg-amber-500' : 'bg-gray-700'
-            }`}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/10"
             title={`Lecture automatique ${autoplayEnabled ? 'activée' : 'désactivée'}`}
+            aria-label={`Lecture automatique ${autoplayEnabled ? 'activée' : 'désactivée'}`}
+            aria-pressed={autoplayEnabled}
           >
-            <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                autoplayEnabled ? 'translate-x-6' : 'translate-x-0'
-              }`}
-            >
-              {autoplayEnabled ? (
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-amber-500">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                  <path d="M10 16l6-4-6-4v8z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-gray-700">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                  <path d="M9 16h2V8H9v8zm4 0h2V8h-2v8z" />
-                </svg>
-              )}
-            </div>
+            <span className="hidden font-mono-meta text-[9px] font-semibold uppercase tracking-wider text-white/55 md:inline">Auto</span>
+            <span className={`relative h-5 w-9 rounded-full p-0.5 transition-colors ${
+              autoplayEnabled ? 'bg-blue-500' : 'bg-slate-600'
+            }`}>
+              <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                autoplayEnabled ? 'translate-x-4' : 'translate-x-0'
+              }`} />
+            </span>
           </button>
         )}
         <button
           onClick={onCyclePlaybackSpeed}
           disabled={disabled || lockSpeed}
-          className="px-2 py-1 rounded-full bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/50 transition-colors leading-none drop-shadow-[0_1px_1px_rgb(0_0_0/0.5)] disabled:opacity-40 disabled:hover:bg-black/40 disabled:cursor-default"
+          className="min-w-11 rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 font-mono-meta text-[10px] font-semibold leading-none text-white/80 transition hover:border-sky-300/30 hover:bg-white/10 hover:text-white disabled:cursor-default disabled:opacity-40"
           aria-label={t('playbackSpeedAria')}
         >
           {playbackRate % 1 === 0
@@ -159,26 +150,21 @@ const ControlsBar: React.FC<ControlsBarProps> = ({
         </button>
         <button
           onClick={onTogglePip}
-          className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)]"
+          className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/75 transition hover:bg-white/10 hover:text-white sm:flex"
           title="Mode image dans l'image"
           aria-label="Picture in Picture"
         >
-          <PipIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
+          <PipIcon className="h-4 w-4" />
         </button>
         <button
           onClick={onToggleFullscreen}
-          className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)]"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-white/75 transition hover:bg-white/10 hover:text-white"
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
         >
-          {isFullscreen ? (
-            <FullscreenExitIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
-          ) : (
-            <FullscreenEnterIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
-          )}
+          {isFullscreen ? <FullscreenExitIcon className="h-4 w-4" /> : <FullscreenEnterIcon className="h-4 w-4" />}
         </button>
       </div>
     </div>
-  </div>
   );
 };
 

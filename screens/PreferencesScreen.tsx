@@ -11,9 +11,9 @@ const ToggleSwitch: React.FC<{ enabled: boolean; onChange: (enabled: boolean) =>
     return (
         <button
             onClick={() => onChange(!enabled)}
-            className={`relative inline-flex items-center h-7 rounded-full w-12 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black shadow-inner ${enabled
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 shadow-amber-500/30'
-                : 'bg-gray-300 dark:bg-black/60 hover:bg-gray-400 dark:hover:bg-black/70 border border-gray-400 dark:border-gray-600'
+            className={`relative inline-flex h-7 w-12 items-center rounded-full shadow-inner transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 ${enabled
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 shadow-blue-500/30'
+                : 'border border-slate-300 bg-slate-200 hover:bg-slate-300 dark:border-slate-600 dark:bg-slate-950 dark:hover:bg-slate-800'
                 }`}
         >
             <span
@@ -30,14 +30,14 @@ const SegmentedControl: React.FC<{
     onChange: (value: any) => void;
 }> = ({ options, value, onChange }) => {
     return (
-        <div className="flex bg-gray-200 dark:bg-black/60 backdrop-blur-sm p-0.5 lg:p-1 rounded-xl border border-gray-300 dark:border-gray-700/50 shadow-inner">
+        <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-0.5 shadow-inner dark:border-slate-700 dark:bg-slate-950">
             {options.map((option) => (
                 <button
                     key={option.value}
                     onClick={() => onChange(option.value)}
                     className={`min-w-[64px] lg:min-w-[80px] px-3 lg:px-4 py-1.5 lg:py-2 text-[13px] lg:text-sm font-semibold rounded-lg transition-all duration-300 ${value === option.value
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 scale-105'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700/50'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                        : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
                         }`}
                 >
                     {option.label}
@@ -56,11 +56,11 @@ const PreferenceRow: React.FC<{
     return (
         <div className="flex items-center justify-between py-3 lg:py-5 px-1 group transition-all duration-300 hover:px-2">
             <div className="flex items-center space-x-3 lg:space-x-4 flex-1">
-                <div className="p-2 lg:p-2.5 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700/50 dark:to-black/50 backdrop-blur-sm border border-gray-300 dark:border-gray-600/30 group-hover:border-amber-500/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-amber-500/10">
-                    <Icon className="w-5 h-5 text-amber-600 dark:text-amber-500/90 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors duration-300" />
+                <div className="rounded-xl border border-slate-200 bg-slate-100 p-2 transition-all duration-300 group-hover:border-blue-500/30 group-hover:shadow-lg group-hover:shadow-blue-500/10 lg:p-2.5 dark:border-slate-700 dark:bg-slate-900">
+                    <Icon className="h-5 w-5 text-blue-600 transition-colors duration-300 group-hover:text-sky-500 dark:text-sky-400" />
                 </div>
                 <div className="flex-1">
-                    <p className="text-sm lg:text-base font-semibold text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-50 transition-colors duration-300">{label}</p>
+                    <p className="text-sm font-semibold text-slate-900 transition-colors duration-300 group-hover:text-blue-600 lg:text-base dark:text-white dark:group-hover:text-sky-300">{label}</p>
                     {description && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
                             {description}
@@ -75,11 +75,11 @@ const PreferenceRow: React.FC<{
 
 const PreferenceSection: React.FC<{ title: string; children: React.ReactNode; 'data-tour'?: string }> = ({ title, children, 'data-tour': dataTour }) => (
     <section className="mb-4 lg:mb-6" data-tour={dataTour}>
-        <h3 className="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500/80 mb-2 lg:mb-3 px-1">
+        <h3 className="mb-2 px-1 font-mono-meta text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600 lg:mb-3 dark:text-sky-400">
             {title}
         </h3>
-        <div className="bg-white dark:bg-black backdrop-blur-md rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow lg:shadow-xl overflow-hidden">
-            <div className="divide-y divide-gray-200 dark:divide-gray-700/30">
+        <div className="broadcast-panel overflow-hidden rounded-2xl">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800">
                 {children}
             </div>
         </div>
@@ -91,15 +91,15 @@ const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onBack }) => {
     const { theme, setTheme, language, setLanguage, t, autoplay, setAutoplay } = useAppContext();
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
+        <div className="broadcast-canvas min-h-screen">
             <Header title={t('preferencesScreenTitle')} onBack={onBack} isSidebarOpen={false} onToggleSidebar={() => {}} />
             <div className="px-4 py-4 lg:py-6 max-w-2xl mx-auto">
                 {/* Titre de la page avec description */}
                 <div className="mb-4 lg:mb-8">
-                    <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">
+                    <h2 className="mb-1 font-display text-xl font-bold text-slate-900 lg:mb-2 lg:text-2xl dark:text-white">
                         {t('preferencesScreenTitle')}
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                         {t('preferencesSubtitle')}
                     </p>
                 </div>

@@ -11,13 +11,13 @@ interface SettingsItemProps {
 }
 
 const SettingsItem: React.FC<SettingsItemProps> = React.memo(({ Icon, label, isDestructive = false, onClick, adornment, dense = false }) => {
-    const textColor = isDestructive ? 'text-red-500' : 'text-gray-900 dark:text-white';
-    const iconColor = isDestructive ? 'text-red-500' : 'text-gray-400';
+    const textColor = isDestructive ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-100';
+    const iconColor = isDestructive ? 'text-rose-500' : 'text-blue-600 dark:text-sky-400';
 
     return (
-        <button onClick={onClick} className={`w-full flex items-center justify-between text-left hover:bg-gray-100 dark:hover:bg-black transition-colors duration-200 ${dense ? 'p-3' : 'p-4'}`}>
+        <button onClick={onClick} className={`group flex w-full items-center justify-between text-left transition-colors duration-200 hover:bg-blue-500/5 dark:hover:bg-sky-400/5 ${dense ? 'p-3' : 'p-4'}`}>
             <div className={`flex items-center ${dense ? 'space-x-3' : 'space-x-4'}`}>
-                <div className="relative">
+                <div className={`relative flex items-center justify-center rounded-xl bg-blue-500/5 ${dense ? 'h-9 w-9' : 'h-10 w-10'} ${isDestructive ? 'bg-rose-500/5' : ''}`}>
                     <Icon className={`${dense ? 'w-5 h-5' : 'w-6 h-6'} ${iconColor}`} />
                     {adornment && (
                         <span className="absolute -top-1 -right-1">{adornment}</span>
@@ -25,7 +25,7 @@ const SettingsItem: React.FC<SettingsItemProps> = React.memo(({ Icon, label, isD
                 </div>
                 <span className={`${textColor} ${dense ? 'text-sm' : ''}`}>{label}</span>
             </div>
-            {!isDestructive && <ChevronRightIcon className={`${dense ? 'w-4 h-4' : 'w-5 h-5'} text-gray-400`} />}
+            {!isDestructive && <ChevronRightIcon className={`${dense ? 'w-4 h-4' : 'w-5 h-5'} text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500`} />}
         </button>
     );
 });

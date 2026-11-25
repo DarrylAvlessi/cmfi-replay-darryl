@@ -48,23 +48,23 @@ const FavoriteRow: React.FC<FavoriteRowProps> = ({ item, badge, isRemoving, onSe
             role="button"
             aria-label={displayTitle}
             onKeyDown={(e) => { if (e.key === 'Enter') onSelect(item); }}
-            className={`group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 hover:border-amber-500/70 dark:hover:border-amber-500/70 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black transition-all duration-300 ${
+            className={`broadcast-card group relative flex items-center gap-3 rounded-2xl p-3 sm:gap-4 sm:p-4 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 transition-all duration-300 ${
                 isRemoving ? 'opacity-0 -translate-x-3 scale-[0.98] pointer-events-none' : 'opacity-100 translate-x-0 scale-100'
             }`}
         >
-            <div className="w-24 sm:w-28 aspect-video flex-shrink-0 rounded-md overflow-hidden bg-gray-200 dark:bg-black border border-gray-200 dark:border-gray-700 transition-transform duration-300 group-hover:scale-[1.04]">
+            <div className="aspect-video w-24 flex-shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 transition-transform duration-300 group-hover:scale-[1.04] sm:w-32 dark:border-slate-800 dark:bg-slate-950">
                 <img src={item.imageUrl} alt={displayTitle} className="w-full h-full object-cover" loading="lazy" />
             </div>
 
             <div className="flex-1 min-w-0">
-                <span className="inline-block px-2 py-0.5 mb-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200">
+                <span className="mb-1.5 inline-flex rounded-md border border-blue-500/15 bg-blue-500/5 px-2 py-0.5 font-mono-meta text-[9px] font-semibold uppercase tracking-wider text-blue-700 sm:text-[10px] dark:text-sky-300">
                     {badge}
                 </span>
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2 break-words group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                <h3 className="line-clamp-2 break-words text-sm font-semibold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-blue-600 sm:text-base dark:text-white dark:group-hover:text-sky-300">
                     {displayTitle}
                 </h3>
                 {metaParts.length > 0 && (
-                    <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                    <p className="mt-1 truncate text-xs text-slate-500 sm:text-sm dark:text-slate-400">
                         {metaParts.join(' · ')}
                     </p>
                 )}
@@ -75,7 +75,7 @@ const FavoriteRow: React.FC<FavoriteRowProps> = ({ item, badge, isRemoving, onSe
                     onClick={(e) => { e.stopPropagation(); onPlay(item); }}
                     aria-label={`Play ${displayTitle}`}
                     title={`Play ${displayTitle}`}
-                    className="p-2.5 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+                    className="rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 p-2.5 text-white shadow-md shadow-blue-600/20 transition-all duration-300 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
                 >
                     <PlayIcon className="w-5 h-5 ml-0.5" />
                 </button>
@@ -88,7 +88,7 @@ const FavoriteRow: React.FC<FavoriteRowProps> = ({ item, badge, isRemoving, onSe
                     className={`p-2.5 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 ${
                         isRemoving
                             ? 'bg-transparent text-red-400'
-                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-600 active:scale-95'
+                            : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 hover:text-rose-600 active:scale-95'
                     }`}
                 >
                     <HeartIcon filled={!isRemoving} className="w-5 h-5" />
@@ -129,9 +129,9 @@ const RemoveConfirmDialog: React.FC<RemoveConfirmDialogProps> = ({ item, onConfi
                 aria-labelledby="remove-confirm-title"
                 aria-describedby="remove-confirm-message"
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-red-500/30 overflow-hidden"
+                className="broadcast-panel w-full max-w-sm overflow-hidden rounded-3xl border border-rose-500/20 shadow-2xl"
             >
-                <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5">
+                <div className="bg-gradient-to-r from-rose-600 to-rose-500 px-6 py-5">
                     <div className="flex items-center gap-3">
                         <HeartIcon filled className="w-8 h-8 flex-shrink-0 text-white" />
                         <h2 id="remove-confirm-title" className="text-lg font-bold text-white">
@@ -147,13 +147,13 @@ const RemoveConfirmDialog: React.FC<RemoveConfirmDialogProps> = ({ item, onConfi
                         <button
                             ref={cancelRef}
                             onClick={onCancel}
-                            className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                            className="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                         >
                             {t('cancel')}
                         </button>
                         <button
                             onClick={onConfirm}
-                            className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                            className="rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
                         >
                             {t('removeFromFavorites')}
                         </button>
@@ -405,25 +405,31 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
     }, [activeTab, bookmarkedMovies, uniqueEpisodes]);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
-            <div className="p-4 md:p-6 lg:p-8 space-y-4 lg:space-y-6" data-tour="bookmarks-list">
+        <div className="broadcast-canvas min-h-screen">
+            <div className="mx-auto max-w-[1440px] space-y-5 px-4 py-6 md:px-6 lg:space-y-7 lg:px-8 lg:py-8" data-tour="bookmarks-list">
                 {/* En-tête avec titre */}
-                <div className="pt-0 lg:pt-2">
-                    <h1 className="text-xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 lg:mb-2">
+                <div className="flex items-end justify-between gap-4 pt-0 lg:pt-2">
+                    <div>
+                    <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-sky-400">{t('myList')}</p>
+                    <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900 md:text-4xl dark:text-white">
                         {t('myFavorites')}
                     </h1>
-                    <div className="h-1 w-16 lg:h-1.5 lg:w-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                    </div>
+                    <div className="hidden rounded-2xl border border-blue-500/15 bg-blue-500/5 px-4 py-3 text-right sm:block dark:border-sky-400/15 dark:bg-sky-400/5">
+                        <p className="font-mono-meta text-lg font-bold text-blue-700 dark:text-sky-300">{bookmarkedMovies.length + uniqueEpisodes.length}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('all') || 'Tous'}</p>
+                    </div>
                 </div>
 
                 {/* Tabs avec design amélioré */}
                 <div className="flex items-center justify-start pt-1 lg:pt-4">
-                    <div className="inline-flex items-center space-x-1.5 lg:space-x-2 bg-white dark:bg-black p-1.5 rounded-full shadow-lg max-w-full overflow-x-auto">
+                    <div className="shell-bar inline-flex max-w-full items-center space-x-1.5 overflow-x-auto rounded-2xl p-1.5 lg:space-x-2">
                         <button
                             onClick={() => setActiveTab('all')}
                             aria-pressed={activeTab === 'all'}
-                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'all'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 lg:px-5 lg:py-2.5 ${activeTab === 'all'
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
                                 }`}
                         >
                             {t('all') || 'Tous'} ({bookmarkedMovies.length + uniqueEpisodes.length})
@@ -431,9 +437,9 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         <button
                             onClick={() => setActiveTab('movies')}
                             aria-pressed={activeTab === 'movies'}
-                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'movies'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 lg:px-5 lg:py-2.5 ${activeTab === 'movies'
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
                                 }`}
                         >
                             {t('categoryMovies')} ({bookmarkedMovies.length})
@@ -441,9 +447,9 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                         <button
                             onClick={() => setActiveTab('series')}
                             aria-pressed={activeTab === 'series'}
-                            className={`text-sm font-semibold px-4 lg:px-6 py-2 lg:py-2.5 rounded-full shrink-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${activeTab === 'series'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 lg:px-5 lg:py-2.5 ${activeTab === 'series'
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
                                 }`}
                         >
                             {t('categorySeries')} ({bookmarkedEpisodes.length})
@@ -454,11 +460,11 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                 {/* Loading State amélioré */}
                 {loading && (
                     <div className="flex items-center justify-center py-12 lg:py-32">
-                        <div className="text-center">
+                        <div className="broadcast-panel rounded-3xl px-8 py-10 text-center">
                             <div className="relative">
-                                <div className="animate-spin rounded-full h-10 w-10 lg:h-16 lg:w-16 border-4 border-gray-200 dark:border-gray-700 border-t-amber-500 mx-auto mb-4 lg:mb-6"></div>
+                                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 lg:mb-6 lg:h-16 lg:w-16 dark:border-slate-700 dark:border-t-sky-400"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <svg className="w-5 h-5 lg:w-8 lg:h-8 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="h-5 w-5 text-blue-600 lg:h-8 lg:w-8 dark:text-sky-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                     </svg>
                                 </div>
@@ -471,11 +477,11 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
 
                 {/* Empty State amélioré */}
                 {!loading && filteredContent.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 lg:py-32 text-center px-4">
+                    <div className="broadcast-panel flex flex-col items-center justify-center rounded-3xl px-4 py-12 text-center lg:py-24">
                         <div className="relative mb-5 lg:mb-8">
-                            <div className="w-20 h-20 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-full flex items-center justify-center">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-blue-500/10 bg-blue-500/5 lg:h-32 lg:w-32 dark:border-sky-400/10 dark:bg-sky-400/5">
                                 <svg
-                                    className="w-10 h-10 lg:w-16 lg:h-16 text-amber-500"
+                                    className="h-10 w-10 text-blue-600 lg:h-16 lg:w-16 dark:text-sky-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -488,8 +494,8 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                                     />
                                 </svg>
                             </div>
-                            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white dark:bg-black rounded-full flex items-center justify-center shadow-lg">
-                                <span className="text-2xl">📺</span>
+                            <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                                <PlayIcon className="h-4 w-4 text-blue-600 dark:text-sky-400" />
                             </div>
                         </div>
                         <h3 className="text-lg lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 lg:mb-3">
@@ -514,7 +520,7 @@ const BookmarksScreen: React.FC<BookmarksScreenProps> = ({ onSelectMedia, onPlay
                             <p className="text-gray-600 dark:text-gray-400">
                                 {filteredContent.length} {filteredContent.length === 1 ? t('episode') : t('episodes')}
                                 {activeTab !== 'all' && (
-                                    <span className="ml-2 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-sm rounded-full">
+                                    <span className="ml-2 rounded-lg border border-blue-500/15 bg-blue-500/5 px-3 py-1 text-sm text-blue-700 dark:text-sky-300">
                                         {activeTab === 'movies' ? t('categoryMovies') : t('categorySeries')}
                                     </span>
                                 )}

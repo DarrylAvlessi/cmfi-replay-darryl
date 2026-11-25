@@ -5,22 +5,15 @@
     (function() {
       var theme = localStorage.getItem('theme');
       if (theme !== 'light' && theme !== 'dark') {
-        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        theme = 'dark';
       }
       document.documentElement.className = theme;
       var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff');
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        if (!localStorage.getItem('theme')) {
-          var t = e.matches ? 'dark' : 'light';
-          document.documentElement.className = t;
-          if (meta) meta.setAttribute('content', t === 'dark' ? '#0f172a' : '#ffffff');
-        }
-      });
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#060911' : '#f4f7fc');
     })();
   </script>
   <meta charset="UTF-8" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#060911" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="CMFI Replay" />
@@ -58,7 +51,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://firestore.googleapis.com">
   <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
   <style>
     /* For Webkit-based browsers (Chrome, Safari) */
@@ -99,7 +92,7 @@
 </script>
 </head>
 
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+<body class="bg-[#f4f7fc] dark:bg-[#060911] text-slate-900 dark:text-slate-50 antialiased">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

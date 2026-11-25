@@ -174,8 +174,8 @@ const DonationForm: React.FC<DonationFormProps> = ({
               }}
               className={`py-3 px-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 selectedAmount === amount && !customAmount
-                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                  : 'bg-slate-100 text-slate-700 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               €{amount}
@@ -199,7 +199,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
               if (e.target.value) setSelectedAmount(null);
             }}
             placeholder={t('donationCustomAmount') || 'Custom amount'}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-black text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-slate-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           />
         </div>
       </div>
@@ -211,8 +211,8 @@ const DonationForm: React.FC<DonationFormProps> = ({
         <div
           className={`overflow-hidden border rounded-xl bg-white dark:bg-black transition-all duration-200 ${
             focusedField
-              ? 'border-amber-500 ring-2 ring-amber-500/30'
-              : 'border-gray-300 dark:border-gray-600'
+              ? 'border-blue-500 ring-2 ring-blue-500/20 dark:border-sky-400'
+              : 'border-slate-200 dark:border-slate-700'
           }`}
         >
           <div className="flex items-center px-4 pt-3.5 pb-3">
@@ -266,7 +266,7 @@ const DonationForm: React.FC<DonationFormProps> = ({
         className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-200 ${
           !stripe || processing || !getAmount()
             ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg hover:shadow-amber-500/30 transform hover:scale-[1.02]'
+            : 'bg-gradient-to-r from-blue-600 to-sky-500 shadow-lg shadow-blue-600/15 hover:brightness-110'
         }`}
       >
         {processing ? (

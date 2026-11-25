@@ -268,15 +268,16 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
 
   if (loading || !items || items.length === 0 || !currentItem) {
     return (
-      <div className="relative w-full h-[60vh] md:h-[80vh] bg-black overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
-        <div className="relative z-10 h-full flex flex-col justify-end pb-16 px-4 md:px-8 lg:px-12 gap-4">
-          <div className="w-3/4 h-8 md:h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
-          <div className="w-1/4 h-5 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
-          <div className="flex gap-4 mt-2">
-            <div className="w-36 h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg animate-shimmer" />
-            <div className="w-12 h-12 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-full animate-shimmer" />
+      <div className="relative w-full h-[64vh] md:h-[74vh] bg-[#060911] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0b1530] via-[#060911] to-[#081226]" />
+        <div className="absolute inset-0 broadcast-grid-bg opacity-40" />
+        <div className="relative z-10 h-full flex flex-col justify-end pb-16 px-5 md:px-10 lg:px-14 gap-4 max-w-3xl">
+          <div className="w-28 h-5 bg-slate-800/80 rounded-full animate-pulse" />
+          <div className="w-3/4 h-10 md:h-14 bg-slate-800/80 rounded-xl animate-pulse" />
+          <div className="w-1/2 h-4 bg-slate-800/60 rounded-lg animate-pulse" />
+          <div className="flex gap-3 mt-2">
+            <div className="w-36 h-12 bg-blue-600/30 rounded-xl animate-pulse" />
+            <div className="w-12 h-12 bg-slate-800/80 rounded-xl animate-pulse" />
           </div>
         </div>
       </div>
@@ -326,25 +327,24 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
   const showVideo = videoUrl && !videoError;
 
   return (
-    <div 
-      className="relative w-full h-[60vh] md:h-[80vh] bg-black overflow-hidden group"
+    <div
+      className="relative w-full h-[64vh] md:h-[74vh] bg-[#060911] overflow-hidden group border-b border-slate-800/70"
       data-tour="home-hero"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Vidéo ou Image de fond */}
       <div className="absolute inset-0">
-        {/* Fond flou dynamique - toujours visible */}
         <div className="absolute inset-0">
           <img
             src={currentItem.imageUrl}
             alt=""
-            className="w-full h-full object-cover blur-2xl scale-110 opacity-40"
+            className="w-full h-full object-cover blur-2xl scale-110 opacity-45"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060911] via-[#060911]/45 to-[#060911]/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060911]/90 via-[#060911]/35 to-transparent" />
         </div>
 
-        {/* Vidéo superposée si disponible */}
         {showVideo && (
           <video
             ref={videoRef}
@@ -361,14 +361,12 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
           />
         )}
 
-        {/* Indicateur de chargement vidéo */}
         {showVideo && !videoLoaded && (
           <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-            <div className="w-12 h-12 border-[3px] border-white/20 border-t-white/80 rounded-full animate-spin" />
+            <div className="w-11 h-11 border-[3px] border-sky-400/20 border-t-sky-400 rounded-full animate-spin" />
           </div>
         )}
 
-        {/* Image principale centrée - fallback si pas de vidéo */}
         {!showVideo && (
           <div className="absolute inset-0 flex items-center justify-center">
             <img
@@ -381,132 +379,130 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
         )}
       </div>
 
-      {/* Contenu principal - Layout Prime Video */}
-      <div className="relative z-10 h-full flex items-center w-full max-w-[100vw] overflow-hidden">
-        {/* Dégradé sombre pour améliorer le contraste du texte */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent lg:from-black/50 lg:via-black/30 lg:to-transparent"></div>
-        
-        <div className="w-full max-w-[100%] px-4 md:px-8 lg:px-12 mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Colonne gauche - Contenu textuel */}
-            <div className="space-y-6 md:space-y-8">
-              {/* Titre principal adaptatif */}
-              <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl overflow-hidden">
-                <h1 
-                  className="font-display font-bold text-white leading-tight break-words transition-all duration-300"
-                  style={{
-                    fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)',
-                    lineHeight: 'clamp(1.3rem, 3.8vw, 3.2rem)',
-                    display: '-webkit-box',
-                    WebkitLineClamp: getLineClamp(),
-                    WebkitBoxOrient: 'vertical',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    wordBreak: 'break-word',
-                    letterSpacing: '-0.005em',
-                    hyphens: 'auto'
-                  }}
-                >
-                  {currentItem.title}
-                </h1>
-              </div>
+      {/* Contenu principal - Broadcast Stage */}
+      <div className="relative z-10 h-full flex items-end w-full max-w-[100vw] overflow-hidden pb-14 md:pb-16">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#060911] via-[#060911]/55 to-transparent pointer-events-none" />
 
-              {/* Métadonnées */}
-              <div className="flex items-center gap-4 text-white/80 text-sm md:text-base">
-                {currentItem.duration && (
-                  <span className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full">
-                    {currentItem.duration}
-                  </span>
-                )}
-                {currentItem.languages && currentItem.languages.length > 0 && (
-                  <span>{currentItem.languages[0].toUpperCase()}</span>
-                )}
-              </div>
+        <div className="w-full max-w-3xl px-5 md:px-10 lg:px-14 mx-0 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/25 border border-sky-400/35 backdrop-blur-md text-sky-300 text-[11px] font-mono-meta font-semibold uppercase tracking-widest mb-3.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+            {t('home')} · Featured
+          </div>
 
-              {/* Boutons d'action */}
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handlePlay}
-                  className="group flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 bg-white hover:bg-white/90 text-black font-bold rounded-lg md:rounded-xl transition-all duration-300 hover:scale-105 shadow-xl"
-                >
-                  <PlayIcon className="w-6 h-6 md:w-7 md:h-7" />
-                  <span className="text-base md:text-lg">{t('play')}</span>
-                </button>
+          <h1
+            className="font-display font-bold text-white leading-[1.06] break-words drop-shadow-xl"
+            style={{
+              fontSize: 'clamp(1.9rem, 4.4vw, 4rem)',
+              display: '-webkit-box',
+              WebkitLineClamp: getLineClamp(),
+              WebkitBoxOrient: 'vertical',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            {currentItem.title}
+          </h1>
 
-                <button
-                  onClick={handleBookmark}
-                  className="p-3 md:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-                  aria-label={isBookmarked ? t('removeFromFavorites') : t('addToFavorites')}
-                >
-                  {isBookmarked ? (
-                    <CheckIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                  ) : (
-                    <PlusIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                  )}
-                </button>
+          {currentItem.description ? (
+            <p className="mt-3 max-w-xl text-sm md:text-base text-slate-300/90 line-clamp-2 leading-relaxed">
+              {currentItem.description}
+            </p>
+          ) : null}
 
-                <button
-                  onClick={() => onSelectMedia(currentItem)}
-                  className="p-3 md:p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
-                  aria-label={t('moreInfo')}
-                >
-                  <InfoIcon className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                </button>
-              </div>
-            </div>
+          <div className="mt-4 flex items-center gap-2.5 text-slate-200 text-xs font-mono-meta">
+            {currentItem.duration && (
+              <span className="px-2.5 py-1 rounded-lg border border-white/15 bg-slate-900/70 backdrop-blur-sm">
+                {currentItem.duration}
+              </span>
+            )}
+            {currentItem.languages && currentItem.languages.length > 0 && (
+              <span className="px-2.5 py-1 rounded-lg border border-sky-400/25 bg-sky-500/15 text-sky-300 uppercase tracking-wider">
+                {currentItem.languages[0]}
+              </span>
+            )}
+          </div>
 
-            {/* Colonne droite - (Espace vide pour laisser la vidéo/image de fond visible) */}
-            <div className="hidden lg:block relative" />
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              onClick={handlePlay}
+              className="flex items-center gap-2.5 px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-semibold rounded-xl shadow-xl shadow-blue-600/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <PlayIcon className="w-5 h-5" />
+              <span>{t('play')}</span>
+            </button>
+
+            <button
+              onClick={handleBookmark}
+              className={`p-3 rounded-xl border backdrop-blur-md transition-colors ${
+                isBookmarked
+                  ? 'bg-sky-500/25 border-sky-400/50 text-sky-300'
+                  : 'bg-slate-900/60 hover:bg-slate-800/80 border-white/15 text-white'
+              }`}
+              aria-label={isBookmarked ? t('removeFromFavorites') : t('addToFavorites')}
+            >
+              {isBookmarked ? (
+                <CheckIcon className="w-5 h-5" />
+              ) : (
+                <PlusIcon className="w-5 h-5" />
+              )}
+            </button>
+
+            <button
+              onClick={() => onSelectMedia(currentItem)}
+              className="p-3 bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-md rounded-xl border border-white/15 text-white transition-colors"
+              aria-label={t('moreInfo')}
+            >
+              <InfoIcon className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bouton de contrôle Audio (Mute/Unmute) */}
+      {/* Mute Toggle */}
       {showVideo && (
         <button
           onClick={toggleMute}
-          className="absolute top-6 md:top-8 right-4 md:right-8 lg:right-12 z-20 p-3 md:p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full border border-white/20 transition-all duration-300 hover:scale-110 shadow-lg group"
+          className="absolute top-5 md:top-6 right-4 md:right-8 z-20 p-2.5 bg-slate-950/60 hover:bg-slate-900/80 backdrop-blur-md rounded-xl border border-white/15 transition-colors"
           aria-label={isMuted ? t('enableSound') : t('disableSound')}
         >
           {isMuted ? (
-            <VolumeMuteIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <VolumeMuteIcon className="w-5 h-5 text-white" />
           ) : (
-            <VolumeHighIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <VolumeHighIcon className="w-5 h-5 text-sky-400" />
           )}
         </button>
       )}
 
-      {/* Contrôles de navigation et indicateurs de carrousel */}
+      {/* Navigation & Progress */}
       {items.length > 1 && (
         <>
-          {/* Contrôles de navigation en bas */}
           <button
             onClick={handlePrev}
-            className="absolute left-4 md:left-8 bottom-6 md:bottom-8 z-20 p-3 md:p-4 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
+            className="absolute left-4 md:left-8 bottom-5 z-20 p-2 bg-slate-950/60 hover:bg-slate-900/90 backdrop-blur-md rounded-xl border border-white/15 transition-colors"
             aria-label={t('previousSlide')}
           >
-            <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
           <button
             onClick={handleNext}
-            className="absolute right-4 md:right-8 bottom-6 md:bottom-8 z-20 p-3 md:p-4 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full border border-white/20 transition-all duration-300 hover:scale-110"
+            className="absolute right-4 md:right-8 bottom-5 z-20 p-2 bg-slate-950/60 hover:bg-slate-900/90 backdrop-blur-md rounded-xl border border-white/15 transition-colors"
             aria-label={t('nextSlide')}
           >
-            <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          {/* Barre de progression séparée */}
-          <div className="absolute bottom-14 md:bottom-16 left-1/2 -translate-x-1/2 z-20 w-32 md:w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div ref={progressBarRef} className="h-full bg-white/80" style={{ width: '0%' }} />
+          <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/10">
+            <div ref={progressBarRef} className="h-full bg-gradient-to-r from-blue-500 to-sky-400" style={{ width: '0%' }} />
           </div>
 
-          {/* Indicateurs centrés entre les flèches */}
-          <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 md:gap-3">
+          <div className="absolute bottom-6 md:bottom-7 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
             {items.map((_, index) => (
               <button
                 key={index}
@@ -517,8 +513,8 @@ const HeroPrimeVideo: React.FC<HeroPrimeVideoProps> = ({ items: propItems, onSel
                 }}
                 className={`transition-all duration-300 ${
                   index === currentIndex
-                    ? 'w-8 h-2 bg-white rounded-full'
-                    : 'w-2 h-2 bg-white/40 hover:bg-white/60 rounded-full'
+                    ? 'w-7 h-1.5 bg-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.8)]'
+                    : 'w-2 h-1.5 bg-white/35 hover:bg-white/60 rounded-full'
                 }`}
                 aria-label={`${t('goToSlide')} ${index + 1}`}
               />

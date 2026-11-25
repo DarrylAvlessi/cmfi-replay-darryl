@@ -62,9 +62,9 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
     ? Math.max(0, Math.min(100, ((buffered / 100) * duration) / edgeScale * 100))
     : buffered;
   return (
-  <div className="px-2 sm:px-4 pt-2 pb-0.5">
+  <div className="px-1 pt-2 pb-2 sm:px-2">
     <div
-      className={`relative w-full transition-all duration-200 rounded-full group ${liveMode ? 'h-0.5 hover:h-1.5 bg-white/20' : 'h-1.5 hover:h-2.5 bg-black/30'} ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+      className={`group relative w-full rounded-full transition-all duration-200 ${liveMode ? 'h-1 hover:h-1.5 bg-white/20' : 'h-1.5 hover:h-2 bg-white/20'} ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
       onMouseMove={onSeekBarHover}
       onMouseEnter={(e) => { onShowPreview(true); onSeekBarHover(e); }}
       onMouseLeave={() => onShowPreview(false)}
@@ -79,7 +79,7 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
           transform: 'translateX(-50%)',
         }}
       >
-        <div className="bg-black rounded-lg overflow-hidden shadow-xl border border-white/20">
+        <div className="overflow-hidden rounded-xl border border-white/20 bg-slate-950 shadow-2xl">
           <video
             ref={previewVideoRef}
             src={src}
@@ -89,18 +89,18 @@ const SeekBar: React.FC<SeekBarProps> = React.memo(function SeekBar({
             playsInline
             crossOrigin="anonymous"
           />
-          <div className="text-white text-[11px] text-center py-0.5 px-2 bg-black/80 font-medium">
+          <div className="bg-slate-950/90 px-2 py-1 text-center font-mono-meta text-[10px] font-medium text-white">
             {formatTime(previewHoverTime)}
           </div>
         </div>
       </div>
 
       {/* Buffered Bar */}
-      <div className="absolute inset-y-0 left-0 bg-white/20 rounded-full transition-all duration-200" style={{ width: `${displayBuffered}%` }} />
+      <div className="absolute inset-y-0 left-0 rounded-full bg-white/25 transition-all duration-200" style={{ width: `${displayBuffered}%` }} />
 
-      {/* Progress Bar with Gradient and Glow (red in live mode) */}
-      <div className={`absolute inset-y-0 left-0 rounded-full transition-all duration-100 ${liveMode ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-[0_0_12px_rgba(220,38,38,0.6)]' : 'bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_0_12px_rgba(245,158,11,0.6)]'}`} style={{ width: `${shownProgress}%` }}>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_6px_rgb(0_0_0/0.8)] opacity-60 group-hover:opacity-100 transition-all duration-200 scale-75 group-hover:scale-100 ring-2 ring-amber-500/50" />
+      {/* Progress Bar with Broadcast Cobalt-Cyan Gradient (crimson in live mode) */}
+      <div className={`absolute inset-y-0 left-0 rounded-full transition-all duration-100 ${liveMode ? 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_14px_rgba(225,29,72,0.65)]' : 'bg-gradient-to-r from-blue-600 to-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.55)]'}`} style={{ width: `${shownProgress}%` }}>
+        <div className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 translate-x-1/2 scale-75 rounded-full bg-white opacity-70 shadow-[0_0_8px_rgba(56,189,248,0.7)] ring-2 ring-sky-300/60 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100" />
       </div>
 
       {/* Invisible Input for Interaction */}

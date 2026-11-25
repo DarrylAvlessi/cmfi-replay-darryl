@@ -17,9 +17,9 @@ const SocialLoginButton: React.FC<{ onClick: () => void; disabled?: boolean }> =
         <button
             onClick={onClick}
             disabled={disabled}
-            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-md font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-black/20 hover:bg-gray-50 dark:hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center items-center py-3 px-4 border border-slate-200 dark:border-slate-700/80 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            <GoogleIcon className="w-6 h-6 mr-3" />
+            <GoogleIcon className="w-5 h-5 mr-3" />
             {disabled ? t('loading') || 'Chargement...' : t('continueWithGoogle')}
         </button>
     );
@@ -30,10 +30,10 @@ const OrSeparator: React.FC = () => {
     return (
         <div className="relative">
             <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300/80 dark:border-gray-600/80" />
+                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
             </div>
             <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">
+                <span className="px-3 bg-white dark:bg-[#0b1120] text-slate-400 text-[11px] font-mono-meta uppercase tracking-[0.16em]">
                     {t('orSeparator')}
                 </span>
             </div>
@@ -170,43 +170,47 @@ const RegisterScreen: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white dark:bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fadeIn">
+        <div className="relative min-h-screen broadcast-canvas flex flex-col justify-center py-16 px-4 sm:px-6 lg:px-8 animate-fadeIn overflow-hidden">
+            <div className="absolute inset-0 broadcast-grid-bg pointer-events-none opacity-50" />
             <AuthHeader />
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="px-4 text-center">
-                    <img src={cmfiLogo} alt="CMFI Replay" className="h-12 mx-auto rounded-lg" />
-                    <h2 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+            <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden shadow-lg shadow-blue-600/20 ring-1 ring-slate-900/10 dark:ring-white/15">
+                        <img src={cmfiLogo} alt="CMFI Replay" className="w-full h-full object-cover" />
+                    </div>
+                    <p className="mt-5 text-[11px] font-mono-meta uppercase tracking-[0.22em] text-blue-600 dark:text-sky-400 font-semibold">
+                        CMFI Replay
+                    </p>
+                    <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">
                         {t('signup')}
                     </h2>
                 </div>
-                <div className="mt-8 px-4 sm:px-0">
+                <div className="mt-8 p-6 sm:p-7 rounded-3xl broadcast-panel">
                     <div className="space-y-6">
-                        <div >
-                            <SocialLoginButton
-                                onClick={handleGoogleSignIn}
-                                disabled={googleLoading}
-                            />
-                        </div>
+                        <SocialLoginButton
+                            onClick={handleGoogleSignIn}
+                            disabled={googleLoading}
+                        />
                         <OrSeparator />
                         {error && (
-                            <div className="text-red-500 text-sm text-center mb-4">
+                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-medium text-center">
                                 {error}
                             </div>
                         )}
-                        <form className="space-y-8" onSubmit={handleAuth} >
-                            <InputField  label={t('fullName')} id="full-name" name="full-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Howard Thurman" />
-                            <InputField  label={t('email')} id="email-signup" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
-                            <InputField  label={t('password')} id="password-signup" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-                            <div className="pt-2" >
+                        <form className="space-y-5" onSubmit={handleAuth}>
+                            <InputField label={t('fullName')} id="full-name" name="full-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Howard Thurman" />
+                            <InputField label={t('email')} id="email-signup" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="e.g. howard.thurman@gmail.com" />
+                            <InputField label={t('password')} id="password-signup" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required placeholder="••••••••" />
+                            <div className="pt-1">
                                 <AuthButton type="submit" disabled={authLoading}>
                                     {authLoading ? t('loading') || 'Chargement...' : t('getStarted')}
                                 </AuthButton>
                             </div>
                         </form>
-                        <div className="mt-6 text-center text-sm">
-                            <p className="text-gray-500 dark:text-gray-400">
+                        <div className="pt-2 text-center text-sm">
+                            <p className="text-slate-500 dark:text-slate-400">
                                 {t('alreadyHaveAccount')}{' '}
-                                <button onClick={() => navigate('/login')} className="font-medium text-amber-600 hover:text-amber-500" >
+                                <button onClick={() => navigate('/login')} className="font-semibold text-blue-600 dark:text-sky-400 hover:underline">
                                     {t('login')}
                                 </button>
                             </p>

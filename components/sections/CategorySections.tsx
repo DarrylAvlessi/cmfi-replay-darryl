@@ -40,20 +40,20 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                 // Afficher la catégorie même si elle est vide
                 if (categorySeries.length === 0) {
                     return (
-                        <div key={category.id} className="py-6 md:py-8 lg:py-10 mt-4 md:mt-6">
-                            <div className="px-4 md:px-6 lg:px-8 mb-6">
+                        <div key={category.id} className="py-6 md:py-8">
+                            <div className="px-4 md:px-6 lg:px-8 mb-5">
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="w-1 h-8 rounded-full"
-                                        style={{ backgroundColor: category.color || '#3B82F6' }}
+                                        className="w-1 h-7 rounded-full"
+                                        style={{ backgroundColor: category.color || '#27A7DE' }}
                                     />
-                                    <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
+                                    <h3 className="rail-title text-2xl md:text-[1.85rem] text-slate-900 dark:text-white">
                                         {getCategoryName(category, language)}
                                     </h3>
                                 </div>
                             </div>
                             <div className="px-4 md:px-6 lg:px-8">
-                                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 italic">
                                     Aucune série dans cette catégorie. Assignez des séries à cette catégorie dans la page Admin.
                                 </p>
                             </div>
@@ -62,19 +62,19 @@ const CategorySections: React.FC<CategorySectionsProps> = React.memo(({
                 }
 
                 return (
-                    <div key={category.id} className="py-6 md:py-8 lg:py-10 mt-4 md:mt-6">
-                        <div className="px-4 md:px-6 lg:px-8 mb-6">
+                    <div key={category.id} className="py-6 md:py-8">
+                        <div className="px-4 md:px-6 lg:px-8 mb-5">
                             <div className="flex items-center gap-3">
                                 <div
-                                    className="w-1 h-8 rounded-full"
-                                    style={{ backgroundColor: category.color || '#3B82F6' }}
+                                    className="w-1 h-7 rounded-full"
+                                    style={{ backgroundColor: category.color || '#27A7DE' }}
                                 />
-                                <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 dark:text-white">
+                                <h3 className="rail-title text-2xl md:text-[1.85rem] text-slate-900 dark:text-white">
                                     {getCategoryName(category, language)}
                                 </h3>
                             </div>
                             {category.description && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 ml-4">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 ml-4">
                                     {category.description}
                                 </p>
                             )}

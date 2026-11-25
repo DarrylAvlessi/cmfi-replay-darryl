@@ -98,6 +98,7 @@ const AppContent: React.FC = () => {
         activeTab: contextActiveTab,
         setActiveTab: setContextActiveTab,
         showWhatsNew,
+        isSidebarCollapsed,
     } = useAppContext();
     const location = useLocation();
     const navigate = useNavigate();
@@ -327,20 +328,14 @@ const AppContent: React.FC = () => {
     // Afficher un indicateur de chargement pendant la vérification de l'authentification
     if (loading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-black">
-                {/* Header avec bouton de menu fonctionnel */}
-                <Header
-                    title=""
-                    isSidebarOpen={isSidebarOpen}
-                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-                    isWatchRoute={false}
-                />
-
-                {/* Contenu de chargement */}
-                <div className={`pt-16`}>
-                    <div className="flex items-center justify-center h-screen">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+            <div className="min-h-screen broadcast-canvas text-slate-900 dark:text-slate-50 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center shadow-lg shadow-blue-600/25">
+                        <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                     </div>
+                    <p className="text-xs font-mono-meta uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                        CMFI Replay
+                    </p>
                 </div>
             </div>
         );
@@ -368,8 +363,15 @@ const AppContent: React.FC = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
+    const isWatchRoute = location.pathname.startsWith('/watch/');
+    const desktopRailPadding = isWatchRoute
+        ? ''
+        : isSidebarCollapsed
+            ? 'lg:pl-[76px]'
+            : 'lg:pl-[244px]';
+
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
+        <div className="min-h-screen broadcast-canvas text-slate-900 dark:text-slate-50">
             <ToastContainer
                 position="bottom-center"
                 autoClose={3000}
@@ -383,34 +385,35 @@ const AppContent: React.FC = () => {
                 theme="colored"
                 aria-label="Notification"
                 toastStyle={{
-                    backgroundColor: '#F59E0B',
-                    color: '#1F2937',
+                    backgroundColor: '#1d4ed8',
+                    color: '#f8fafc',
+                    borderRadius: '14px',
                 }}
             />
 
-            {/* Sidebar - Mobile only (hidden on desktop) */}
-            <div className="lg:hidden">
+            {/* Desktop Icon-Rail + Mobile Slide-over Drawer */}
+            {!isWatchRoute && (
                 <Sidebar
                     isOpen={isSidebarOpen}
                     onClose={() => setIsSidebarOpen(false)}
                     activeTab={contextActiveTab}
                     setActiveTab={setContextActiveTab}
                 />
-            </div>
+            )}
 
             {/* Ne pas afficher le header sur les pages de lecture vidéo */}
-            {!location.pathname.startsWith('/watch/') && (
+            {!isWatchRoute && (
                 <Header
                     title={location.pathname === '/home' ? t('home') :
                         getTitleFromPath(location.pathname, t)}
                     isSidebarOpen={isSidebarOpen}
                     onToggleSidebar={handleToggleSidebar}
-                    isWatchRoute={location.pathname.startsWith('/watch/')}
+                    isWatchRoute={isWatchRoute}
                 />
             )}
 
             <RouteLoadingBar visible={routeLoading} />
-            <div className={`page-transition fadeIn ${!location.pathname.startsWith('/watch/') ? 'min-h-screen' : ''} ${showBottomNav ? 'pb-20' : ''} ${!location.pathname.startsWith('/watch/') ? 'pt-16 md:pt-16' : 'pt-0'} transition-all duration-300 ease-in-out`}>
+            <div className={`page-transition fadeIn ${!isWatchRoute ? 'min-h-screen' : ''} ${desktopRailPadding} ${showBottomNav ? 'pb-28 lg:pb-8' : ''} ${!isWatchRoute ? 'pt-[4.5rem] md:pt-16' : 'pt-0'} transition-all duration-300 ease-out`}>
                 <Suspense fallback={<RouteLoadingBar visible />}>
                     <Routes>
                         {/* Routes publiques - Accessibles sans authentification */}
@@ -617,7 +620,7 @@ const AppContent: React.FC = () => {
             </div>
 
             {showBottomNav && (
-                <div className="fixed bottom-0 left-0 right-0 z-20 lg:hidden">
+                <div className="fixed bottom-0 left-0 right-0 z-20 px-3 pb-3 lg:hidden">
                     <BottomNav />
                 </div>
             )}

@@ -3,6 +3,7 @@
 
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { MediaContent, MediaType, Episode } from '../types';
 
@@ -100,37 +101,45 @@ const EpisodeListItem = React.memo<{
     const Tag = episodeHref ? 'a' : 'div';
 
     return (
-        <div className={`group flex gap-3 md:gap-4 p-2 rounded-xl transition-colors hover:bg-gray-100 dark:hover:bg-white/[0.04] ${isPlaying ? 'ring-1 ring-amber-500' : ''}`}>
+        <div className={`group flex gap-3 md:gap-4 p-2.5 rounded-2xl transition-all duration-200 border ${
+            isPlaying
+                ? 'bg-blue-600/10 dark:bg-sky-500/10 border-blue-500/50 dark:border-sky-400/50 shadow-md shadow-blue-600/10'
+                : 'border-transparent hover:bg-slate-100/80 dark:hover:bg-white/[0.04] hover:border-slate-200 dark:hover:border-slate-800'
+        }`}>
             <Tag
                 href={episodeHref}
                 onClick={handleEpisodeClick}
                 className="flex-1 flex gap-3 md:gap-4 min-w-0 cursor-pointer"
             >
-                <div className="relative w-32 sm:w-36 md:w-44 shrink-0 aspect-video bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden self-start">
-                    <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover" loading="lazy" />
+                <div className="relative w-32 sm:w-36 md:w-44 shrink-0 aspect-video bg-slate-200 dark:bg-slate-900 rounded-xl overflow-hidden self-start border border-slate-200 dark:border-slate-800">
+                    <img src={thumbnailUrl} alt={episodeTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                     {!isPlaying && (
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                            <PlayIcon className="w-8 h-8 text-white/0 group-hover:text-white/90 transition-all" />
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all shadow-lg">
+                                <PlayIcon className="w-4 h-4 text-white ml-0.5" />
+                            </div>
                         </div>
                     )}
                     {isPlaying && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500 text-gray-900 text-xs font-bold rounded-md">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-mono-meta text-[10px] font-bold rounded-md shadow">
                             {t('currentlyPlaying')}
                         </div>
                     )}
                     {isEpisodeSerie && episode.runtime > 0 && (
-                        <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
+                        <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-slate-950/85 text-white font-mono-meta text-[10px] font-medium rounded">
                             {formatSeconds(episode.runtime)}
                         </div>
                     )}
                 </div>
                 <div className="flex-1 min-w-0 space-y-1 py-0.5">
-                    <span className="text-gray-500 dark:text-gray-400 text-xs font-medium">{t('episodeLabel', { number: String(episodeNumber) })}</span>
-                    <h4 className="font-bold text-gray-900 dark:text-white text-sm md:text-base leading-tight line-clamp-2">
+                    <span className="text-blue-600 dark:text-sky-400 font-mono-meta text-[11px] font-semibold uppercase tracking-wider">
+                        {t('episodeLabel', { number: String(episodeNumber) })}
+                    </span>
+                    <h4 className="font-display font-bold text-slate-900 dark:text-white text-sm md:text-base leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
                         {episodeTitle}
                     </h4>
                     {isFromOtherSeries && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-sky-300 border border-blue-500/20 text-[11px] rounded-lg font-medium">
                             {t('otherProduction')}
                         </span>
                     )}
@@ -140,35 +149,35 @@ const EpisodeListItem = React.memo<{
             <div ref={menuRef} className="relative self-start pt-1 shrink-0">
                 <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                    className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                     aria-label="Episode actions"
                 >
                     <EllipsisVerticalIcon className="w-5 h-5" />
                 </button>
 
                 {menuOpen && (
-                    <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-20 py-1 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#0b1120] rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 z-20 py-1 overflow-hidden">
                         <button
                             onClick={() => { setShowDetails(true); setMenuOpen(false); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-left"
                         >
-                            <InfoIcon className="w-4 h-4" />
+                            <InfoIcon className="w-4 h-4 text-sky-500" />
                             <span>{t('details')}</span>
                         </button>
                         <button
                             onClick={() => { onBookmark?.(); setMenuOpen(false); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-left"
                         >
-                            <svg className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-4 h-4 text-sky-500" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                             </svg>
                             <span>{isBookmarked ? t('addedToList') : t('myList')}</span>
                         </button>
                         <button
                             onClick={() => { setMenuOpen(false); onShare?.(episode); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-left"
                         >
-                            <ShareIcon className="w-4 h-4" />
+                            <ShareIcon className="w-4 h-4 text-sky-500" />
                             <span>{t('share')}</span>
                         </button>
                     </div>
@@ -176,34 +185,39 @@ const EpisodeListItem = React.memo<{
             </div>
 
             {showDetails && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setShowDetails(false)}>
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+                createPortal(
+                <div
+                    className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+                    role="presentation"
+                    onClick={() => setShowDetails(false)}
+                >
+                    <div className="broadcast-panel rounded-2xl max-w-lg w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-start justify-between gap-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{episodeTitle}</h3>
-                            <button onClick={() => setShowDetails(false)} className="p-1 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0">
+                            <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{episodeTitle}</h3>
+                            <button onClick={() => setShowDetails(false)} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0">
                                 <XMarkIcon className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                            <p><span className="font-medium text-gray-900 dark:text-white">{t('episode')}:</span> {t('episodeLabel', { number: String(episodeNumber) })}</p>
-                            <p><span className="font-medium text-gray-900 dark:text-white">Duration:</span> {episodeDuration}</p>
+                        <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                            <p><span className="font-semibold text-slate-900 dark:text-white">{t('episode')}:</span> {t('episodeLabel', { number: String(episodeNumber) })}</p>
+                            <p><span className="font-semibold text-slate-900 dark:text-white">Duration:</span> {episodeDuration}</p>
                             {isEpisodeSerie && (episode as EpisodeSerie).overview && (
                                 <div>
-                                    <span className="font-medium text-gray-900 dark:text-white">{t('description')}:</span>
-                                    <p className="mt-1 text-gray-600 dark:text-gray-400 leading-relaxed">{(episode as EpisodeSerie).overview}</p>
+                                    <span className="font-semibold text-slate-900 dark:text-white">{t('description')}:</span>
+                                    <p className="mt-1 text-slate-600 dark:text-slate-400 leading-relaxed">{(episode as EpisodeSerie).overview}</p>
                                 </div>
                             )}
                             {isEpisodeSerie && (episode as EpisodeSerie).views !== undefined && (
-                                <p><span className="font-medium text-gray-900 dark:text-white">{t('views')}:</span> {(episode as EpisodeSerie).views?.toLocaleString()}</p>
+                                <p><span className="font-semibold text-slate-900 dark:text-white">{t('views')}:</span> {(episode as EpisodeSerie).views?.toLocaleString()}</p>
                             )}
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => { onBookmark?.(); }}
-                                className={`flex-1 flex items-center justify-center gap-2 font-bold py-2.5 px-4 rounded-xl transition-colors text-sm border ${
+                                className={`flex-1 flex items-center justify-center gap-2 font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm border ${
                                     isBookmarked
-                                        ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
-                                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ? 'bg-blue-600/10 dark:bg-sky-500/15 border-blue-500/40 text-blue-600 dark:text-sky-400'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 <svg className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -213,14 +227,16 @@ const EpisodeListItem = React.memo<{
                             </button>
                             <button
                                 onClick={() => { setShowDetails(false); onShare?.(episode); }}
-                                className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2.5 px-4 rounded-xl transition-colors text-sm"
+                                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-semibold py-2.5 px-4 rounded-xl transition-all text-sm shadow-lg shadow-blue-600/20"
                             >
                                 <ShareIcon className="w-4 h-4" />
                                 <span>{t('share')}</span>
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
+                )
             )}
         </div>
     );
@@ -884,117 +900,92 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
     }, []);
 
     return (
-
-        <div className="animate-fadeIn pb-8 md:pb-12 bg-white dark:bg-[#121212] min-h-screen relative">
-
-            <div className="relative w-full aspect-[3/1] sm:aspect-[4/1] md:aspect-[5/1] lg:aspect-[6/1] max-h-[180px] sm:max-h-[220px] md:max-h-[260px] lg:max-h-[280px] overflow-hidden bg-gray-200 dark:bg-gray-800">
-
-                <img src={imageUrl} alt="" className="absolute w-full h-full object-cover scale-110 blur-xl" />
-
-                <div className="absolute inset-0 flex items-center justify-center z-[5] px-4 pt-14 sm:pt-16">
-                    <h1 className="text-white text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black drop-shadow-xl tracking-tight text-center leading-tight">
-                        {title}
-                    </h1>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
+        <div className="animate-fadeIn pb-14 broadcast-canvas min-h-screen relative">
+            {/* Broadcast Hero Header */}
+            <div className="relative w-full h-[220px] sm:h-[260px] md:h-[310px] overflow-hidden bg-[#060911] border-b border-slate-800/70">
+                <img src={imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-45" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060911] via-[#060911]/55 to-[#060911]/30" />
+                <div className="absolute inset-0 broadcast-grid-bg opacity-30" />
 
                 <header className="absolute top-0 left-0 right-0 z-10">
-
-                    <div className="flex items-center justify-between min-h-16 px-4 py-2 pt-4 sm:pt-2">
-
+                    <div className="flex items-center justify-between px-4 sm:px-6 py-4">
                         <button
-
                             onClick={onBack}
-
-                            className="p-2 rounded-full text-white bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
-
+                            className="p-2.5 rounded-xl text-white bg-slate-950/60 hover:bg-slate-900/90 border border-white/15 backdrop-blur-md transition-colors"
                             aria-label={t('goBack')}
-
                         >
-
-                            <ArrowLeftIcon className="w-6 h-6" />
-
+                            <ArrowLeftIcon className="w-5 h-5" />
                         </button>
-
-
 
                         <button
-
                             onClick={() => navigate('/home')}
-
-                            className="p-2 rounded-full text-white bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors"
-
+                            className="p-2.5 rounded-xl text-white bg-slate-950/60 hover:bg-slate-900/90 border border-white/15 backdrop-blur-md transition-colors"
                             aria-label={t('home')}
-
                         >
-
-                            <HomeIcon className="w-6 h-6" />
-
+                            <HomeIcon className="w-5 h-5" />
                         </button>
-
                     </div>
-
                 </header>
 
+                <div className="relative z-[5] h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-end pb-7">
+                    <div className="flex items-end gap-5 w-full">
+                        {imageUrl && (
+                            <div className="hidden sm:block w-28 md:w-36 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/15 bg-slate-900 shrink-0 -mb-1">
+                                <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                            </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-mono-meta mb-2.5">
+                                {type && (
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-blue-600/30 border border-sky-400/35 text-sky-300 font-semibold uppercase tracking-wider">
+                                        {type === MediaType.Movie ? t('movie') : type === MediaType.Series ? t('series') : t('podcast')}
+                                    </span>
+                                )}
+                                {item.duration && (
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-slate-900/70 border border-white/15 text-slate-200">
+                                        {item.duration}
+                                    </span>
+                                )}
+                                {languages && languages.length > 0 && (
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-slate-900/70 border border-white/15 text-slate-200">
+                                        {languages[0].toUpperCase()}
+                                    </span>
+                                )}
+                            </div>
+                            <h1 className="font-display text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-xl tracking-tight leading-tight line-clamp-2">
+                                {title}
+                            </h1>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-
-
-            
-
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-5 md:space-y-8 relative z-[1]">
-
-
-
-                <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">
-                    {item.duration && (
-                        <span className="px-2.5 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium">
-                            {item.duration}
-                        </span>
-                    )}
-                    {languages && languages.length > 0 && (
-                        <span className="px-2.5 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium">
-                            {languages[0].toUpperCase()}
-                        </span>
-                    )}
-                    {type && (
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 font-semibold">
-                            {type === MediaType.Movie ? t('movie') : type === MediaType.Series ? t('series') : t('podcast')}
-                        </span>
-                    )}
-                </div>
-
-
-
-
-
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative z-[1]">
                 {type === MediaType.Movie && !isLoadingLikes && (
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-4 text-sm font-mono-meta">
                         <span className="flex items-center gap-1.5">
-                            <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} />
-                            <span className={hasLiked ? 'text-red-500 font-semibold' : 'text-gray-600 dark:text-gray-400'}>
+                            <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-rose-500' : 'text-slate-400'}`} />
+                            <span className={hasLiked ? 'text-rose-500 font-semibold' : 'text-slate-600 dark:text-slate-300'}>
                                 {likeCount} {t('likes')}
                             </span>
                         </span>
                         <span className="flex items-center gap-1.5">
                             <CommentIcon className="w-4 h-4 text-sky-500" />
-                            <span className="text-gray-600 dark:text-gray-400">
+                            <span className="text-slate-600 dark:text-slate-300">
                                 {comments.length} {t(comments.length !== 1 ? 'comments' : 'comment')}
                             </span>
                         </span>
                     </div>
                 )}
 
-
-
-                <div className="space-y-3">
+                {/* Action Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <button
                         onClick={handlePlay}
                         data-tour="detail-play-btn"
-                        className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 px-6 rounded-xl transition-colors text-sm sm:text-base shadow-lg"
+                        className="sm:w-auto flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-semibold py-3.5 px-8 rounded-xl transition-all text-sm sm:text-base shadow-xl shadow-blue-600/25 active:scale-[0.98]"
                     >
-                        <PlayIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <PlayIcon className="w-5 h-5" />
                         <span>{t('play')}</span>
                     </button>
 
@@ -1003,16 +994,16 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                             <button
                                 onClick={handleLike}
                                 disabled={isLiking}
-                                className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
+                                className={`flex items-center justify-center gap-1.5 font-semibold py-2.5 px-4 rounded-xl border transition-colors text-xs sm:text-sm ${
                                     hasLiked
-                                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
-                                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                        ? 'bg-rose-500/10 border-rose-500/35 text-rose-500'
+                                        : 'broadcast-panel text-slate-700 dark:text-slate-200 hover:border-blue-500/40'
                                 }`}
                             >
-                                <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-red-500' : ''}`} />
+                                <LikeIcon className={`w-4 h-4 ${hasLiked ? 'text-rose-500' : ''}`} />
                                 <span>{hasLiked ? t('liked') : t('like')}</span>
                                 {likeCount > 0 && (
-                                    <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">{likeCount}</span>
+                                    <span className="px-1.5 py-0.5 bg-slate-200/70 dark:bg-slate-800 rounded font-mono-meta text-xs">{likeCount}</span>
                                 )}
                             </button>
                         )}
@@ -1020,10 +1011,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                         <button
                             onClick={() => toggleBookmark(item.id, item.title, item.description || '', item.imageUrl || '', item.type === MediaType.Series || item.type === MediaType.Podcast)}
                             data-tour="bookmark-btn"
-                            className={`flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border transition-colors text-xs sm:text-sm ${
+                            className={`flex items-center justify-center gap-1.5 font-semibold py-2.5 px-4 rounded-xl border transition-colors text-xs sm:text-sm ${
                                 isBookmarked
-                                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
-                                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    ? 'bg-blue-600/10 dark:bg-sky-500/15 border-blue-500/40 text-blue-600 dark:text-sky-400'
+                                    : 'broadcast-panel text-slate-700 dark:text-slate-200 hover:border-blue-500/40'
                             }`}
                         >
                             {isBookmarked ? <CheckIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}
@@ -1033,7 +1024,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                         <button
                             onClick={() => handleShare(type === MediaType.Series ? 'series' : undefined)}
                             disabled={isSharing}
-                            className="relative flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                            className="flex items-center justify-center gap-1.5 font-semibold py-2.5 px-4 rounded-xl broadcast-panel text-slate-700 dark:text-slate-200 hover:border-blue-500/40 transition-colors disabled:opacity-50 text-xs sm:text-sm"
                         >
                             <ShareIcon className="w-4 h-4" />
                             <span>{t('share')}</span>
@@ -1042,7 +1033,7 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                         <button
                             onClick={() => setShowSuggestModal(true)}
                             data-tour="suggest-title"
-                            className="flex items-center justify-center gap-1.5 font-semibold py-2 px-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xs sm:text-sm"
+                            className="flex items-center justify-center gap-1.5 font-semibold py-2.5 px-4 rounded-xl broadcast-panel text-slate-700 dark:text-slate-200 hover:border-blue-500/40 transition-colors text-xs sm:text-sm"
                             title={t('suggest')}
                         >
                             <PencilIcon className="w-4 h-4" />
@@ -1051,27 +1042,25 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                     </div>
                 </div>
 
-
-
                 {/* Tab Navigation - Series/Podcast only */}
                 {(type === MediaType.Series || type === MediaType.Podcast) && (
-                    <div className="flex border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex gap-1 border-b border-slate-200 dark:border-slate-800">
                         <button
                             onClick={() => setActiveTab('episodes')}
-                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
                                 activeTab === 'episodes'
-                                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                    ? 'border-blue-600 dark:border-sky-400 text-blue-600 dark:text-sky-400'
+                                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                             }`}
                         >
                             {t('episodes')}
                         </button>
                         <button
                             onClick={() => setActiveTab('about')}
-                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
                                 activeTab === 'about'
-                                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                    ? 'border-blue-600 dark:border-sky-400 text-blue-600 dark:text-sky-400'
+                                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                             }`}
                         >
                             {t('about')}
@@ -1079,58 +1068,32 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                     </div>
                 )}
 
-                {/* About Tab - Description + Languages */}
+                {/* About Tab */}
                 {(type === MediaType.Movie || activeTab === 'about') && (
-                    <>
-                    <div className="space-y-2 md:space-y-3">
-
-                        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{t('description')}</h2>
-
-                    {description ? (
-
-                        <>
-
-                            <p className={`text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base transition-all duration-300 ${
-
-                                isLongDescription && !isDescriptionExpanded ? 'line-clamp-4' : ''
-
-                            }`}>
-
-                                {description}
-
+                    <div className="p-5 sm:p-6 rounded-2xl broadcast-panel space-y-3">
+                        <h2 className="font-display text-lg md:text-xl font-bold text-slate-900 dark:text-white">{t('description')}</h2>
+                        {description ? (
+                            <>
+                                <p className={`text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base ${
+                                    isLongDescription && !isDescriptionExpanded ? 'line-clamp-4' : ''
+                                }`}>
+                                    {description}
+                                </p>
+                                {isLongDescription && (
+                                    <button
+                                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                        className="text-blue-600 dark:text-sky-400 font-semibold text-sm hover:underline"
+                                    >
+                                        {isDescriptionExpanded ? t('showLess') : t('readMore')}
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-slate-500 dark:text-slate-400 text-sm italic">
+                                {t('noDescription')}
                             </p>
-
-                            {isLongDescription && (
-
-                                <button
-
-                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-
-                                    className="text-amber-600 dark:text-amber-400 font-semibold text-sm md:text-base hover:text-amber-700 dark:hover:text-amber-300 transition-colors duration-200"
-
-                                >
-
-                                    {isDescriptionExpanded ? t('showLess') : t('readMore')}
-
-                                </button>
-
-                            )}
-
-                        </>
-
-                    ) : (
-
-                        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base italic">
-
-                            {t('noDescription')}
-
-                        </p>
-
-                    )}
-
-                </div>
-
-                    </>
+                        )}
+                    </div>
                 )}
 
                 {activeTab === 'episodes' && (type === MediaType.Series || type === MediaType.Podcast) && (
@@ -1190,21 +1153,21 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                         });
                                                     }
                                                 }}
-                                                className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-900 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                className="flex items-center gap-2 px-5 py-2.5 broadcast-panel rounded-xl text-slate-900 dark:text-white text-sm font-semibold hover:border-blue-500/40 transition-colors"
                                                 aria-haspopup="listbox"
                                                 aria-expanded={isSeasonDropdownOpen}
                                             >
                                                 <span>{seasonLabel(selectedSeason, t('season'))}</span>
-                                                <span className="text-gray-500">|</span>
+                                                <span className="text-slate-400">|</span>
                                                 {showCountSkeleton
-                                                    ? <span className="inline-block w-16 h-4 align-middle rounded bg-gray-300 dark:bg-gray-600 animate-pulse" />
-                                                    : <span className="text-gray-400 font-normal">{episodeCount} {t('episodes')}</span>}
-                                                <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${isSeasonDropdownOpen ? 'rotate-180' : ''}`} />
+                                                    ? <span className="inline-block w-16 h-4 align-middle rounded bg-slate-300 dark:bg-slate-700 animate-pulse" />
+                                                    : <span className="text-slate-500 dark:text-slate-400 font-mono-meta text-xs font-normal">{episodeCount} {t('episodes')}</span>}
+                                                <ChevronDownIcon className={`w-4 h-4 text-slate-400 transition-transform ${isSeasonDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
 
                                             {isSeasonDropdownOpen && (
                                                 <div
-                                                    className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl max-h-72 overflow-y-auto shadow-xl z-10 border border-gray-200 dark:border-gray-700"
+                                                    className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-[#0b1120] rounded-2xl max-h-72 overflow-y-auto shadow-2xl z-10 border border-slate-200 dark:border-slate-800 py-1"
                                                     role="listbox"
                                                 >
                                                     {visibleSeasons.map(season => {
@@ -1217,10 +1180,10 @@ const MediaDetailScreen: React.FC<MediaDetailScreenProps> = ({ item, onBack, onP
                                                                 role="option"
                                                                 aria-selected={season.uid_season === selectedSeasonUid}
                                                                 onClick={() => { setSelectedSeasonUid(season.uid_season); setIsSeasonDropdownOpen(false); }}
-                                                                className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                                                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                                                                     season.uid_season === selectedSeasonUid
-                                                                        ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium'
-                                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                                        ? 'bg-blue-600/10 dark:bg-sky-500/15 text-blue-600 dark:text-sky-400 font-semibold'
+                                                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
                                                                 }`}
                                                             >
                                                                 {isYouTubeSeason(season)

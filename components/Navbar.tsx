@@ -53,14 +53,14 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="hidden lg:flex items-center space-x-1" data-tour="sidebar-categories">
+    <nav className="hidden lg:flex items-center gap-1" data-tour="sidebar-categories">
       {navItems.map((item) => (
         <Link
           key={item.id}
           to={item.path}
-          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${isActive(item.path)
-              ? 'text-amber-500 border-b-2 border-amber-500'
-              : 'text-gray-700 hover:text-amber-600 dark:text-gray-300 dark:hover:text-amber-400'
+          className={`px-3.5 py-1.5 text-sm font-medium rounded-full transition-colors duration-200 ${isActive(item.path)
+              ? 'bg-stone-900 text-stone-50 dark:bg-stone-100 dark:text-stone-900'
+              : 'text-stone-600 hover:bg-stone-900/5 dark:text-stone-300 dark:hover:bg-white/10'
             }`}
           aria-current={isActive(item.path) ? 'page' : undefined}
         >
@@ -71,9 +71,9 @@ const Navbar: React.FC = () => {
       <div className="relative group">
         <Link
           to="/productions"
-          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${isActive('/productions')
-              ? 'text-amber-500 border-b-2 border-amber-500'
-              : 'text-gray-700 hover:text-amber-600 dark:text-gray-300 dark:hover:text-amber-400'
+          className={`px-3.5 py-1.5 text-sm font-medium rounded-full transition-colors duration-200 flex items-center gap-1 ${isActive('/productions')
+              ? 'bg-stone-900 text-stone-50 dark:bg-stone-100 dark:text-stone-900'
+              : 'text-stone-600 hover:bg-stone-900/5 dark:text-stone-300 dark:hover:bg-white/10'
             }`}
           aria-current={isActive('/productions') ? 'page' : undefined}
         >
@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
           </svg>
         </Link>
 
-        <div className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-black rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+        <div className="absolute left-0 top-full mt-2 w-60 shell-bar rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
           {categoriesLoading ? (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
               {t('loading') || 'Chargement...'}
@@ -134,9 +134,9 @@ const Navbar: React.FC = () => {
 
       <Link
         to={donateItem.path}
-        className={`ml-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-1.5 ${isActive(donateItem.path)
-            ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/40'
-            : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:scale-105'
+        className={`ml-2 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${isActive(donateItem.path)
+            ? 'bg-clay text-white'
+            : 'bg-clay/10 text-clay hover:bg-clay hover:text-white dark:bg-clay/15 dark:text-amber-200'
           }`}
         aria-current={isActive(donateItem.path) ? 'page' : undefined}
       >

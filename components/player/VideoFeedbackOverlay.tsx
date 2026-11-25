@@ -28,7 +28,7 @@ const VideoFeedbackOverlay: React.FC<VideoFeedbackOverlayProps> = ({
       </div>
     </div>
     <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-150 ${isLongPressing ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-      <div className="px-4 py-2 rounded-xl bg-black/70 text-amber-400 font-bold text-lg backdrop-blur-sm border border-amber-500/30 shadow-lg">
+      <div className="rounded-xl border border-sky-300/25 bg-slate-950/75 px-4 py-2 text-lg font-bold text-sky-300 shadow-lg backdrop-blur-sm">
         2x
       </div>
     </div>
@@ -45,7 +45,7 @@ const VideoFeedbackOverlay: React.FC<VideoFeedbackOverlayProps> = ({
           <span className="text-sm font-semibold tabular-nums">{Math.round(volume * 100)}%</span>
           <div className="w-16 h-1.5 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all duration-100"
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-300 transition-all duration-100"
               style={{ width: `${isMuted ? 0 : volume * 100}%` }}
             />
           </div>

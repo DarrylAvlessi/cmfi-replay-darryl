@@ -190,33 +190,36 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black animate-fadeIn pb-8 lg:flex">
-            {/* Sidebar avec recherche, tri, filtres */}
-            <aside className="bg-white dark:bg-black border-b border-gray-200 dark:border-black lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r lg:border-gray-200 dark:lg:border-gray-700">
-                <div className="px-4 md:px-6 lg:px-4 py-4 space-y-4">
-                    {/* Barre de navigation supérieure */}
-                    <div className="flex items-center justify-between lg:justify-start lg:gap-3">
+        <div className="min-h-screen broadcast-canvas animate-fadeIn pb-12 lg:flex">
+            {/* Filter Panel */}
+            <aside className="bg-white/80 dark:bg-[#080d1a]/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r">
+                <div className="px-4 md:px-5 py-5 space-y-4">
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={handleBack}
-                            className="lg:hidden p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-white/10 transition-colors"
                             aria-label={t('back')}
                         >
-                            <ArrowLeftIcon className="w-6 h-6" />
+                            <ArrowLeftIcon className="w-5 h-5" />
                         </button>
-                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/15 bg-blue-500/5 text-blue-600 dark:border-sky-400/15 dark:bg-sky-400/5 dark:text-sky-400 lg:hidden">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="16" rx="3" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h8M8 13h8M8 17h4" />
+                            </svg>
+                        </span>
+                        <h1 className="font-display text-2xl font-bold text-slate-900 lg:hidden dark:text-white">
                             {t('seriesScreenTitle') || 'Productions'}
                         </h1>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p className="text-xs leading-relaxed text-slate-500 sm:text-sm lg:hidden dark:text-slate-400">
                         {t('categorySeriesDescription')}
                     </p>
 
-                    {/* Barre de recherche */}
                     <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -225,40 +228,36 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             placeholder={t('searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                     </div>
 
-                    {/* Barre de contrôle unifiée: Tri + Vue */}
-                    <div className="flex items-center bg-gray-100 dark:bg-gray-900/50 rounded-xl p-1">
-                        {/* Sélecteur de tri */}
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1">
                         <div className="relative flex-1 min-w-0">
                             <select
                                 value={sortOption}
                                 onChange={(e) => setSortOption(e.target.value as SortOption)}
-                                className="appearance-none bg-transparent border-0 w-full text-gray-700 dark:text-gray-300 px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-0 cursor-pointer transition-colors duration-200 hover:text-amber-600 dark:hover:text-amber-400"
+                                className="appearance-none bg-transparent border-0 w-full text-slate-700 dark:text-slate-200 px-3 py-1.5 text-xs sm:text-sm font-medium focus:outline-none cursor-pointer"
                             >
                                 <option value="title">{t('sortByTitle') || 'Titre (A-Z)'}</option>
                                 <option value="seasons">{t('sortBySeasons') || 'Plus de saisons'}</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
                         </div>
 
-                        {/* Séparateur vertical */}
-                        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+                        <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                        {/* Toggle vue Grille/Liste */}
                         <div className="flex items-center gap-0.5">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-lg transition-all duration-200 ${
+                                className={`p-1.5 rounded-lg transition-all ${
                                     viewMode === 'grid'
-                                        ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                                 aria-label={t('gridView')}
                             >
@@ -268,10 +267,10 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-lg transition-all duration-200 ${
+                                className={`p-1.5 rounded-lg transition-all ${
                                     viewMode === 'list'
-                                        ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                                 aria-label={t('listView')}
                             >
@@ -282,14 +281,10 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                         </div>
                     </div>
 
-                    {/* Filtre par catégorie (défilement horizontal) */}
                     {categories.length > 0 && (
-                        <div className="pt-2 pb-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800">
                             <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-nowrap items-center lg:flex-col lg:overflow-x-visible lg:items-stretch">
-                                <svg className="w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400 lg:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                </svg>
-                                <span className="hidden lg:block text-sm font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">
+                                <span className="hidden lg:block text-[11px] font-mono-meta font-semibold uppercase tracking-widest text-slate-400 mb-1">
                                     {t('browseCategories')}
                                 </span>
                                 <button
@@ -298,14 +293,15 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                         newParams.delete('category');
                                         setSearchParams(newParams);
                                     }}
-                                    className={`flex-shrink-0 whitespace-nowrap lg:w-full lg:whitespace-normal px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                    className={`flex-shrink-0 whitespace-nowrap lg:w-full lg:whitespace-normal px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-left flex items-center justify-between ${
                                         selectedCategoryId === null
-                                            ? 'bg-amber-500 text-gray-900'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/20'
+                                            : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
                                     }`}
                                     aria-pressed={selectedCategoryId === null}
                                 >
-                                    {t('all')} ({series.length})
+                                    <span>{t('all')}</span>
+                                    <span className="font-mono-meta text-xs opacity-80 ml-2">{series.length}</span>
                                 </button>
                                 {categories.map((category) => (
                                     <button
@@ -315,48 +311,67 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                                             newParams.set('category', category.id);
                                             setSearchParams(newParams);
                                         }}
-                                        className={`flex-shrink-0 whitespace-nowrap lg:w-full lg:whitespace-normal px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                                        className={`flex-shrink-0 whitespace-nowrap lg:w-full lg:whitespace-normal px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-2 ${
                                             selectedCategoryId === category.id
-                                                ? 'bg-amber-500 text-gray-900'
-                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-600/20 font-semibold'
+                                                : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
                                         }`}
                                         aria-pressed={selectedCategoryId === category.id}
                                     >
-                                        <div
-                                            className="w-3.5 h-3.5 rounded-full ring-1 ring-inset ring-gray-300 dark:ring-gray-600 flex-shrink-0"
-                                            style={{ backgroundColor: category.color || '#3B82F6' }}
+                                        <span
+                                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                            style={{ backgroundColor: category.color || '#27A7DE' }}
                                         />
-                                        <span>{getCategoryName(category, language)}</span>
-                                        <span className="text-xs opacity-70 ml-auto">({categoryCounts[category.id] || 0})</span>
+                                        <span className="truncate">{getCategoryName(category, language)}</span>
+                                        <span className="font-mono-meta text-xs opacity-70 ml-auto">{categoryCounts[category.id] || 0}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
                     )}
-
                 </div>
             </aside>
 
             {/* Contenu principal */}
             <main className="flex-1 min-w-0">
-                <div className="relative px-2 md:px-6 lg:px-6 pt-6 z-10">
+                <div className="relative px-4 md:px-6 lg:px-8 pt-6 z-10">
+                <header className="broadcast-panel relative mb-6 hidden overflow-hidden rounded-3xl p-6 lg:block">
+                    <div className="pointer-events-none absolute -right-10 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl dark:bg-sky-400/10" />
+                    <div className="relative flex items-end justify-between gap-6">
+                        <div>
+                            <p className="mb-2 font-mono-meta text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-sky-400">{t('browseCategories')}</p>
+                            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                {t('seriesScreenTitle') || 'Productions'}
+                            </h2>
+                            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                                {t('categorySeriesDescription')}
+                            </p>
+                        </div>
+                        {!loading && (
+                            <div className="shrink-0 rounded-2xl border border-blue-500/15 bg-blue-500/5 px-4 py-3 text-right dark:border-sky-400/15 dark:bg-sky-400/5">
+                                <p className="font-mono-meta text-2xl font-bold text-blue-700 dark:text-sky-300">{filteredAndSortedSeries.length}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('seriesScreenTitle')}</p>
+                            </div>
+                        )}
+                    </div>
+                </header>
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="text-center space-y-4">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
-                            <p className="text-gray-600 dark:text-gray-400">{t('loading') || 'Chargement...'}</p>
+                            <div className="animate-spin rounded-full h-11 w-11 border-2 border-slate-700 border-t-sky-400 mx-auto" />
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{t('loading') || 'Chargement...'}</p>
                         </div>
                     </div>
                 ) : filteredAndSortedSeries.length === 0 ? (
-                    <div className="text-center py-20">
-                        <div className="max-w-md mx-auto space-y-4">
-                            <svg className="w-24 h-24 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="text-center py-20 broadcast-panel rounded-3xl">
+                        <div className="max-w-md mx-auto space-y-4 px-4">
+                            <svg className="w-16 h-16 mx-auto text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z" />
                             </svg>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white">
                                  {searchTerm ? t('noSearchResults') || 'Aucun résultat' : t('noSeries') || 'No productions found'}
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
                                 {searchTerm
                                     ? t('tryDifferentSearch') || 'Essayez une autre recherche'
                                      : t('noSeriesAvailable') || 'No productions available'}
@@ -364,7 +379,7 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm('')}
-                                    className="mt-4 px-6 py-2 bg-amber-500 text-gray-900 font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+                                    className="mt-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-sky-500 text-white text-sm font-semibold rounded-xl hover:from-blue-500 hover:to-sky-400 transition-all"
                                 >
                                     {t('clearSearch') || 'Effacer la recherche'}
                                 </button>
@@ -373,33 +388,30 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                     </div>
                 ) : (
                     <>
-                        {/* Breadcrumb - desktop only */}
-                        <div className="hidden lg:flex items-center gap-2 mb-6 text-sm text-gray-500 dark:text-gray-400">
-                            <button onClick={handleBack} className="hover:text-amber-500 transition-colors flex items-center gap-1">
-                                <ArrowLeftIcon className="w-4 h-4" />
-                                <span>{t('home') || 'Home'}</span>
-                            </button>
-                            <span className="text-gray-300 dark:text-gray-600">/</span>
-                            <span className="text-gray-900 dark:text-white font-medium">{t('seriesScreenTitle') || 'Productions'}</span>
-                        </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                <button onClick={handleBack} className="hover:text-blue-600 dark:hover:text-sky-400 transition-colors flex items-center gap-1">
+                                    <ArrowLeftIcon className="w-3.5 h-3.5" />
+                                    <span>{t('home') || 'Home'}</span>
+                                </button>
+                                <span>/</span>
+                                <span className="text-slate-900 dark:text-white font-semibold">{t('seriesScreenTitle') || 'Productions'}</span>
+                            </div>
 
-                        {/* Compteur de résultats */}
-                        <div className="mb-4 lg:mb-6">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                 {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'productions' : t('serie') || 'production'}
-                                {searchTerm && ` ${t('foundFor') || 'trouvée(s) pour'} "${searchTerm}"`}
+                            <p className="text-xs font-mono-meta text-slate-500 dark:text-slate-400">
+                                {filteredAndSortedSeries.length} {filteredAndSortedSeries.length > 1 ? t('series') || 'productions' : t('serie') || 'production'}
+                                {searchTerm && ` • "${searchTerm}"`}
                             </p>
                         </div>
 
-                        {/* Grille ou Liste selon le mode */}
                         {viewMode === 'grid' ? (
                             <ScrollReveal>
-                                <div className="relative grid grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-1.5 sm:gap-4 md:gap-6 z-0">
+                                <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 z-0">
                                     {filteredAndSortedSeries.map((serie, index) => (
                                         <div
                                             key={serie.id}
                                             className="animate-fadeIn"
-                                            style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+                                            style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
                                         >
                                             <SeriesCard
                                                 serie={serie}
@@ -413,12 +425,12 @@ const SeriesScreen: React.FC<SeriesScreenProps> = ({ onSelectMedia, onPlay }) =>
                             </ScrollReveal>
                         ) : (
                             <ScrollReveal>
-                                <div className="relative space-y-2 z-0">
+                                <div className="relative space-y-3 z-0">
                                     {filteredAndSortedSeries.map((serie, index) => (
                                         <div
                                             key={serie.id}
                                             className="animate-fadeIn"
-                                            style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+                                            style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
                                         >
                                             <SeriesCard
                                                 serie={serie}

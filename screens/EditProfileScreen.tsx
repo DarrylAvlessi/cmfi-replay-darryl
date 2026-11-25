@@ -144,13 +144,13 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                 isSidebarOpen={isSidebarOpen}
                 onToggleSidebar={handleToggleSidebar}
             />
-            <div className="p-4 space-y-4 lg:space-y-8 animate-fadeIn">
-                <div className="flex flex-col items-center space-y-2 lg:space-y-4">
+            <div className="mx-auto max-w-2xl space-y-4 p-4 animate-fadeIn lg:space-y-6 lg:p-6">
+                <div className="broadcast-panel flex flex-col items-center space-y-2 rounded-3xl p-6 lg:space-y-4 lg:p-8">
                     <div className="relative">
                         <img 
                             src={photoUrl || 'https://picsum.photos/seed/defaultuser/200/200'} 
                             alt="Your avatar" 
-                            className="w-20 h-20 lg:w-32 lg:h-32 rounded-full border-2 lg:border-4 border-amber-500 object-cover"
+                            className="h-20 w-20 rounded-3xl border border-white/30 object-cover shadow-xl ring-4 ring-blue-500/10 lg:h-32 lg:w-32 dark:ring-sky-400/10"
                         />
                         {loading && (
                             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
@@ -168,7 +168,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                     <button 
                         onClick={() => fileInputRef.current?.click()}
                         disabled={loading}
-                        className="text-amber-500 font-semibold hover:text-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="rounded-xl border border-blue-500/15 bg-blue-500/5 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50 dark:text-sky-300"
                     >
                         {t('changePhoto')}
                     </button>
@@ -176,7 +176,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
 
                 <div className="space-y-4 lg:space-y-6">
                     {error && (
-                        <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                        <div className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300">
                             {error}
                         </div>
                     )}
@@ -203,7 +203,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack }) => {
                     <button 
                         onClick={handleSave}
                         disabled={loading}
-                        className="w-full bg-amber-500 text-gray-900 font-bold py-2.5 lg:py-3 px-6 rounded-lg hover:bg-amber-400 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-6 py-2.5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 lg:py-3"
                     >
                         {loading ? 'Sauvegarde...' : (t('saveChanges') || 'Sauvegarder les modifications')}
                     </button>

@@ -25,6 +25,7 @@ const formatTime = (seconds: number) => {
 interface VideoPlayerProps {
     src?: string;
     poster: string;
+    title?: string;
     onUnavailable?: () => void;
     onEnded?: () => void;
     onPlayingStateChange?: (isPlaying: boolean) => void;
@@ -53,6 +54,7 @@ interface VideoPlayerProps {
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
     src,
     poster,
+    title,
     onUnavailable,
     onEnded,
     onPlayingStateChange,
@@ -149,14 +151,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     if (unavailable) {
         return (
-            <div className="relative w-full aspect-video bg-black flex items-center justify-center">
-                <div className="flex items-center space-x-4 text-white">
-                    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/10 border border-white/20">
-                        <span className="text-3xl leading-none">!</span>
+            <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[22px] bg-slate-950">
+                <div className="broadcast-grid-bg absolute inset-0 opacity-30" />
+                <div className="relative flex flex-col items-center gap-4 text-white sm:flex-row">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-3xl leading-none text-sky-300 shadow-[0_0_40px_rgba(37,99,235,0.2)]">
+                        !
                     </div>
-                    <div>
-                        <div className="text-xl font-semibold">Video unavailable</div>
-                        <button onClick={onUnavailable} className="mt-1 text-amber-400 font-semibold hover:text-amber-300">
+                    <div className="text-center sm:text-left">
+                        <div className="text-lg font-semibold">Video unavailable</div>
+                        <button onClick={onUnavailable} className="mt-1 font-semibold text-sky-300 transition-colors hover:text-white">
                             Return to Home
                         </button>
                     </div>
@@ -168,18 +171,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
         <div
             ref={containerRef}
-            className="relative w-full aspect-video bg-black group overflow-hidden touch-manipulation"
+            className="group relative aspect-video w-full touch-manipulation overflow-hidden rounded-[18px] bg-[#02040a] sm:rounded-[20px]"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleContainerTouchStart}
             onTouchMove={handleContainerTouchMove}
             onTouchEnd={handleContainerTouchEnd}
         >
+            <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_50%_0%,rgba(37,99,235,0.12),transparent_52%)]" />
             <VideoTopProgressBar isBuffering={isBuffering} bufferedPercent={buffered} />
             {isLive && (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600/90 backdrop-blur-sm shadow-lg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span className="text-white text-[11px] font-bold tracking-widest">{t('liveBadge')}</span>
+                <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-600/90 px-3 py-1.5 shadow-lg shadow-rose-950/30 backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                    <span className="font-mono-meta text-[10px] font-bold tracking-[0.16em] text-white">{t('liveBadge')}</span>
                 </div>
             )}
             <VideoLoadingOverlay isInitialLoading={isInitialLoading} />
@@ -187,12 +191,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 ref={videoRef}
                 src={src}
                 poster={poster}
-                className="w-full h-full"
+                className="h-full w-full object-contain"
                 onClick={handleVideoClick}
                 onError={handleVideoError}
                 playsInline
                 preload="metadata"
             />
+            {!hideControls && (
+                <div className={`pointer-events-none absolute inset-x-0 top-0 z-[5] bg-gradient-to-b from-slate-950/95 via-slate-950/80 to-transparent px-4 pb-14 pt-4 transition-all duration-300 sm:px-6 sm:pt-5 ${
+                    showControls ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+                }`}>
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-slate-950/85 font-display text-[11px] font-bold tracking-tight text-white shadow-lg backdrop-blur-md">
+                                CM
+                            </span>
+                            <div className="min-w-0">
+                                <p className="inline-flex max-w-full items-center rounded-md border border-white/10 bg-slate-950/75 px-2 py-1 font-mono-meta text-[9px] font-semibold uppercase tracking-[0.18em] text-sky-200 shadow-lg backdrop-blur-md">
+                                    CMFI Replay <span className="mx-1.5 text-white/45">/</span> {isEpisode ? t('episode') : t('movie')}
+                                </p>
+                                {title && (
+                                    <p className="mt-1 max-w-[min(60vw,520px)] truncate rounded-md bg-slate-950/75 px-2 py-1 text-sm font-semibold text-white shadow-lg backdrop-blur-md sm:text-base">
+                                        {title}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        {isBuffering && (
+                            <span className="flex shrink-0 items-center gap-2 rounded-full border border-white/15 bg-slate-950/90 px-3 py-1.5 font-mono-meta text-[9px] font-semibold uppercase tracking-wider text-white shadow-lg backdrop-blur-md">
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-400" />
+                                {t('buffering')}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
             <VideoFeedbackOverlay
                 seekFeedback={seekFeedback}
                 seekStep={seekFeedbackStep}
@@ -203,7 +236,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 playPauseFeedback={playPauseFeedback}
                 isLoading={isInitialLoading || isBuffering}
             />
-            <div className={`absolute inset-0 transition-opacity flex flex-col justify-between ${showControls && !hideControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 z-[4] flex flex-col justify-between transition-opacity duration-300 ${showControls && !hideControls ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}>
                 <div className="flex-1" onClick={isTouch ? undefined : handleVideoClick} />
                 <VideoCenterButton
                     isTouch={isTouch}
@@ -212,7 +245,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     onTogglePlay={togglePlay}
                     disabled={remoteMode && !liveDvr}
                 />
-                <div className="bg-gradient-to-t from-black/85 via-black/40 to-black/10">
+                <div className="bg-gradient-to-t from-[#02040a]/95 via-[#02040a]/70 to-transparent px-3 pb-3 pt-16 sm:px-5 sm:pb-5">
                     <SeekBar
                         duration={duration}
                         progress={progress}
@@ -236,36 +269,38 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         currentTime={currentTime}
                         ariaValueText={liveDvr ? (isBehindLive ? t('behindLive', { count: String(Math.max(0, Math.round(behindBySec))) }) : t('liveBadge')) : undefined}
                     />
-                    <ControlsBar
-                        isPlaying={isPlaying}
-                        isMuted={isMuted}
-                        volume={volume}
-                        isFullscreen={isFullscreen}
-                        autoplayEnabled={autoplayEnabled}
-                        playbackRate={playbackRate}
-                        showVolumeSlider={showVolumeSlider}
-                        currentTime={currentTime}
-                        duration={duration}
-                        showAutoplayToggle={showAutoplayToggle}
-                        onTogglePlay={togglePlay}
-                        onToggleMute={toggleMute}
-                        onTogglePip={togglePip}
-                        onToggleFullscreen={toggleFullscreen}
-                        onToggleAutoplay={toggleAutoplay}
-                        onCyclePlaybackSpeed={cyclePlaybackSpeed}
-                        onShowVolumeSlider={setShowVolumeSlider}
-                        onVolumeSliderChange={handleVolumeSliderChange}
-                        onVolumeSliderInput={handleVolumeSliderInput}
-                        onVolumeSeek={handleVolumeSeek}
-                        formatTime={formatTime}
-                        disabled={remoteMode && !liveDvr}
-                        lockSpeed={remoteMode}
-                        liveMode={liveDvr}
-                        isBehindLive={isBehindLive}
-                        behindBySec={behindBySec}
-                        onJumpToLive={onJumpToLive}
-                        liveBadgeText={t('liveBadge')}
-                    />
+                    <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-2 py-1 shadow-[0_12px_36px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-3">
+                        <ControlsBar
+                            isPlaying={isPlaying}
+                            isMuted={isMuted}
+                            volume={volume}
+                            isFullscreen={isFullscreen}
+                            autoplayEnabled={autoplayEnabled}
+                            playbackRate={playbackRate}
+                            showVolumeSlider={showVolumeSlider}
+                            currentTime={currentTime}
+                            duration={duration}
+                            showAutoplayToggle={showAutoplayToggle}
+                            onTogglePlay={togglePlay}
+                            onToggleMute={toggleMute}
+                            onTogglePip={togglePip}
+                            onToggleFullscreen={toggleFullscreen}
+                            onToggleAutoplay={toggleAutoplay}
+                            onCyclePlaybackSpeed={cyclePlaybackSpeed}
+                            onShowVolumeSlider={setShowVolumeSlider}
+                            onVolumeSliderChange={handleVolumeSliderChange}
+                            onVolumeSliderInput={handleVolumeSliderInput}
+                            onVolumeSeek={handleVolumeSeek}
+                            formatTime={formatTime}
+                            disabled={remoteMode && !liveDvr}
+                            lockSpeed={remoteMode}
+                            liveMode={liveDvr}
+                            isBehindLive={isBehindLive}
+                            behindBySec={behindBySec}
+                            onJumpToLive={onJumpToLive}
+                            liveBadgeText={t('liveBadge')}
+                        />
+                    </div>
                 </div>
             </div>
             {isBehindLive && onJumpToLive && (

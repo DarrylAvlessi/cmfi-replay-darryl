@@ -6,7 +6,7 @@ import { MediaContent } from '../types';
 import { EpisodeSerie, episodeSerieService, seasonSerieService, serieService, likeService, viewService, getLastWatchedPosition, SeasonSerie, WatchRole } from '../lib/db';
 import {
     PlayIcon, PauseIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
-    LikeIcon, ShareIcon, PlusIcon, WatchTogetherIcon, EllipsisVerticalIcon,
+    LikeIcon, ShareIcon, PlusIcon, WatchTogetherIcon, EllipsisVerticalIcon, CommentIcon,
     VolumeHighIcon, VolumeMuteIcon, PipIcon, FullscreenEnterIcon, FullscreenExitIcon,
     BackwardIcon, ForwardPlaybackIcon, CheckIcon, PencilIcon
 } from '../components/icons';
@@ -349,12 +349,13 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     const LikeButton: React.FC<{ label: string, value?: string | number, onClick?: () => void, isActive?: boolean }> = ({ label, value, onClick, isActive }) => (
         <button
             onClick={handleLikeWithAnimation}
-            className={`relative flex flex-col items-center space-y-1 transition-all duration-300 ${isActive
-                ? 'text-red-500 dark:text-red-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'
-                }`}
+            className={`relative flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                isActive
+                    ? 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-rose-500/30 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300 dark:hover:text-rose-400'
+            }`}
         >
-            <div className="relative">
+            <div className="relative shrink-0">
                 <div
                     className={`transition-all duration-300 ${likeAnimation ? 'scale-150' : 'scale-100'
                         }`}
@@ -364,7 +365,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     }}
                 >
                     <LikeIcon
-                        className={`w-7 h-7 ${isActive ? 'fill-red-500 dark:fill-red-400' : ''}`}
+                        className={`h-4 w-4 ${isActive ? 'fill-rose-500 dark:fill-rose-400' : ''}`}
                     />
                 </div>
                 {/* Particules animées */}
@@ -396,17 +397,20 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                     </div>
                 )}
             </div>
-            <span className={`text-xs font-semibold transition-all duration-300 ${likeAnimation ? 'scale-110' : 'scale-100'
-                }`}>
+            <span className={`transition-all duration-300 ${likeAnimation ? 'scale-110' : 'scale-100'}`}>
                 {value ? formatNumber(Number(value)) : label}
             </span>
         </button>
     );
 
     const ActionButton: React.FC<{ Icon: React.FC<any>, label: string, value?: string | number, onClick?: () => void, isActive?: boolean, className?: string }> = ({ Icon, label, value, onClick, isActive, className }) => (
-        <button onClick={onClick} className={`flex flex-col items-center space-y-1 hover:text-amber-500 dark:hover:text-amber-400 ${isActive ? 'text-amber-500 dark:text-amber-400' : 'text-gray-600 dark:text-gray-400'} ${className || ''}`}>
-            <Icon className="w-7 h-7" />
-            <span className="text-xs font-semibold">{value ? formatNumber(Number(value)) : label}</span>
+        <button onClick={onClick} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+            isActive
+                ? 'border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-sky-300'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-blue-500/30 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300 dark:hover:text-sky-300'
+        } ${className || ''}`}>
+            <Icon className="h-4 w-4 shrink-0" />
+            <span>{value ? formatNumber(Number(value)) : label}</span>
         </button>
     );
 
@@ -451,58 +455,61 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
     }, [episode.uid_episode]);
 
     return (
-        <div className={forceMini ? '' : 'bg-white dark:bg-black min-h-screen animate-fadeIn'}>
-            <div className="container mx-auto px-4 md:px-6 lg:px-8 py-1 md:py-4 lg:py-8 pt-4 md:pt-6">
+        <div className={forceMini ? '' : 'broadcast-canvas min-h-screen animate-fadeIn'}>
+            <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8 lg:py-7">
 
                 {!forceMini && (
-                <div className="flex items-center gap-3 mb-4">
-                    <button
-                        onClick={onBack}
-                        className="shrink-0 group p-3 rounded-full text-white bg-black/70 hover:bg-black/90 backdrop-blur-md transition-all duration-300 hover:scale-110 shadow-xl border border-white/10"
-                        aria-label={t('back')}
-                    >
-                        <ArrowLeftIcon className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
-                    </button>
-                    {currentSeason && serieUid && (
-                        <div className="flex items-center gap-2 min-w-0 text-sm md:text-base">
+                    <header className="mb-5 flex items-center justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
                             <button
-                                onClick={() => navigate(`/serie/${serieUid}`)}
-                                className="truncate text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold transition-colors duration-200 hover:underline"
+                                onClick={onBack}
+                                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-500/40 hover:text-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-sky-300"
+                                aria-label={t('back')}
                             >
-                                {item.title}
+                                <ArrowLeftIcon className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
                             </button>
-                            <span className="shrink-0 text-gray-500 dark:text-gray-400">•</span>
-                            <span className="shrink-0 text-gray-700 dark:text-gray-300 font-medium">
-                                {isYouTubeSeason(currentSeason) ? (
-                                    seasonLabel(currentSeason, t('season'))
-                                ) : (
-                                    <>
-                                        {t('season')} {currentSeason.season_number}
-                                        {currentSeason.title_season && (
-                                            <span className="ml-2 text-gray-600 dark:text-gray-400">
-                                                - {currentSeason.title_season}
-                                            </span>
-                                        )}
-                                    </>
-                                )}
-                            </span>
+                            <div className="min-w-0">
+                                <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-600 dark:text-sky-400">
+                                    CMFI Replay <span className="mx-1.5 text-slate-300 dark:text-slate-700">/</span>
+                                    {currentSeason && isYouTubeSeason(currentSeason) ? seasonLabel(currentSeason, t('season')) : t('series')}
+                                </p>
+                                <div className="flex min-w-0 items-center gap-2 text-sm">
+                                    {currentSeason && serieUid && (
+                                        <>
+                                            <button
+                                                onClick={() => navigate(`/production/${serieUid}`)}
+                                                className="truncate font-semibold text-slate-700 transition hover:text-blue-600 dark:text-slate-200 dark:hover:text-sky-300"
+                                            >
+                                                {item.title}
+                                            </button>
+                                            <span className="shrink-0 text-slate-400">·</span>
+                                        </>
+                                    )}
+                                    <span className="truncate font-medium text-slate-500 dark:text-slate-400">{displayEpisode.title}</span>
+                                </div>
+                            </div>
                         </div>
-                    )}
-                </div>
+                        <span className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 font-mono-meta text-[10px] font-bold uppercase tracking-wider sm:flex ${
+                            videoIsPlaying
+                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                : 'border-slate-200 bg-white/70 text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400'
+                        }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${videoIsPlaying ? 'animate-pulse bg-emerald-500' : 'bg-slate-400'}`} />
+                            {videoIsPlaying ? t('playing') : t('player')}
+                        </span>
+                    </header>
                 )}
 
-                {/* Conteneur principal avec grille pour la mise en page */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                    {/* Colonne de gauche - Lecteur vidéo et métadonnées */}
-                    <div className="lg:col-span-2 space-y-2 md:space-y-4">
-                        <div>
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-8">
+                    <div className="space-y-5 lg:col-span-8">
+                        <div className={`relative isolate ${effectiveMini ? '' : 'rounded-[28px] border border-slate-800 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.18),transparent_55%),#030712] p-1.5 shadow-[0_28px_90px_-36px_rgba(37,99,235,0.45)] sm:p-2'}`}>
                              <div ref={sentinelRef} className="h-px" aria-hidden="true" />
                              {effectiveMini && <div className="w-full aspect-video" aria-hidden="true" />}
                                <div
                                    className={
                                       effectiveMini
                                        ? `fixed z-50 pointer-events-auto w-48 md:w-64 aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/10 bg-black ${isDragging ? 'cursor-grabbing' : ''}`
-                                            : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-2 ring-black/20 dark:ring-white/5'
+                                            : 'relative aspect-video w-full overflow-hidden rounded-[22px] bg-black ring-1 ring-white/10'
                                   }
                                   style={effectiveMini ? { position: 'fixed', ...(dragPosition ? { left: dragPosition.x, top: dragPosition.y } : { bottom: 16, right: 16 }), touchAction: 'none', zIndex: 50 } : undefined}
                               >
@@ -564,6 +571,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                               key={episode.uid_episode || episode.title}
                                               src={episode.video_path_hd?.trim() ? episode.video_path_hd : episode.video_path_sd}
                                               poster={episode.picture_path || item.imageUrl}
+                                              title={displayEpisode.title}
                                               onUnavailable={onReturnHome}
                                               onEnded={handleVideoEnded}
                                               onPlayingStateChange={handlePlayingStateChange}
@@ -587,23 +595,23 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                          </div>
 
                          {!forceMini && (
-                         <div className="space-y-2 md:space-y-4">
+                         <div className="space-y-5">
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight truncate">
+                                <h1 className="font-display mb-2 truncate text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white md:text-4xl">
                                     {displayEpisode.title}
                                 </h1>
-                                <div className="flex items-center space-x-2 md:space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1 md:mt-0">
-                                    <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full font-semibold">
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400 md:mt-0 md:gap-4">
+                                    <span className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 font-mono-meta text-xs font-semibold tracking-wide text-blue-700 dark:text-sky-300">
                                         {item.author || item.theme}
                                     </span>
-                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                                    <span className="h-1 w-1 rounded-full bg-slate-400" />
                                     <span className="font-medium">
                                         {formatNumber(displayEpisode.views || 0)} {t('views')}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="relative flex flex-wrap items-center justify-center gap-2 py-2 md:py-4 px-2 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-black/50 shadow-lg">
+                            <div className="broadcast-panel relative flex flex-wrap items-center gap-2 rounded-2xl p-3 shadow-sm sm:p-4">
                                 <LikeButton
                                     label={hasLiked ? (t('likeVideo') + ' ✓') : t('likeVideo')}
                                     value={likeCount}
@@ -647,16 +655,16 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
 
                                 {/* Menu dropdown mobile */}
                                 {showMoreMenu && (
-                                    <div className="absolute z-50 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200/50 dark:border-black/50">
+                                    <div className="broadcast-panel absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl shadow-xl">
                                         <button
                                             onClick={() => { setShowMoreMenu(false); setShowSuggestModal(true); }}
-                                            className="w-full text-left px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                            className="w-full px-4 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-blue-50 dark:text-slate-200 dark:hover:bg-sky-500/10"
                                         >
                                             {t('suggest')}
                                         </button>
                                         <button
                                             onClick={() => { setShowMoreMenu(false); setShowWatchTogether(prev => !prev); }}
-                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 ${showWatchTogether ? 'text-amber-500' : 'text-gray-600 dark:text-gray-400'}`}
+                                            className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-blue-50 dark:hover:bg-sky-500/10 ${showWatchTogether ? 'text-blue-600 dark:text-sky-400' : 'text-slate-600 dark:text-slate-300'}`}
                                         >
                                             {t('watchTogether')}
                                         </button>
@@ -668,7 +676,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 <button
                                     onClick={() => onNavigateEpisode('prev')}
                                     disabled={!hasPrevEpisode}
-                                    className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-black dark:to-gray-700 hover:from-amber-500 hover:to-orange-500 text-gray-900 dark:text-white hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-200 disabled:hover:to-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 font-semibold"
+                                    className="group flex items-center space-x-2 rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition-all hover:border-blue-500/40 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:text-slate-700 sm:px-6 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-sky-400/40 dark:hover:text-sky-300 dark:disabled:hover:border-slate-700 dark:disabled:hover:text-slate-200"
                                 >
                                     <ChevronLeftIcon className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                                     <span>{t('prevEpisode')}</span>
@@ -676,7 +684,7 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 <button
                                     onClick={() => onNavigateEpisode('next')}
                                     disabled={!hasNextEpisode}
-                                    className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-amber-500 disabled:hover:to-orange-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100 font-semibold"
+                                    className="group flex items-center space-x-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:from-blue-500 hover:to-sky-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-sky-500 sm:px-6"
                                 >
                                     <span>{t('nextEpisode')}</span>
                                     <ChevronRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -702,10 +710,19 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
 
                     {/* Colonne de droite - Section des commentaires améliorée */}
                     {!forceMini && (
-                    <div className="lg:col-span-1">
-                        <div className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-hidden flex flex-col">
-                            <div className="lg:flex-1 lg:overflow-y-auto lg:pb-4 pr-2 -mr-2 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 dark:scrollbar-track-black">
-                                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50 dark:border-black/50 shadow-xl">
+                    <aside className="lg:col-span-4">
+                        <div className="lg:sticky lg:top-5">
+                            <div className="broadcast-panel overflow-hidden rounded-3xl shadow-sm">
+                                <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4 dark:border-slate-800">
+                                    <div>
+                                        <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-sky-400">{t('community')}</p>
+                                        <h2 className="mt-1 font-display text-lg font-bold text-slate-900 dark:text-white">{t('comments')}</h2>
+                                    </div>
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-sky-400">
+                                        <CommentIcon className="h-4 w-4" />
+                                    </span>
+                                </div>
+                                <div className="max-h-[min(70vh,760px)] overflow-y-auto p-4 sm:p-5">
                                     <CommentSection
                                         itemUid={episode.uid_episode}
                                         onAuthRequired={handleAuthRequired}
@@ -713,17 +730,29 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </aside>
                     )}
                 </div>
 
                 {/* Section des autres épisodes de la saison */}
                 {!forceMini && episodesInSeason.length > 0 && (
-                    <div className="mt-6 md:mt-4 lg:mt-6 pt-6 md:pt-0 border-t border-gray-200 dark:border-gray-700 md:border-t-0 space-y-2 md:space-y-4">
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                            {t('otherEpisodes') || 'Autres épisodes de la saison'}
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <section className="mt-2 border-t border-slate-200/80 pt-7 dark:border-slate-800">
+                        <div className="mb-5 flex items-end justify-between gap-4">
+                            <div>
+                                <p className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-sky-400">{item.title}</p>
+                                <h2 className="mt-1 font-display text-xl font-bold text-slate-900 dark:text-white md:text-2xl">
+                                    {t('otherEpisodes')}
+                                </h2>
+                            </div>
+                            {currentSeason && (
+                                <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-mono-meta text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                                    {isYouTubeSeason(currentSeason)
+                                        ? seasonLabel(currentSeason, t('season'))
+                                        : `${t('season')} ${currentSeason.season_number}`}
+                                </span>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {episodesInSeason
                                 .filter(e => e.uid_episode !== episode.uid_episode) // Exclure l'épisode actuel
                                 .sort((a, b) => {
@@ -736,9 +765,9 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                     <Link
                                         key={otherEpisode.uid_episode}
                                         to={`/watch/${otherEpisode.uid_episode}`}
-                                        className="group relative bg-gray-100/50 dark:bg-black/40 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                                        className="broadcast-card group relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                                     >
-                                        <div className="relative aspect-video bg-gray-300 dark:bg-gray-700">
+                                        <div className="relative aspect-video bg-slate-200 dark:bg-slate-800">
                                             {otherEpisode.picture_path ? (
                                                 <img 
                                                     src={otherEpisode.picture_path} 
@@ -747,27 +776,32 @@ const EpisodePlayerScreen: React.FC<EpisodePlayerScreenProps> = ({ item, episode
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <PlayIcon className="w-12 h-12 text-gray-400 dark:text-gray-600" />
+                                                    <PlayIcon className="h-12 w-12 text-slate-400 dark:text-slate-600" />
                                                 </div>
                                             )}
-                                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                <PlayIcon className="w-12 h-12 text-white/80 group-hover:text-white group-hover:scale-110 transition-transform" />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-slate-950/45 transition-colors group-hover:bg-slate-950/25">
+                                                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/15 text-white opacity-90 backdrop-blur transition group-hover:scale-110 group-hover:bg-blue-500">
+                                                    <PlayIcon className="ml-0.5 h-5 w-5" />
+                                                </span>
                                             </div>
                                             {otherEpisode.runtime_h_m && (
-                                                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                                <div className="absolute bottom-2 right-2 rounded-md bg-slate-950/80 px-2 py-1 font-mono-meta text-[10px] text-white">
                                                     {otherEpisode.runtime_h_m}
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="p-3">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base truncate">
-                                                {episodeSerieService.getEpisodeNumberForSeason(otherEpisode, currentSeason?.uid_season || '')}. {otherEpisode.title}
-                                            </h4>
+                                        <div className="flex items-start gap-3 p-3.5">
+                                            <span className="font-mono-meta pt-0.5 text-xs font-bold text-blue-600 dark:text-sky-400">
+                                                {String(episodeSerieService.getEpisodeNumberForSeason(otherEpisode, currentSeason?.uid_season || '')).padStart(2, '0')}
+                                            </span>
+                                            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-sky-300 md:text-base">
+                                                {otherEpisode.title}
+                                            </h3>
                                         </div>
                                     </Link>
                                 ))}
                         </div>
-                    </div>
+                    </section>
                 )}
 
                 {!forceMini && showAuthPrompt && (

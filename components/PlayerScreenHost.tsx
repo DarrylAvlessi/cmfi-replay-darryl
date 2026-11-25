@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMiniPlayerContext } from '../context/MiniPlayerContext';
 import { EpisodeSerie } from '../lib/db';
@@ -58,64 +59,68 @@ const PlayerScreenHost: React.FC = () => {
     ? playerData.episode.title || `Épisode ${playerData.episode.episode_numero || ''}`
     : null;
 
+  const playerScreen = playerData.type === 'episode' && playerData.episode ? (
+    <EpisodePlayerScreen
+      item={playerData.item}
+      episode={playerData.episode}
+      onBack={handleBack}
+      onNavigateEpisode={handleNavigateEpisode}
+      onReturnHome={handleReturnHome}
+      forceMini={forceMini}
+      onClose={handleClose}
+    />
+  ) : (
+    <MoviePlayerScreen
+      item={playerData.item as any}
+      onBack={handleBack}
+      onReturnHome={handleReturnHome}
+      forceMini={forceMini}
+      onClose={handleClose}
+    />
+  );
+
   return (
     <>
-      <div
-        className={
-          isCollapsed
-            ? 'hidden'
-            : forceMini
-              ? 'fixed inset-0 z-[9999] pointer-events-none'
-              : ''
-        }
-        data-tour={forceMini && !isCollapsed ? 'mini-player' : undefined}
-        style={forceMini && !isCollapsed ? { background: 'transparent' } : undefined}
-      >
-        {playerData.type === 'episode' && playerData.episode ? (
-          <EpisodePlayerScreen
-            item={playerData.item}
-            episode={playerData.episode}
-            onBack={handleBack}
-            onNavigateEpisode={handleNavigateEpisode}
-            onReturnHome={handleReturnHome}
-            forceMini={forceMini}
-            onClose={handleClose}
-          />
-        ) : (
-          <MoviePlayerScreen
-            item={playerData.item as any}
-            onBack={handleBack}
-            onReturnHome={handleReturnHome}
-            forceMini={forceMini}
-            onClose={handleClose}
-          />
-        )}
-      </div>
+      {forceMini ? createPortal(
+        <div
+          className={`fixed inset-0 z-[9999] pointer-events-none ${isCollapsed ? 'hidden' : ''}`}
+          data-tour={!isCollapsed ? 'mini-player' : undefined}
+          style={{ background: 'transparent' }}
+        >
+          {playerScreen}
+        </div>,
+        document.body
+      ) : (
+        playerScreen
+      )}
 
       {isCollapsed && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-[9999] h-14 bg-gray-900/95 backdrop-blur-md border-t border-white/10 flex items-center px-4 gap-3 cursor-pointer"
-          onClick={handleCollapsedBarClick}
-        >
-          <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-          <span className="text-white text-sm font-medium truncate flex-1">
-            {playerData.item.title}
-            {episodeTitle && (
-              <span className="text-gray-400 ml-2">— {episodeTitle}</span>
-            )}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); fullyClose(); }}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-colors flex-shrink-0"
-            aria-label="Close"
+        createPortal(
+          <div
+            className="fixed bottom-0 left-0 right-0 z-[9999] flex h-14 cursor-pointer items-center gap-3 border-t border-slate-800 bg-[#0b1120]/95 px-4 shadow-2xl backdrop-blur-xl"
+            onClick={handleCollapsedBarClick}
           >
-            ✕
-          </button>
-        </div>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 shadow-md shadow-blue-600/30">
+              <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+            <span className="flex-1 truncate text-sm font-medium text-white">
+              {playerData.item.title}
+              {episodeTitle && (
+                <span className="ml-2 text-slate-400">— {episodeTitle}</span>
+              )}
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); fullyClose(); }}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold text-white transition-colors hover:bg-white/20"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>,
+          document.body
+        )
       )}
     </>
   );

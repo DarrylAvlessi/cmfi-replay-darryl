@@ -90,7 +90,7 @@ const Breadcrumbs: React.FC = () => {
     }
 
     return (
-        <nav className="px-4 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-b border-gray-200 dark:border-black" aria-label={t('breadcrumb')}>
+        <nav className="px-4 py-3 bg-white/70 dark:bg-[#0b1120]/70 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80" aria-label={t('breadcrumb')}>
             <ol className="flex items-center space-x-2 text-sm">
                 {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;
@@ -99,7 +99,7 @@ const Breadcrumbs: React.FC = () => {
                         <li key={crumb.path} className="flex items-center">
                             {index > 0 && (
                                 <svg
-                                    className="w-4 h-4 mx-2 text-gray-400 dark:text-gray-600"
+                                    className="w-4 h-4 mx-2 text-slate-400 dark:text-slate-600"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -112,13 +112,13 @@ const Breadcrumbs: React.FC = () => {
                                 </svg>
                             )}
                             {isLast ? (
-                                <span className="font-medium text-amber-600 dark:text-amber-500">
+                                <span className="font-semibold text-blue-600 dark:text-sky-400">
                                     {crumb.label}
                                 </span>
                             ) : (
                                 <Link
                                     to={crumb.path}
-                                    className="text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-200"
+                                    className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-sky-400 transition-colors duration-200"
                                 >
                                     {crumb.label}
                                 </Link>

@@ -59,30 +59,30 @@ const SuggestTitleModal: React.FC<SuggestTitleModalProps> = ({ isOpen, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-black rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('suggestTitle')}</h2>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
+            <div className="broadcast-panel rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+                    <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white">{t('suggestTitle')}</h2>
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                     >
                         <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-xs font-mono-meta uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                             {t('currentTitle')}
                         </label>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 px-3 py-2 rounded-lg">
+                        <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                             {currentTitle}
                         </p>
                     </div>
 
                     <div>
-                        <label htmlFor="suggestedTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="suggestedTitle" className="block text-xs font-mono-meta uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                             {t('suggestedTitle')}
                         </label>
                         <input
@@ -90,13 +90,13 @@ const SuggestTitleModal: React.FC<SuggestTitleModalProps> = ({ isOpen, onClose, 
                             type="text"
                             value={suggestedTitle}
                             onChange={(e) => setSuggestedTitle(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                             placeholder={t('suggestTitlePlaceholder')}
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="reason" className="block text-xs font-mono-meta uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                             {t('reason')}
                         </label>
                         <textarea
@@ -104,7 +104,7 @@ const SuggestTitleModal: React.FC<SuggestTitleModalProps> = ({ isOpen, onClose, 
                             rows={3}
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"
                             placeholder={t('reasonPlaceholder')}
                         />
                     </div>
@@ -113,14 +113,14 @@ const SuggestTitleModal: React.FC<SuggestTitleModalProps> = ({ isOpen, onClose, 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors"
                         >
                             {t('cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !suggestedTitle.trim() || suggestedTitle.trim() === currentTitle}
-                            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-semibold rounded-lg transition-colors text-sm"
+                            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-all text-sm shadow-lg shadow-blue-600/20"
                         >
                             {loading ? t('sending') : t('sendSuggestion')}
                         </button>

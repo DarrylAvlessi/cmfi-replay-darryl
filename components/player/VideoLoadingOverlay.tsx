@@ -1,25 +1,25 @@
 import React from 'react';
+import { useAppContext } from '../../context/AppContext';
 
 interface VideoLoadingOverlayProps {
   isInitialLoading: boolean;
 }
 
-const VideoLoadingOverlay: React.FC<VideoLoadingOverlayProps> = ({ isInitialLoading }) => (
-  <div className={`absolute inset-0 flex items-center justify-center z-10 transition-all duration-300 ${isInitialLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-    <div className="flex flex-col items-center space-y-3">
-      <div className="glide-spinner">
-        <div className="glide-spinner__track" style={{ width: 56, height: 56 }}>
-          <div className="glide-spinner__circle" style={{ width: 56, height: 56 }} />
-          <div className="glide-spinner__circle" style={{ width: 44, height: 44, margin: 6 }} />
-          <div className="glide-spinner__circle" style={{ width: 32, height: 32, margin: 12 }} />
-          <div className="glide-spinner__circle" style={{ width: 20, height: 20, margin: 18 }} />
+const VideoLoadingOverlay: React.FC<VideoLoadingOverlayProps> = ({ isInitialLoading }) => {
+  const { t } = useAppContext();
+  return (
+    <div className={`absolute inset-0 z-10 flex items-center justify-center bg-slate-950/35 backdrop-blur-[2px] transition-all duration-300 ${isInitialLoading ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-slate-950/55 px-7 py-5 shadow-2xl backdrop-blur-xl">
+        <div className="relative flex h-12 w-12 items-center justify-center">
+          <span className="absolute inset-0 animate-spin rounded-full border-2 border-white/10 border-t-sky-300" />
+          <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_16px_rgba(56,189,248,0.9)]" />
         </div>
+        <span className="font-mono-meta text-[10px] font-semibold uppercase tracking-[0.2em] text-white/65">
+          {t('loading')}
+        </span>
       </div>
-      <span className="text-white/60 text-xs font-medium tracking-widest animate-pulse">
-        CHARGEMENT
-      </span>
     </div>
-  </div>
-);
+  );
+};
 
 export default VideoLoadingOverlay;

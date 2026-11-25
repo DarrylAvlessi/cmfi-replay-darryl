@@ -6,10 +6,9 @@ function getInitialTheme(): Theme {
     if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('theme');
         if (saved === 'light' || saved === 'dark') return saved;
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        return prefersDark ? 'dark' : 'light';
+        return 'dark';
     }
-    return 'light';
+    return 'dark';
 }
 
 export function useTheme() {
@@ -20,6 +19,10 @@ export function useTheme() {
         root.classList.remove('light', 'dark');
         root.classList.add(theme);
         localStorage.setItem('theme', theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+            meta.setAttribute('content', theme === 'dark' ? '#060911' : '#f4f7fc');
+        }
     }, [theme]);
 
     const setTheme = useCallback((newTheme: Theme) => {

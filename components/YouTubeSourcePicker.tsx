@@ -59,21 +59,21 @@ function SourceCard({
             aria-checked={active}
             disabled={empty}
             onClick={onSelect}
-            className={`relative text-left p-4 rounded-2xl border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none ${
+            className={`relative text-left p-4 rounded-2xl border transition-all duration-300 focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none ${
                 active
-                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/15'
+                    ? 'border-blue-500 bg-blue-600/10 dark:bg-sky-500/15'
                     : empty
-                        ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 opacity-50 cursor-not-allowed'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 cursor-pointer hover:border-amber-500/60 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-0.5'
+                        ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1120] opacity-50 cursor-not-allowed'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b1120] cursor-pointer hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-600/10 hover:-translate-y-0.5'
             }`}
         >
             {active && (
-                <span className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                <span className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center">
                     <CheckIcon className="w-4 h-4 text-white" />
                 </span>
             )}
             <span className="flex items-center gap-2.5">
-                <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${circular ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
+                <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${circular ? 'bg-rose-500/10' : 'bg-blue-600/10 dark:bg-sky-500/15'}`}>
                     {icon}
                 </span>
                 <span className="font-bold text-gray-900 dark:text-white">{title}</span>

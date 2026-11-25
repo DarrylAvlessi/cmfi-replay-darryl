@@ -13,13 +13,13 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     width,
     height
 }) => {
-    const baseClasses = "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-700 dark:to-black animate-shimmer bg-[length:200%_100%]";
+    const baseClasses = "bg-gradient-to-r from-slate-200 via-slate-300/70 to-slate-200 dark:from-[#0b1120] dark:via-slate-800 dark:to-[#0b1120] animate-shimmer bg-[length:200%_100%]";
 
     const variantClasses = {
         text: "rounded",
         circular: "rounded-full",
         rectangular: "rounded-none",
-        rounded: "rounded-md",
+        rounded: "rounded-2xl",
     };
 
     const style = {

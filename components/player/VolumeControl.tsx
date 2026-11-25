@@ -29,15 +29,15 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
   >
     <button
       onClick={onToggleMute}
-      className="p-1 rounded-full hover:bg-white/15 backdrop-blur-sm transition-colors duration-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)]"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white"
       aria-label={isMuted ? 'Unmute' : 'Mute'}
     >
       {isMuted || volume === 0 ? (
-        <VolumeMuteIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
+        <VolumeMuteIcon         className="h-4 w-4" />
       ) : volume < 0.5 ? (
-        <VolumeLowIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
+        <VolumeLowIcon         className="h-4 w-4" />
       ) : (
-        <VolumeHighIcon className="w-5 h-5 drop-shadow-[0_1px_2px_rgb(0_0_0/0.7)]" />
+        <VolumeHighIcon         className="h-4 w-4" />
       )}
     </button>
     <div
@@ -47,14 +47,14 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
     >
       <div className="flex items-center w-24">
         <div
-          className="relative w-full h-1 bg-black/30 rounded-full cursor-pointer group"
+          className="group relative h-1 w-full cursor-pointer rounded-full bg-white/20"
           onClick={onVolumeSeek}
         >
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-600 to-sky-300"
             style={{ width: `${isMuted ? 0 : volume * 100}%` }}
           >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_6px_rgb(0_0_0/0.8)] opacity-60 group-hover:opacity-100 transition-all duration-200 scale-75 group-hover:scale-100 ring-2 ring-amber-500/50" />
+            <div className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 scale-75 rounded-full bg-white opacity-70 shadow transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 ring-2 ring-sky-300/60" />
           </div>
           <input
             type="range"

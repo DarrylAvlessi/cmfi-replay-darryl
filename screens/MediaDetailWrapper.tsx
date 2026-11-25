@@ -19,6 +19,8 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let ignore = false;
+
         const fetchMedia = async () => {
             if (!uid) {
                 navigate('/home');
@@ -26,9 +28,11 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
             }
 
             setLoading(true);
+            setMedia(null);
             try {
                 // Essayer de récupérer comme film
                 const movie = await movieService.getMovieByUid(uid);
+                if (ignore) return;
                 if (movie) {
                     setMedia({
                         id: movie.uid,
@@ -47,6 +51,7 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
 
                 // Essayer de récupérer comme série ou podcast
                 const serie = await serieService.getSerieByUid(uid);
+                if (ignore) return;
                 if (serie) {
                     setMedia({
                         id: serie.uid_serie,
@@ -64,6 +69,7 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
 
                 // Essayer de récupérer comme épisode
                 const episode = await episodeSerieService.getEpisodeByUid(uid);
+                if (ignore) return;
                 if (episode) {
                     navigate(`/watch/${uid}`);
                     return;
@@ -72,12 +78,17 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
                 // Si aucun média n'est trouvé
                 navigate('/home');
             } catch (error) {
+                if (ignore) return;
                 console.error('Erreur lors de la récupération du média:', error);
                 navigate('/home');
             }
         };
 
         fetchMedia();
+
+        return () => {
+            ignore = true;
+        };
     }, [uid, navigate]);
 
     const handleBack = () => {
@@ -111,8 +122,28 @@ const MediaDetailWrapper: React.FC<MediaDetailWrapperProps> = ({ onPlay, playing
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-white text-xl">{t('loading') || 'Chargement...'}</div>
+            <div
+                className="broadcast-canvas min-h-screen px-4 py-8 sm:px-6 lg:px-8"
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+            >
+                <span className="sr-only">{t('loading') || 'Chargement...'}</span>
+                <div className="mx-auto max-w-7xl animate-pulse space-y-6">
+                    <div className="h-64 rounded-3xl border border-slate-200/70 bg-slate-200/70 dark:border-slate-800 dark:bg-slate-900 sm:h-80" />
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                        <div className="space-y-5">
+                            <div className="h-12 w-2/3 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+                            <div className="flex gap-3">
+                                <div className="h-12 w-32 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+                                <div className="h-12 w-28 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+                                <div className="h-12 w-28 rounded-xl bg-slate-200/80 dark:bg-slate-800" />
+                            </div>
+                            <div className="h-48 rounded-2xl border border-slate-200/70 bg-white/80 dark:border-slate-800 dark:bg-slate-900/70" />
+                        </div>
+                        <div className="hidden h-72 rounded-2xl border border-slate-200/70 bg-white/80 dark:border-slate-800 dark:bg-slate-900/70 lg:block" />
+                    </div>
+                </div>
             </div>
         );
     }
